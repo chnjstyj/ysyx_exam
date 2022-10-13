@@ -1,5 +1,5 @@
 STUID = 577
-STUNAME = 唐英杰
+STUNAME = Tang Yingjie
 
 # DO NOT modify the following code!!!
 
