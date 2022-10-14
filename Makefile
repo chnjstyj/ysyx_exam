@@ -1,4 +1,4 @@
-STUID = 577
+STUID = 22050577
 STUNAME = Tang Yingjie
 
 # DO NOT modify the following code!!!
