@@ -12,9 +12,7 @@ all:
 sim:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by your self."
-	verilator -Wall --trace -cc ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp
-	make -C obj_dir -f Vtop.mk Vtop
-	obj_dir/Vtop
+	$(call run)
 
 run:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
 	verilator -Wall --trace -cc ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp
