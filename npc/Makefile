@@ -1,20 +1,17 @@
 v_dir = vsrc
 cpp_dir = csrc
 
-define git_commit
-	git add .
-	git commit -m $(0)
-endef
-
 run_without_cpp:${v_dir}/top.v
 	verilator -cc vsrc/top.v
 
 all:
 	@echo "Write this Makefile by your self."
+	@echo
 
 sim:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by your self."
+	$(MAKE) run
 
 run:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
 	verilator -Wall --trace -cc ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp
