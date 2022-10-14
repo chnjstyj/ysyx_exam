@@ -10,7 +10,7 @@ all:
 
 sim:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@echo "Write this Makefile by your self."
+	#@echo "Write this Makefile by your self."
 	$(MAKE) run
 
 run:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
