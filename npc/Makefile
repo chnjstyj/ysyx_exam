@@ -17,10 +17,9 @@ sim:${v_dir}/top.v ${cpp_dir}/tb_top.cpp auto_bind.cpp $(NVBOARD_ARCHIVE)
 	$(MAKE) run
 
 run:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
-	verilator -Wall --trace -cc ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp \
-		-lSDL2 -lSDL2_image 
-	make -C obj_dir -f Vtop.mk Vtop
-	obj_dir/Vtop
+	verilator -Wall --trace -cc \
+		-lSDL2 -lSDL2_image \
+		 ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp 
 
 auto_bind.cpp: constr/${constr_name}.nxdc
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
