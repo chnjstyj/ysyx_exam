@@ -26,6 +26,7 @@ CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(top_name)\""
 LDFLAGS += -lSDL2 -lSDL2_image
 
 run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
+	mkdir output
 	verilator $(VERILATOR_CFLAGS) \
 		--top-module ${top_name} $^ \
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
