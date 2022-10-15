@@ -21,7 +21,9 @@ int main()
     nvboard_init();
     while(1)
     {
+        top.eval();
         nvboard_update();
     }
+    nvboard_quit();
     return 0;
 }
