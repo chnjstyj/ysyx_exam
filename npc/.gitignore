@@ -20,3 +20,7 @@ out/
 .idea/
 .idea_modules/
 test_run_dir/
+
+!constr/*
+obj_dir/*
+auto_bind.cpp
