@@ -3,6 +3,8 @@ cpp_dir = csrc
 constr_name ?= top
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
+v_file = ${v_dir}/top.v
+cpp_file = ${cpp_dir}/tb_top.cpp
 
 run_without_cpp:${v_dir}/top.v
 	verilator -cc vsrc/top.v
@@ -11,12 +13,12 @@ all:
 	@echo "Write this Makefile by your self."
 	@echo
 
-sim:${v_dir}/top.v ${cpp_dir}/tb_top.cpp auto_bind.cpp $(NVBOARD_ARCHIVE)
+sim:
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by your self."
 	$(MAKE) run
 
-run:${v_dir}/top.v ${cpp_dir}/tb_top.cpp auto_bind.cpp $(NVBOARD_ARCHIVE)
+run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
 	verilator -Wall -cc \
 		-lSDL2 -lSDL2_image \
 		 ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp $(NVBOARD_ARCHIVE)
