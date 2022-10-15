@@ -18,9 +18,11 @@ sim:
 	@echo "Write this Makefile by your self."
 	$(MAKE) run
 
+LDFLAGS += -lSDL2 -lSDL2_image
+
 run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
 	verilator -Wall -cc \
-		-lSDL2 -lSDL2_image \
+		$(addprefix -LDFLAGS , $(LDFLAGS)) \
 		 ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp $(NVBOARD_ARCHIVE)
 
 auto_bind.cpp: constr/${constr_name}.nxdc
