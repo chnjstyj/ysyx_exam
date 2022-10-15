@@ -2,6 +2,7 @@
 *
 obj_dir/*
 output/*
+!constr/*
 !*/
 !Makefile
 !*.mk
