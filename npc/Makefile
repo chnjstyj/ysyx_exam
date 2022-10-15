@@ -23,7 +23,7 @@ LDFLAGS += -lSDL2 -lSDL2_image
 run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
 	verilator -Wall -cc \
 		$(addprefix -LDFLAGS , $(LDFLAGS)) \
-		 ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp $(NVBOARD_ARCHIVE)
+		 ${v_dir}/top.v --exe -o ${cpp_dir}/tb_top.cpp $(NVBOARD_ARCHIVE)
 
 auto_bind.cpp: constr/${constr_name}.nxdc
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
