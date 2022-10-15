@@ -26,7 +26,7 @@ CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(top_name)\""
 LDFLAGS += -lSDL2 -lSDL2_image
 
 run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
-	mkdir output
+	-mkdir output
 	verilator $(VERILATOR_CFLAGS) \
 		--top-module ${top_name} $^ \
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
@@ -37,6 +37,6 @@ auto_bind.cpp: constr/${top_name}.nxdc
 
 .PHONY: clean
 clean:
-	rm -rf obj_dir *.vcd
+	rm -rf obj_dir *.vcd output
 
 include ../Makefile
