@@ -1,6 +1,6 @@
 v_dir = vsrc
 cpp_dir = csrc
-constr_name ?= top
+top_name ?= top
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 v_file = ${v_dir}/top.v
@@ -18,14 +18,18 @@ sim:
 	@echo "Write this Makefile by your self."
 	$(MAKE) run
 
+INCFLAGS = $(addprefix -I, $(INC_PATH))
+CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(top_name)\""
 LDFLAGS += -lSDL2 -lSDL2_image
 
 run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
-	verilator -Wall -cc \
-		$(addprefix -LDFLAGS , $(LDFLAGS)) \
-		 ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp $(NVBOARD_ARCHIVE) -o .
+	verilator -MMD --build -cc \
+		-O3 --x-assign fast --x-initial fast --noassert \
+		--top-module ${top_name} $^ \
+		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
+		 ${v_dir}/top.v --exe -o .
 
-auto_bind.cpp: constr/${constr_name}.nxdc
+auto_bind.cpp: constr/${top_name}.nxdc
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
 
 .PHONY: clean
