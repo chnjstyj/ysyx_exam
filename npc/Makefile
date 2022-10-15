@@ -1,42 +1,37 @@
-v_dir = vsrc
-cpp_dir = csrc
-top_name ?= top
-include $(NVBOARD_HOME)/scripts/nvboard.mk
+BUILD_DIR = ./build
 
-v_file = ${v_dir}/top.v
-cpp_file = ${cpp_dir}/tb_top.cpp
+export PATH := $(PATH):$(abspath ./utils)
 
-VERILATOR_CFLAGS += -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert
+test:
+	mill -i __.test
 
-run_without_cpp:${v_dir}/top.v
-	verilator -cc vsrc/top.v
+verilog:
+	$(call git_commit, "generate verilog")
+	mkdir -p $(BUILD_DIR)
+	mill -i __.test.runMain Elaborate -td $(BUILD_DIR)
 
-all:
-	@echo "Write this Makefile by your self."
-	@echo
+help:
+	mill -i __.test.runMain Elaborate --help
 
-sim:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	@echo "Write this Makefile by your self."
-	$(MAKE) run
+compile:
+	mill -i __.compile
 
-INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(top_name)\""
-LDFLAGS += -lSDL2 -lSDL2_image
+bsp:
+	mill -i mill.bsp.BSP/install
 
-run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
-	-mkdir output
-	verilator $(VERILATOR_CFLAGS) \
-		--top-module ${top_name} $^ \
-		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--exe -o ../output/Vtop
+reformat:
+	mill -i __.reformat
 
-auto_bind.cpp: constr/${top_name}.nxdc
-	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
+checkformat:
+	mill -i __.checkFormat
 
-.PHONY: clean
 clean:
-	rm -rf obj_dir *.vcd output
+	-rm -rf $(BUILD_DIR)
+
+.PHONY: test verilog help compile bsp reformat checkformat clean
+
+sim:
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	@echo "Write this Makefile by yourself."
 
 include ../Makefile
