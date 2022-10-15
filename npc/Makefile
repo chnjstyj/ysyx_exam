@@ -16,7 +16,7 @@ sim:${v_dir}/top.v ${cpp_dir}/tb_top.cpp auto_bind.cpp $(NVBOARD_ARCHIVE)
 	@echo "Write this Makefile by your self."
 	$(MAKE) run
 
-run:${v_dir}/top.v ${cpp_dir}/tb_top.cpp
+run:${v_dir}/top.v ${cpp_dir}/tb_top.cpp auto_bind.cpp $(NVBOARD_ARCHIVE)
 	verilator -Wall --trace -cc \
 		-lSDL2 -lSDL2_image \
 		 ${v_dir}/top.v --exe ${cpp_dir}/tb_top.cpp 
