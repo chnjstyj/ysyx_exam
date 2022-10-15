@@ -10,11 +10,6 @@
 //==========
 
 class Vtop__Syms;
-<<<<<<< HEAD
-class Vtop_VerilatedVcd;
-
-=======
->>>>>>> tracer-ysyx2204
 
 //----------
 
