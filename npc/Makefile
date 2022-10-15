@@ -27,7 +27,7 @@ run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
 		-O3 --x-assign fast --x-initial fast --noassert \
 		--top-module ${top_name} $^ \
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--exe -o 
+		--exe
 
 auto_bind.cpp: constr/${top_name}.nxdc
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
