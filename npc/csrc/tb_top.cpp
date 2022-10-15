@@ -3,34 +3,24 @@
 #include <assert.h>
 #include <verilated.h>
 #include <verilated_vcd_c.h>
+#include <nvboard.h>
 
 #include "Vtop.h"
 
 #define MAX_SIM_TIME 20
 vluint64_t sim_time = 0;
 
+void nvboard_bind_all_pins(Vtop* top);
+
 int main()
 {
-    Vtop* top = new Vtop;
-
-    Verilated::traceEverOn(true);
-    VerilatedVcdC *m_trace = new VerilatedVcdC;
-    top->trace(m_trace, 5);
-    m_trace->open("waveform.vcd");
-    while (sim_time < 20)
+    Vtop *top = new Vtop;
+    nvboard_bind_all_pins(top);
+    nvboard_init();
+    while(1)
     {
-        int a = rand()&1;
-        int b = rand()&1;
-        top -> a = a;
-        top -> b = b;
-        top->eval();
-        m_trace->dump(sim_time);
-        printf("a = %d, b = %d, f = %d\n", a, b, top->f);
-        assert(top->f == (a ^ b));
-        sim_time++;
+        nvboard_update();
     }
-
-    m_trace->close();
     delete top;
     return 0;
 }
