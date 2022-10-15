@@ -3,7 +3,10 @@
 
 #include "Vtop.h"
 #include "Vtop__Syms.h"
+<<<<<<< HEAD
 #include "verilated_vcd_c.h"
+=======
+>>>>>>> tracer-ysyx2204
 
 //============================================================
 // Constructors
@@ -47,7 +50,10 @@ static void _eval_initial_loop(Vtop__Syms* __restrict vlSymsp) {
     // Evaluate till stable
     int __VclockLoop = 0;
     QData __Vchange = 1;
+<<<<<<< HEAD
     vlSymsp->__Vm_activity = true;
+=======
+>>>>>>> tracer-ysyx2204
     do {
         VL_DEBUG_IF(VL_DBG_MSGF("+ Initial loop\n"););
         Vtop___024root___eval_settle(&(vlSymsp->TOP));
@@ -79,7 +85,10 @@ void Vtop::eval_step() {
     // Evaluate till stable
     int __VclockLoop = 0;
     QData __Vchange = 1;
+<<<<<<< HEAD
     vlSymsp->__Vm_activity = true;
+=======
+>>>>>>> tracer-ysyx2204
     do {
         VL_DEBUG_IF(VL_DBG_MSGF("+ Clock loop\n"););
         Vtop___024root___eval(&(vlSymsp->TOP));
@@ -116,6 +125,7 @@ VerilatedContext* Vtop::contextp() const {
 const char* Vtop::name() const {
     return vlSymsp->name();
 }
+<<<<<<< HEAD
 
 //============================================================
 // Trace configuration
@@ -143,3 +153,5 @@ void Vtop::trace(VerilatedVcdC* tfp, int, int) {
     tfp->spTrace()->addInitCb(&traceInit, &(vlSymsp->TOP));
     Vtop___024root__traceRegister(&(vlSymsp->TOP), tfp->spTrace());
 }
+=======
+>>>>>>> tracer-ysyx2204

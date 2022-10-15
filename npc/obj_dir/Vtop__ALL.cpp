@@ -2,7 +2,12 @@
 #define VL_INCLUDE_OPT include
 #include "Vtop.cpp"
 #include "Vtop___024root.cpp"
+<<<<<<< HEAD
 #include "Vtop__Trace.cpp"
 #include "Vtop___024root__Slow.cpp"
 #include "Vtop__Syms.cpp"
 #include "Vtop__Trace__Slow.cpp"
+=======
+#include "Vtop___024root__Slow.cpp"
+#include "Vtop__Syms.cpp"
+>>>>>>> tracer-ysyx2204
