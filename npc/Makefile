@@ -30,7 +30,7 @@ run:${v_file} ${cpp_file} auto_bind.cpp $(NVBOARD_ARCHIVE)
 	verilator $(VERILATOR_CFLAGS) \
 		--top-module ${top_name} $^ \
 		$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-		--exe -o ../output/top
+		--exe -o ../output/Vtop
 
 auto_bind.cpp: constr/${top_name}.nxdc
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
