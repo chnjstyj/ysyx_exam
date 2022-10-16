@@ -1,41 +1,43 @@
 import chisel3._
 import chisel3.util._
 
-/**
-  * Compute GCD using subtraction method.
-  * Subtracts the smaller from the larger until register y is zero.
-  * value in register x is then the GCD
-  */
 class top extends Module {
   val io = IO(new Bundle {
-    val Y        = Input(UInt(2.W))
-    val X0        = Input(UInt(2.W))
-    val X1        = Input(UInt(2.W))
-    val X2        = Input(UInt(2.W))
-    val X3        = Input(UInt(2.W))
-    val F         = Output(UInt(2.W))
+    val X   = Input(UInt(8.W))
+    val en  = Input(UInt(1.W))
+    val output_en = Output(UInt(1.W))
+    val F   = Output(UInt(3.W))
+    val seg = Output(UInt(8.W))
   })
 
-  io.F := 0.U(2.W)
-  
-  switch (io.Y)
-  {
-    is (0.U(2.W))
-    {
-      io.F := io.X0
+  val result = RegInit(0.U(3.W))
+
+  val numList = (List(0,1,2,3,4,5,6,7)).reverse
+
+  val seg = Module(new seg)
+
+  seg.io.input := result 
+
+  when(io.en === 0.U){
+    io.F := 0.U 
+    io.seg := 0.U
+  }.otherwise{
+    io.F := result
+    io.seg := seg.io.output
+  }
+
+  for (i <- numList){
+    when (io.X === 0.U){
+      result := 0.U
+    }.elsewhen (io.X(i) === 1.U){
+      result := i.U(3.W)
     }
-    is (1.U(2.W))
-    {
-      io.F := io.X1
-    }
-    is (2.U(2.W))
-    {
-      io.F := io.X2
-    }
-    is (3.U(2.W))
-    {
-      io.F := io.X3
-    }
+  }
+
+  when (io.X === 0.U){
+    io.output_en := 0.U
+  }.otherwise{
+    io.output_en := 1.U
   }
 
 }

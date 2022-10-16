@@ -1,9 +1,8 @@
 top=top
 
-io_Y (SW1,SW0)
-io_X0 (SW3,SW2)
-io_X1 (SW5,SW4)
-io_X2 (SW7,SW6)
-io_X3 (SW9,SW8)
+io_X (SW7,SW6,SW5,SW4,SW3,SW2,SW1,SW0)
+io_en SW8
 
-io_F (LD1,LD0)
+io_output_en LD3
+io_F (LD2,LD1,LD0)
+io_seg (DEC0P,SEG0G,SEG0F,SEG0E,SEG0D,SEG0C,SEG0B,SEG0A)

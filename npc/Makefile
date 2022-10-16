@@ -8,6 +8,9 @@ export PATH := $(PATH):$(abspath ./utils)
 VERILATOR_CFLAGS += -MMD --build -cc  \
 				-O3 --x-assign fast --x-initial fast --noassert
 
+run:
+	-./Vtop
+
 test:
 	mill -i __.test
 
