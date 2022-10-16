@@ -5,7 +5,7 @@
 #include <verilated_vcd_c.h>
 #include <nvboard.h>
 
-#include "Vtop.h" 
+#include "Vtop.h"
 
 static Vtop top;
 
@@ -16,7 +16,11 @@ void nvboard_bind_all_pins(Vtop* top);
 
 int main()
 {
-    //Vtop *top = new Vtop;
+    /*
+    Verilated::traceEverOn(true);
+    VerilatedVcdC *m_trace = new VerilatedVcdC;
+    (&top)->trace(m_trace, 5);
+    m_trace->open("waveform.vcd");*/
     nvboard_bind_all_pins(&top);
     nvboard_init();
     while(1)

@@ -1,6 +1,9 @@
 top=top
 
-io_a SW0
-io_b SW1
+io_Y (SW1,SW0)
+io_X0 (SW3,SW2)
+io_X1 (SW5,SW4)
+io_X2 (SW7,SW6)
+io_X3 (SW9,SW8)
 
-io_f LD0
+io_F (LD1,LD0)

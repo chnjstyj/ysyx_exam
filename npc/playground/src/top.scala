@@ -1,4 +1,5 @@
 import chisel3._
+import chisel3.util._
 
 /**
   * Compute GCD using subtraction method.
@@ -7,9 +8,34 @@ import chisel3._
   */
 class top extends Module {
   val io = IO(new Bundle {
-    val a        = Input(UInt(1.W))
-    val b        = Input(UInt(1.W))
-    val f     = Output(UInt(1.W))
+    val Y        = Input(UInt(2.W))
+    val X0        = Input(UInt(2.W))
+    val X1        = Input(UInt(2.W))
+    val X2        = Input(UInt(2.W))
+    val X3        = Input(UInt(2.W))
+    val F         = Output(UInt(2.W))
   })
-    io.f := io.a ^ io.b;
+
+  io.F := 0.U(2.W)
+  
+  switch (io.Y)
+  {
+    is (0.U(2.W))
+    {
+      io.F := io.X0
+    }
+    is (1.U(2.W))
+    {
+      io.F := io.X1
+    }
+    is (2.U(2.W))
+    {
+      io.F := io.X2
+    }
+    is (3.U(2.W))
+    {
+      io.F := io.X3
+    }
+  }
+
 }
