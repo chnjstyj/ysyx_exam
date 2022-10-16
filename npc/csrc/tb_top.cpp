@@ -29,17 +29,11 @@ int main()
     m_trace->open("waveform.vcd");*/
     nvboard_bind_all_pins(&top);
     nvboard_init();
-    CData r = 0;
     top.reset = 0;
     while(1)
     {
-        single_cycle();
-        if (r != top.io_F) 
-        {
-            char x = top.io_F;
-            printf("%c\n",x+48);
-            r = top.io_F;
-        }
+        top.eval();
+        //single_cycle();
         nvboard_update();
     }
     nvboard_quit();
