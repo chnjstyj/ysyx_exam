@@ -5,7 +5,7 @@ class seg extends Module
 {
     val io = IO(new Bundle
     {
-        val input   = Input(UInt(3.W))
+        val input   = Input(UInt(4.W))
         val output  = Output(UInt(8.W))
     })
 
@@ -23,5 +23,11 @@ class seg extends Module
         is(7.U) {io.output := "b1111_1000".U} 
         is(8.U) {io.output := "b1000_0000".U} 
         is(9.U) {io.output := "b1001_0000".U} 
+        is(10.U){io.output := "b1000_1000".U}
+        is(11.U){io.output := "b1000_0011".U}
+        is(12.U){io.output := "b1100_0110".U}
+        is(13.U){io.output := "b1010_0001".U}
+        is(14.U){io.output := "b1000_0110".U}
+        is(15.U){io.output := "b1000_1110".U}
     }
 }

@@ -29,11 +29,13 @@ int main()
     m_trace->open("waveform.vcd");*/
     nvboard_bind_all_pins(&top);
     nvboard_init();
+    top.reset = 1;
+    top.clock = 0; top.eval();
+    top.clock = 1; top.eval();
     top.reset = 0;
     while(1)
     {
-        top.eval();
-        //single_cycle();
+        single_cycle();
         nvboard_update();
     }
     nvboard_quit();

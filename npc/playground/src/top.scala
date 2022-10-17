@@ -1,34 +1,37 @@
 import chisel3._
 import chisel3.util._
+import chisel3.experimental._
 
 class top extends Module {
   val io = IO(new Bundle {
-    val a   = Input(SInt(4.W))
-    val b   = Input(SInt(4.W))
-    val op  = Input(UInt(3.W))
-    val result = Output(SInt(4.W))
+    val init = Input(UInt(8.W))
+    val sw_clk = Input(Clock())
+    val en = Input(UInt(1.W))
+    val seg1 = Output(UInt(8.W))
+    val seg2 = Output(UInt(8.W))
   })
 
-  val add_result = WireDefault(io.a + io.b)
-  val sub_result = WireDefault(io.a - io.b)
-  val not_result = WireDefault(~io.a)
-  val and_result = WireDefault(io.a & io.b)
-  val or_result = WireDefault(io.a | io.b)
-  val xor_result = WireDefault(io.a ^ io.b)
-  val less_than_result = WireDefault((io.a < io.b))
-  val eq_result = WireDefault((io.a === io.b))
+  val seg_high = Module(new seg)
+  val seg_low = Module(new seg)
 
-  io.result := 0.S
 
-  switch (io.op) {
-    is("b000".U(3.W)){io.result := add_result}
-    is("b001".U(3.W)){io.result := sub_result}
-    is("b010".U(3.W)){io.result := not_result}
-    is("b011".U(3.W)){io.result := and_result}
-    is("b100".U(3.W)){io.result := or_result}
-    is("b101".U(3.W)){io.result := xor_result}
-    is("b110".U(3.W)){io.result := (Cat(0.S(3.W),less_than_result)).asSInt}
-    is("b111".U(3.W)){io.result := (Cat(0.S(3.W),eq_result)).asSInt}
+
+  withClock(io.sw_clk){
+    val shift_reg = RegInit(0.U(8.W))
+    val x8 = WireDefault(shift_reg(4) ^ shift_reg(3) ^ shift_reg(2) ^ shift_reg(0))
+
+    when (io.en === 1.U){
+      shift_reg := io.init
+    }.otherwise{
+      shift_reg := Cat(x8,shift_reg(7,1))
+    }
+
+    io.seg1 := seg_high.io.output 
+    io.seg2 := seg_low.io.output
+
+    seg_high.io.input := shift_reg(7,4)
+    seg_low.io.input := shift_reg(3,0)
+
   }
   
 }
