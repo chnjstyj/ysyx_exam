@@ -24,3 +24,4 @@ test_run_dir/
 !constr/*
 obj_dir/*
 auto_bind.cpp
+!keyboard.hex

@@ -5,7 +5,7 @@ top_name ?= top
 
 export PATH := $(PATH):$(abspath ./utils)
 
-VERILATOR_CFLAGS += -MMD --build -cc  \
+VERILATOR_CFLAGS += --trace -MMD --build -cc  \
 				-O3 --x-assign fast --x-initial fast --noassert
 
 run:
@@ -60,5 +60,8 @@ sim:verilog
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by yourself."
 	$(MAKE) verilator
+	$(MAKE) run
+wave:
+	gtkwave waveform.vcd
 
 include ../Makefile
