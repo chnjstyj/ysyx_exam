@@ -27,6 +27,12 @@ static void single_cycle()
   //m_trace.dump(sim_time);
 }
 
+static void reset(int n) {
+  top.reset = 1;
+  while (n -- > 0) single_cycle();
+  top.reset = 0;
+}
+
 int main()
 {
 
@@ -37,20 +43,11 @@ int main()
 
   nvboard_bind_all_pins(&top);
   nvboard_init();
-  top.reset = 1;
-  top.clock = 0;top.eval();
-  top.clock = 1;top.eval();
-  top.reset = 0;top.eval();
-  top.clock = 0;top.eval();
+  reset(10);
   while (1)
   {
-    // usleep(10000);
     single_cycle();
     
-    if (top.io_data !=0) 
-    {
-      //printf("%x\n",top.io_data);
-    }
     nvboard_update();
   }
   // m_trace.close();
