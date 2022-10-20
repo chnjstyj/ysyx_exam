@@ -15,6 +15,11 @@ class vga_ctrl extends Module{
         val vga_r = Output(UInt(8.W))
         val vga_g = Output(UInt(8.W))
         val vga_b = Output(UInt(8.W))
+        /**
+        val h_count = Output(UInt(8.W))
+        val v_count = Output(UInt(8.W))
+        val h_char = Output(UInt(8.W))
+        val v_char = Output(UInt(8.W))*/
     })
 
     //parameters
@@ -32,6 +37,18 @@ class vga_ctrl extends Module{
     val y_cnt = RegInit(1.U(10.W))
     val h_valid = Wire(UInt(1.W))
     val v_valid = Wire(UInt(1.W))
+
+    /*
+    val h_char = RegInit(0.U(8.W))
+    val v_char = RegInit(0.U(8.W))    
+    val h_count = RegInit(0.U(8.W))
+    val v_count = RegInit(0.U(8.W))
+
+    io.h_count := h_count
+    io.v_count := v_count
+
+    io.h_char := h_char
+    io.v_char := v_char*/
 
     when(x_cnt === h_total - 1.U){
         x_cnt := 1.U 

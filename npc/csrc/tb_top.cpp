@@ -36,21 +36,23 @@ static void reset(int n) {
 int main()
 {
 
-  //Verilated::traceEverOn(true);
-  // VerilatedVcdC *m_trace = new VerilatedVcdC;
-  //(&top)->trace(&m_trace, 5);
-  //m_trace.open("waveform.vcd");
+  Verilated::traceEverOn(true);
+  //VerilatedVcdC *m_trace = new VerilatedVcdC;
+  (&top)->trace(&m_trace, 5);
+  m_trace.open("waveform.vcd");
 
   nvboard_bind_all_pins(&top);
   nvboard_init();
   reset(10);
-  while (1)
+  while (
+    //sim_time <= 307200*4
+    1
+    )
   {
     single_cycle();
-    
     nvboard_update();
   }
-  // m_trace.close();
+  m_trace.close();
   nvboard_quit();
   return 0;
 }

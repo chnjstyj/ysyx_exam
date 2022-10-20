@@ -9,14 +9,7 @@ class ps2 extends Module {
     val ps2_clk = Input(UInt(1.W))
     val ps2_data = Input(UInt(1.W))
     val data = Output(UInt(8.W))
-    val seg = Output(UInt(16.W))
-    val seg_count = Output(UInt(16.W))
   })
-  
-  val seg1 = Module(new seg)
-  val seg2 = Module(new seg)
-  val seg3 = Module(new seg)
-  val seg4 = Module(new seg)
 
   val ps2_clk_sync = Reg(UInt(3.W))
   val sampling = WireDefault(ps2_clk_sync(2) & !ps2_clk_sync(1))
@@ -35,19 +28,6 @@ class ps2 extends Module {
 
   val mem = Mem(255,UInt(8.W)) 
   loadMemoryFromFile(mem,"keyboard.hex")
-
-  seg1.io.input := io.data(7,4)
-  seg2.io.input := io.data(3,0)
-  seg3.io.input := num_cout(7,4)
-  seg4.io.input := num_cout(3,0)
-
-  when(en === 1.U){
-    io.seg := Cat(seg1.io.output,seg2.io.output)
-    io.seg_count := Cat(seg3.io.output,seg4.io.output)
-  }.otherwise{
-    io.seg := "hffff".U
-    io.seg_count := "hffff".U
-  }
   
   ps2_clk_sync := Cat(ps2_clk_sync(1,0),io.ps2_clk)
 

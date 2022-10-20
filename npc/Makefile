@@ -62,6 +62,6 @@ sim:verilog
 	$(MAKE) verilator
 	$(MAKE) run
 wave:
-	gtkwave waveform.vcd
+	gtkwave waveform.vcd -a waveform.gtkw
 
 include ../Makefile
