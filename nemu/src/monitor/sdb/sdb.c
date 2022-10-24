@@ -18,6 +18,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include "sdb.h"
+#include <regex.h>
+#include <memory/paddr.h>
+
 
 static int is_batch_mode = false;
 
@@ -53,6 +56,91 @@ static int cmd_q(char *args) {
   return -1;
 }
 
+static int cmd_si(char *args) {
+  if (args == NULL) cpu_exec(1);
+  else cpu_exec(*args - 48);
+  return 0;
+}
+
+static int cmd_info(char *args) {
+  switch (*args)
+  {
+  case ('r'):
+    isa_reg_display();
+    break; 
+  case ('w'):
+    printf("Not Supported!\n");
+    break;
+  
+  default:
+    break;
+  }
+  return 0;
+}
+
+static inline int str_to_int(char* str)
+{
+  int width = strlen(str);
+  int result = 0;
+  int i;
+  for (i = width - 1;i >= 0; i--)
+  {
+    result += (str[i] - 48) * (10 ^ i);
+  }
+  return result;
+}
+
+static inline int check_hex_num(char* str)
+{
+  int ret = 0;
+  regex_t oregex;
+  const char* p_regex_str = "^0[xX][0-9a-fA-F]+$";
+  if ((ret = regcomp(&oregex, p_regex_str, REG_EXTENDED | REG_NOSUB)) == 0)
+  {
+    if ((ret = regexec(&oregex, str, 0, NULL, 0)) == 0) 
+    {
+      return 0;
+    }
+    else return 1;
+  }
+  else return 1;
+}
+
+static inline int str_hex_to_int(char* str,uint32_t* addr)
+{
+  //int width = strlen(str);
+  if (check_hex_num(str) == 0)
+  {
+	  sscanf(str,"%x",addr);
+    return 0;
+  }
+  else return 1;
+}
+
+static int cmd_x(char *args) 
+{
+  uint32_t data = 0;
+  paddr_t addr = 0;
+  int nums = 0;
+  char* expr;
+  if (args == NULL)
+  {
+    printf("Error Input!\n");
+  }
+  else
+  {
+    nums = str_to_int(strtok(args," "));
+    expr = strtok(NULL," ");
+    if (str_hex_to_int(expr,&addr) == 0)
+    {
+      //printf("%d  %s  %d\n",nums,expr,addr);
+      data = paddr_read(addr,4);
+      printf("%d   %d\n",data,nums);
+    }
+  }
+  return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -63,6 +151,9 @@ static struct {
   { "help", "Display information about all supported commands", cmd_help },
   { "c", "Continue the execution of the program", cmd_c },
   { "q", "Exit NEMU", cmd_q },
+  { "si", "Run one stop", cmd_si },
+  { "info", "Print program status,r regfiles w watchpoints", cmd_info },
+  { "x", "Print memory", cmd_x },
 
   /* TODO: Add more commands */
 
