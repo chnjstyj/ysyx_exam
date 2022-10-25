@@ -182,3 +182,47 @@ word_t expr(char *e, bool *success) {
 
   return 0;
 }
+
+bool check_parentheses(int p,int q);
+int find_main_op();
+
+int eval(int p,int q)
+{
+  int op;
+  if (p > q)
+  {
+    printf("错误的表达式\n");
+    assert(0);
+    return 0;
+  }
+  else if(p == q)
+  {
+    return atoi(tokens[p].str);
+  }
+  else if (check_parentheses(p,q) == true)
+  {
+    return eval(p + 1,q + 1);
+  }
+  else 
+  {
+    op = find_main_op();
+    int val1 = eval(p,op-1);
+    int val2 = eval(op+1,q);
+    switch (tokens[op].type)
+    {
+    case '+':return val1 + val2;break;
+    case '-':return val1 + val2;break;
+    case '*':return val1 + val2;break;
+    case '/':return val1 + val2;break;
+    default:
+      printf("错误的运算符\n");
+      assert(0);
+      return 0;
+    }
+  }
+}
+
+bool check_parentheses(int p,int q)
+{
+  
+}
