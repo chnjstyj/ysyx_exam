@@ -20,7 +20,10 @@
  */
 #include <regex.h>
 
+#define debug
+
 enum {
+  TK_NUMS,
   TK_NOTYPE = 256, TK_EQ,
 
   /* TODO: Add more token types */
@@ -38,6 +41,12 @@ static struct rule {
 
   {" +", TK_NOTYPE},    // spaces
   {"\\+", '+'},         // plus
+  {"\\-", '-'},         // sub
+  {"\\*", '*'},         // mul
+  {"\\/", '/'},         // div
+  {"[0-9]+", TK_NUMS},         // numbers
+  {"\\(", '('},         // left bracket
+  {"\\)", ')'},         // right bracket
   {"==", TK_EQ},        // equal
 };
 
@@ -84,6 +93,8 @@ static bool make_token(char *e) {
         char *substr_start = e + position;
         int substr_len = pmatch.rm_eo;
 
+        int k;
+
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
 
@@ -94,8 +105,45 @@ static bool make_token(char *e) {
          * of tokens, some extra actions should be performed.
          */
 
+        if (rules[i].token_type == TK_NUMS)
+        {
+          tokens[nr_token].type = TK_NUMS;
+          if (substr_len > 32)
+          {
+            while (substr_len > 32)
+            {
+              for (k = 0; k < 32; k++)
+              {
+                tokens[nr_token].str[k] = *(substr_start + k);
+              }
+              substr_len -= 32;
+              substr_start += 32;
+              nr_token++;
+            }
+            for (k = 0; k < substr_len; k++)
+            {
+                tokens[nr_token].str[k] = *(substr_start + k);
+            } 
+            nr_token++;
+          }
+          else 
+          {  
+            for (k = 0; k < substr_len; k++)
+            {
+                tokens[nr_token].str[k] = *(substr_start + k);
+            } 
+            nr_token++;
+          }
+        }
+        else if (rules[i].token_type != TK_NOTYPE)
+        {
+          tokens[nr_token].type = rules[i].token_type;
+          nr_token++;
+        }
+
+
         switch (rules[i].token_type) {
-          default: TODO();
+          default: //TODO();
         }
 
         break;
@@ -119,7 +167,18 @@ word_t expr(char *e, bool *success) {
   }
 
   /* TODO: Insert codes to evaluate the expression. */
-  TODO();
+  //TODO();
+  #ifdef debug
+  int i;
+  for (i = 0; i < 32; i ++)
+  {
+    printf("%c     ",tokens[i].type);
+    if (tokens[i].str != NULL)
+      printf("%s\n",tokens[i].str);
+    else 
+      putchar('\n');
+  }
+  #endif
 
   return 0;
 }

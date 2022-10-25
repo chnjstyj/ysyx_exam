@@ -80,13 +80,8 @@ static int cmd_info(char *args) {
 
 static inline int str_to_int(char* str)
 {
-  int width = strlen(str);
-  int result = 0;
-  int i;
-  for (i = width - 1;i >= 0; i--)
-  {
-    result += (str[i] - 48) * (10 ^ i);
-  }
+  //int width = strlen(str);
+  int result = atoi(str);
   return result;
 }
 
@@ -119,10 +114,13 @@ static inline int str_hex_to_int(char* str,uint32_t* addr)
 
 static int cmd_x(char *args) 
 {
-  uint32_t data = 0;
-  paddr_t addr = 0;
+  //uint32_t data = 0;
+  //paddr_t addr = 0;
   int nums = 0;
-  char* expr;
+  char* input_expr;
+  bool success;
+  //int i;
+  //int j = 0;
   if (args == NULL)
   {
     printf("Error Input!\n");
@@ -130,13 +128,24 @@ static int cmd_x(char *args)
   else
   {
     nums = str_to_int(strtok(args," "));
-    expr = strtok(NULL," ");
-    if (str_hex_to_int(expr,&addr) == 0)
+    input_expr = strtok(NULL," ");
+    printf("%d\n",nums);
+    /*
+    if (str_hex_to_int(input_expr,&addr) == 0)
     {
-      //printf("%d  %s  %d\n",nums,expr,addr);
-      data = paddr_read(addr,4);
-      printf("%d   %d\n",data,nums);
-    }
+      while(j < nums)
+      {
+        printf("0x%x:",addr + j*4);
+        for (i=3;i >= 0; i--)
+        {
+          data = paddr_read(addr + i + (j*4),1);
+          printf("0x%02x   ",data);
+        }
+        putchar('\n');
+        j++;
+      }
+    }*/
+    expr(input_expr,&success);
   }
   return 0;
 }
