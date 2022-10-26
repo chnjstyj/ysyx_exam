@@ -150,6 +150,22 @@ static int cmd_x(char *args)
   return 0;
 }
 
+static int cmd_p(char *args) 
+{
+  char* input_expr;
+  bool success;
+  if (args == NULL) 
+  {
+    printf("Error Input!\n");
+  }
+  else 
+  {
+    input_expr = strtok(args," ");
+    expr(input_expr,&success);
+  }
+  return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -163,6 +179,7 @@ static struct {
   { "si", "Run one stop", cmd_si },
   { "info", "Print program status,r regfiles w watchpoints", cmd_info },
   { "x", "Print memory", cmd_x },
+  { "p", "Give the result of the expression", cmd_p },
 
   /* TODO: Add more commands */
 

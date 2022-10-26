@@ -19,8 +19,11 @@
  * Type 'man regex' for more information about POSIX regex functions.
  */
 #include <regex.h>
+#include "SeqStack.h"
 
 #define debug
+
+uint32_t eval(int p,int q);
 
 enum {
   TK_NUMS,
@@ -170,25 +173,27 @@ word_t expr(char *e, bool *success) {
   //TODO();
   #ifdef debug
   int i;
-  for (i = 0; i < 32; i ++)
+  for (i = 0; i < nr_token; i ++)
   {
     printf("%c     ",tokens[i].type);
-    if (tokens[i].str != NULL)
+    if (tokens[i].type == TK_NUMS)
       printf("%s\n",tokens[i].str);
     else 
       putchar('\n');
   }
+  //printf("q:%d\n",nr_token-1);
   #endif
+  uint32_t result = eval(0,nr_token-1);
+  printf("result:%d\n",result);
 
   return 0;
 }
 
-bool check_parentheses(int p,int q);
-int find_main_op();
+int check_parentheses(int p,int q);
+int find_main_op(int p,int q);
 
-int eval(int p,int q)
+uint32_t eval(int p,int q)
 {
-  int op;
   if (p > q)
   {
     printf("错误的表达式\n");
@@ -199,21 +204,32 @@ int eval(int p,int q)
   {
     return atoi(tokens[p].str);
   }
-  else if (check_parentheses(p,q) == true)
+  else if (check_parentheses(p,q) == 1)
   {
-    return eval(p + 1,q + 1);
+    #ifdef debug
+    printf("括号匹配\n");
+    #endif
+    return eval(p + 1,q - 1);
   }
   else 
   {
-    op = find_main_op();
-    int val1 = eval(p,op-1);
-    int val2 = eval(op+1,q);
+    int op = find_main_op(p,q);
+    #ifdef debug
+    printf("在此处分割:%d\n",op);
+    #endif
+    uint32_t val1;
+    if (op - 1 >= p)
+    {
+      val1 = eval(p,op-1);
+    }
+    else val1 = 0;
+    uint32_t val2 = eval(op+1,q);
     switch (tokens[op].type)
     {
     case '+':return val1 + val2;break;
-    case '-':return val1 + val2;break;
-    case '*':return val1 + val2;break;
-    case '/':return val1 + val2;break;
+    case '-':return val1 - val2;break;
+    case '*':return val1 * val2;break;
+    case '/':return val1 / val2;break;
     default:
       printf("错误的运算符\n");
       assert(0);
@@ -222,7 +238,156 @@ int eval(int p,int q)
   }
 }
 
-bool check_parentheses(int p,int q)
+int check_parentheses(int p,int q)
 {
-  
+  SeqStack s = {0};
+  int i;
+  int result;
+  if(tokens[p].type == '(' && tokens[q].type == ')')
+  {
+    for (i = p; i < q; i++)
+    {
+      if (tokens[i].type == '(') Push(&s,'(');
+      else if (tokens[i].type == ')')
+      {
+        if (Pop(&s,&result))
+        {
+          if (!isEmpty(s)) 
+          {
+            #ifdef debug 
+            printf("括号不匹配 提前\n");
+            #endif
+            return 0;
+          }
+        }
+        else 
+        {
+          #ifdef debug 
+          printf("括号不匹配 堆栈溢出\n");
+          #endif
+          return 0;
+        }
+      }
+    }
+    if (Pop(&s,&result)) return 1;
+    else 
+    {
+      #ifdef debug 
+      printf("非前后括号\n");
+      #endif
+      return 0;
+    }
+  }
+  else 
+  {
+    #ifdef debug 
+    printf("无括号包围\n");
+    #endif
+    return 0;
+  }
+}
+
+int find_main_op(int p,int q)
+{
+  SeqStack s = {0};
+  int pop_result;
+  int i;
+  int level = 2;
+  int op = p;
+  for (i = p; i <= q; i++)
+  {
+    #ifdef debug
+    printf("op:%c    pos:%d\n",tokens[i].type,i);
+    #endif
+    switch (tokens[i].type)
+    {
+      case '+':
+      case '-':
+        if (isEmpty(s)) 
+        {
+          #ifdef debug 
+          printf("有括号跳过+-\n");
+          #endif
+          break;
+        }
+        else 
+        {
+          if ((i > p && tokens[i-1].type != TK_NUMS))
+          {
+            #ifdef debug
+            printf("检测到负号，位置更新为%d   ",i-1);
+            #endif
+            op = i - 1;
+            #ifdef debug
+            printf("op = %d\n",op);
+            #endif
+          }
+          else if ( i == p )
+          {
+            #ifdef debug
+            printf("检测到表达式头负号,位置更新为%d\n",i);
+            #endif
+            op = i;
+          }
+          else 
+          {
+            op = i;
+            level = 1;
+          }
+          break;
+        }
+      case '*':
+      case '/':
+        if (isEmpty(s))
+        {
+          #ifdef debug 
+          printf("有括号跳过*/\n");
+          #endif
+          break;
+        }
+        else
+        {
+          if (level > 1)
+          {
+            op = i;
+            break;
+          }
+          else break;
+        }
+      case '(':
+        if (Push(&s,'(')) 
+        {
+          #ifdef debug
+          printf("压栈\n");
+          #endif
+          break;
+        }
+        else 
+        {
+          printf("堆栈已满\n");
+          assert(0);
+          break;
+        }
+      case ')':
+        if (Pop(&s,&pop_result)) 
+        {
+          #ifdef debug
+          printf("出栈\n");
+          #endif
+          break;
+        }
+        else 
+        {
+          printf("堆栈为空\n");
+          assert(0);
+          break;
+        }
+      default:
+        break;
+    }
+  }
+  #ifdef debug
+  printf("最终位置为%d\n",op);
+  #endif
+  return op;
 }

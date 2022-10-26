@@ -15,6 +15,8 @@
 
 #include <common.h>
 
+#define test_expr
+
 void init_monitor(int, char *[]);
 void am_init_monitor();
 void engine_start();
@@ -26,6 +28,15 @@ int main(int argc, char *argv[]) {
   am_init_monitor();
 #else
   init_monitor(argc, argv);
+#endif
+
+#ifdef test_expr 
+
+FILE *fp = fopen("~/ysyx-workbench/nemu/tools/gen-expr/build/Input", "r");
+if (fp != NULL)
+{
+  ;
+}
 #endif
 
   /* Start engine. */
