@@ -14,6 +14,9 @@
 ***************************************************************************************/
 
 #include <isa.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include<math.h>
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -23,11 +26,11 @@
 
 #define debug
 
-uint32_t eval(int p,int q);
+uint64_t eval(int p,int q);
 
 enum {
-  TK_NUMS,
-  TK_NOTYPE = 256, TK_EQ,
+  TK_NUMS,TK_HEX_NUMS,TK_REG,
+  TK_NOTYPE = 256, TK_EQ,TK_NE,TK_AND
 
   /* TODO: Add more token types */
 
@@ -47,15 +50,90 @@ static struct rule {
   {"\\-", '-'},         // sub
   {"\\*", '*'},         // mul
   {"\\/", '/'},         // div
+  {"^[0][x][0-9a-z]+",TK_HEX_NUMS}, //hex numbers
   {"[0-9]+", TK_NUMS},         // numbers
+  {"^[$][0-1a-z]+",TK_REG}, //reg
   {"\\(", '('},         // left bracket
   {"\\)", ')'},         // right bracket
   {"==", TK_EQ},        // equal
+  {"!=", TK_NE},        // equal
+  {"&&", TK_NE},        // equal
 };
 
 #define NR_REGEX ARRLEN(rules)
 
 static regex_t re[NR_REGEX] = {};
+
+char* toString(uint64_t iVal)
+{
+  char str[1024] = {'\0',};
+  char *pos = NULL;
+  
+  int abs = iVal;
+
+  pos = str + 1023; //移动指针,指向堆栈底部
+  *pos-- = '\0';  //end
+
+  int dit = 0;
+  while(abs > 0)
+  {
+    dit = abs % 10;
+    abs = abs / 10;
+    
+    *pos-- = (char)('0' + dit); 
+  }
+
+  char *ret = (char*)malloc(1024 - (pos - str));
+  
+  if(iVal == 0)               //0的一个处理
+  strcpy(ret, "0");
+  else                        //iVal非0的拷贝
+  strcpy(ret, pos+1);
+
+  return(ret);    
+}
+
+uint64_t hex_str_to_int(char* str)
+{
+  int width = strlen(str);
+  //printf("width:%d\n",width);
+  int i ;
+  uint64_t result = 0;
+  for (i = 2; i < width; i++)
+  {
+    //printf("%c\n",str[i]);
+    switch (str[i])
+    {
+      case 'a':
+      case 'A':
+        result += 10 * (int)pow(16,width-i-1);
+        break;
+      case 'b':
+      case 'B':
+        result += 11 * (int)pow(16,width-i-1);
+        break;
+      case 'c':
+      case 'C':
+        result += 12 * (int)pow(16,width-i-1);
+        break;
+      case 'd':
+      case 'D':
+        result += 13 * (int)pow(16,width-i-1);
+        break;
+      case 'e':
+      case 'E':
+        result += 14 * (int)pow(16,width-i-1);
+        break;
+      case 'f':
+      case 'F':
+        result += 15 * (int)pow(16,width-i-1);
+        break;
+      default:
+        result += (str[i] - '0') * (int)pow(16,width-i-1);
+    }
+  }
+  return result;
+}
 
 /* Rules are used for many times.
  * Therefore we compile them only once before any usage.
@@ -139,6 +217,33 @@ static bool make_token(char *e) {
             nr_token++;
           }
         }
+        else if (rules[i].token_type == TK_HEX_NUMS)
+        {
+          tokens[nr_token].type = TK_NUMS;
+          uint64_t result = 0;
+          char* result_str = "";
+          char hex_str[16] = {0};
+          for (k = 0; k < substr_len; k++)
+          {
+              hex_str[k] = *(substr_start + k);
+          } 
+          hex_str[substr_len] = '\0';
+
+          result = hex_str_to_int(hex_str);          
+          #ifdef debug 
+          printf("hex str:%s    result:%ld\n",hex_str,result);
+          #endif
+          result_str = toString(result);
+          for (k = 0; k < strlen(result_str); k++)
+          {
+              tokens[nr_token].str[k] = *(result_str + k);
+          } 
+          nr_token++;
+        }
+        else if (rules[i].token_type == TK_REG)
+        {
+          
+        }
         else if (rules[i].token_type != TK_NOTYPE)
         {
           tokens[nr_token].type = rules[i].token_type;
@@ -184,9 +289,9 @@ word_t expr(char *e, bool *success) {
   }
   //printf("q:%d\n",nr_token-1);
   #endif
-  uint32_t result = eval(0,nr_token-1);
+  uint64_t result = eval(0,nr_token-1);
   #ifdef debug
-  printf("result:%d\n",result);
+  printf("result:%d\n",(int)result);
   #endif
   return result;
 }
@@ -194,7 +299,7 @@ word_t expr(char *e, bool *success) {
 int check_parentheses(int p,int q);
 int find_main_op(int p,int q);
 
-uint32_t eval(int p,int q)
+uint64_t eval(int p,int q)
 {
   int i;
   int j;
@@ -226,7 +331,7 @@ uint32_t eval(int p,int q)
   }
   else if(p == q)
   {
-    return (uint32_t)atoi(tokens[p].str);
+    return (uint64_t)atoi(tokens[p].str);
   }
   else if ((p < q) && all_nums)
   {
@@ -238,7 +343,7 @@ uint32_t eval(int p,int q)
         str[i*32 + j] = tokens[p+i].str[i];
       }
     }
-    return (uint32_t)atoi(str);
+    return (uint64_t)atoi(str);
   }
   else if (check_parentheses(p,q) == 1)
   {
@@ -253,13 +358,13 @@ uint32_t eval(int p,int q)
     #ifdef debug
     printf("在此处分割:%d\n",op);
     #endif
-    uint32_t val1;
+    uint64_t val1;
     if (op - 1 >= p)
     {
       val1 = eval(p,op-1);
     }
     else val1 = 0;
-    uint32_t val2 = eval(op+1,q);
+    uint64_t val2 = eval(op+1,q);
     switch (tokens[op].type)
     {
     case '+':return val1 + val2;break;
