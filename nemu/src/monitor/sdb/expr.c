@@ -79,7 +79,7 @@ typedef struct token {
   char str[32];
 } Token;
 
-static Token tokens[32] __attribute__((used)) = {};
+static Token tokens[1024] __attribute__((used)) = {};
 static int nr_token __attribute__((used))  = 0;
 
 static bool make_token(char *e) {
@@ -97,9 +97,10 @@ static bool make_token(char *e) {
         int substr_len = pmatch.rm_eo;
 
         int k;
-
+        #ifdef debug
         Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
+        #endif
 
         position += substr_len;
 
@@ -184,9 +185,10 @@ word_t expr(char *e, bool *success) {
   //printf("q:%d\n",nr_token-1);
   #endif
   uint32_t result = eval(0,nr_token-1);
+  #ifdef debug
   printf("result:%d\n",result);
-
-  return 0;
+  #endif
+  return result;
 }
 
 int check_parentheses(int p,int q);
@@ -194,6 +196,28 @@ int find_main_op(int p,int q);
 
 uint32_t eval(int p,int q)
 {
+  int i;
+  int j;
+  int all_nums = 1;
+  for (i = p; i <= q; i++)
+  {
+    if(tokens[i].type != TK_NUMS)
+    { 
+      all_nums = 0;
+      #ifdef debug
+      printf("%c",tokens[i].type);
+      #endif
+    }
+    else 
+    {
+      #ifdef debug
+      printf("%s",tokens[i].str);
+      #endif
+    }
+  }
+  #ifdef debug
+  putchar('\n');
+  #endif
   if (p > q)
   {
     printf("错误的表达式\n");
@@ -202,7 +226,19 @@ uint32_t eval(int p,int q)
   }
   else if(p == q)
   {
-    return atoi(tokens[p].str);
+    return (uint32_t)atoi(tokens[p].str);
+  }
+  else if ((p < q) && all_nums)
+  {
+    char str[q-p+1];
+    for(i = 0;i <= q-p;i++)
+    {
+      for(j = 0; j < 32; j++)
+      {
+        str[i*32 + j] = tokens[p+i].str[i];
+      }
+    }
+    return (uint32_t)atoi(str);
   }
   else if (check_parentheses(p,q) == 1)
   {
@@ -231,7 +267,7 @@ uint32_t eval(int p,int q)
     case '*':return val1 * val2;break;
     case '/':return val1 / val2;break;
     default:
-      printf("错误的运算符\n");
+      printf("错误的运算符 %d   %c\n",op,tokens[op].type);
       assert(0);
       return 0;
     }
@@ -312,7 +348,7 @@ int find_main_op(int p,int q)
         }
         else 
         {
-          if ((i > p && tokens[i-1].type != TK_NUMS))
+          if ((i > p && tokens[i-1].type != TK_NUMS && tokens[i-1].type != '(' && tokens[i-1].type != ')'))
           {
             #ifdef debug
             printf("检测到负号，位置更新为%d   ",i-1);

@@ -1,4 +1,4 @@
-#define MaxSize 32
+#define MaxSize 256
 
 typedef struct
 {

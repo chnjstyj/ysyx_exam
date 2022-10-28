@@ -16,6 +16,11 @@
 #include <isa.h>
 #include <memory/paddr.h>
 
+
+//#define test_expr
+
+word_t expr(char *e, bool *success);
+
 void init_rand();
 void init_log(const char *log_file);
 void init_mem();
@@ -137,6 +142,31 @@ void init_monitor(int argc, char *argv[]) {
 
   /* Display welcome message. */
   welcome();
+
+  #ifdef test_expr 
+  int index_ = 1;
+  uint32_t result;
+  uint32_t e_result;
+  char expr_[10000] = {0};
+  bool success;
+  FILE *fp = fopen("input", "r");
+  if (fp != NULL)
+  {
+    while (fscanf(fp,"%d %s",&result,expr_) != EOF)
+    {
+      //printf("%d %s\n",result,expr);
+      //if (expr == NULL) break;
+      e_result = expr(expr_,&success);
+      if (e_result != result) printf("%d:Error!\n",index_);
+      else //printf("%d:Success!\n",index_);
+      index_++;
+    }
+  }
+  else 
+  {
+    printf("Error File\n");
+  }
+  #endif
 }
 #else // CONFIG_TARGET_AM
 static long load_img() {
