@@ -16,7 +16,8 @@
 #include <isa.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include<math.h>
+#include <math.h>
+#include <memory/paddr.h>
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -30,7 +31,7 @@ uint64_t eval(int p,int q);
 
 enum {
   TK_NUMS,TK_HEX_NUMS,TK_REG,
-  TK_NOTYPE = 256, TK_EQ,TK_NE,TK_AND
+  TK_NOTYPE = 256, TK_EQ,TK_NE,TK_AND,TK_DEREF
 
   /* TODO: Add more token types */
 
@@ -69,12 +70,12 @@ char* toString(uint64_t iVal)
   char str[1024] = {'\0',};
   char *pos = NULL;
   
-  int abs = iVal;
+  uint64_t abs = iVal;
 
   pos = str + 1023; //移动指针,指向堆栈底部
   *pos-- = '\0';  //end
 
-  int dit = 0;
+  uint64_t dit = 0;
   while(abs > 0)
   {
     dit = abs % 10;
@@ -85,9 +86,9 @@ char* toString(uint64_t iVal)
 
   char *ret = (char*)malloc(1024 - (pos - str));
   
-  if(iVal == 0)               //0的一个处理
+  if(iVal == 0)               
   strcpy(ret, "0");
-  else                        //iVal非0的拷贝
+  else                        
   strcpy(ret, pos+1);
 
   return(ret);    
@@ -106,30 +107,30 @@ uint64_t hex_str_to_int(char* str)
     {
       case 'a':
       case 'A':
-        result += 10 * (int)pow(16,width-i-1);
+        result += 10 * (uint64_t)pow(16,width-i-1);
         break;
       case 'b':
       case 'B':
-        result += 11 * (int)pow(16,width-i-1);
+        result += 11 * (uint64_t)pow(16,width-i-1);
         break;
       case 'c':
       case 'C':
-        result += 12 * (int)pow(16,width-i-1);
+        result += 12 * (uint64_t)pow(16,width-i-1);
         break;
       case 'd':
       case 'D':
-        result += 13 * (int)pow(16,width-i-1);
+        result += 13 * (uint64_t)pow(16,width-i-1);
         break;
       case 'e':
       case 'E':
-        result += 14 * (int)pow(16,width-i-1);
+        result += 14 * (uint64_t)pow(16,width-i-1);
         break;
       case 'f':
       case 'F':
-        result += 15 * (int)pow(16,width-i-1);
+        result += 15 * (uint64_t)pow(16,width-i-1);
         break;
       default:
-        result += (str[i] - '0') * (int)pow(16,width-i-1);
+        result += (str[i] - '0') * (uint64_t)pow(16,width-i-1);
     }
   }
   return result;
@@ -222,27 +223,34 @@ static bool make_token(char *e) {
           tokens[nr_token].type = TK_NUMS;
           uint64_t result = 0;
           char* result_str = "";
-          char hex_str[16] = {0};
+          char hex_str[32] = {'\0'};
           for (k = 0; k < substr_len; k++)
           {
               hex_str[k] = *(substr_start + k);
           } 
-          hex_str[substr_len] = '\0';
 
           result = hex_str_to_int(hex_str);          
           #ifdef debug 
-          printf("hex str:%s    result:%ld\n",hex_str,result);
+          printf("hex str:%s    result:%lx\n",hex_str,result);
           #endif
           result_str = toString(result);
           for (k = 0; k < strlen(result_str); k++)
           {
               tokens[nr_token].str[k] = *(result_str + k);
           } 
+          #ifdef debug 
+          printf("dec str:%s\n",tokens[nr_token].str);
+          #endif
           nr_token++;
         }
         else if (rules[i].token_type == TK_REG)
         {
-          
+          tokens[nr_token].type = TK_REG;
+          for (k = 1; k < substr_len; k++)
+          {
+              tokens[nr_token].str[k-1] = *(substr_start + k);
+          } 
+          nr_token++;
         }
         else if (rules[i].token_type != TK_NOTYPE)
         {
@@ -289,9 +297,18 @@ word_t expr(char *e, bool *success) {
   }
   //printf("q:%d\n",nr_token-1);
   #endif
+
+  for (i = 0; i < nr_token; i ++) {
+  if (tokens[i].type == '*' && (i == 0 || ((tokens[i - 1].type == '(' || tokens[i - 1].type == ')') && tokens[i - 1].type != TK_NUMS))) 
+  {
+    tokens[i].type = TK_DEREF;
+  }
+}
+
+
   uint64_t result = eval(0,nr_token-1);
   #ifdef debug
-  printf("result:%d\n",(int)result);
+  printf("result:%ld\n",result);
   #endif
   return result;
 }
@@ -331,7 +348,26 @@ uint64_t eval(int p,int q)
   }
   else if(p == q)
   {
-    return (uint64_t)atoi(tokens[p].str);
+    bool success;
+    uint64_t reg_value;
+    if (tokens[p].type == TK_NUMS)
+      return (uint64_t)atol(tokens[p].str);
+    else if(tokens[p].type == TK_REG)
+    {
+      reg_value = isa_reg_str2val(tokens[p].str,&success);
+      if (success == true) return reg_value;
+      else 
+      {
+        printf("错误的寄存器\n");
+        assert(0);
+        return 0;
+      }
+    }
+    else 
+    {
+      assert(0);
+      return 0;
+    }
   }
   else if ((p < q) && all_nums)
   {
@@ -343,7 +379,7 @@ uint64_t eval(int p,int q)
         str[i*32 + j] = tokens[p+i].str[i];
       }
     }
-    return (uint64_t)atoi(str);
+    return (uint64_t)atol(str);
   }
   else if (check_parentheses(p,q) == 1)
   {
@@ -356,7 +392,7 @@ uint64_t eval(int p,int q)
   {
     int op = find_main_op(p,q);
     #ifdef debug
-    printf("在此处分割:%d\n",op);
+    printf("在此处分裂:%d\n",op);
     #endif
     uint64_t val1;
     if (op - 1 >= p)
@@ -371,6 +407,18 @@ uint64_t eval(int p,int q)
     case '-':return val1 - val2;break;
     case '*':return val1 * val2;break;
     case '/':return val1 / val2;break;
+    case TK_EQ:return (val1 == val2);break;
+    case TK_NE:return (val1 != val2);break;
+    case TK_AND:return (val1 & val2);break;
+    case TK_DEREF:
+    {
+      #ifdef debug 
+      printf("解指针 %lx\n",val2);
+      #endif 
+      uint64_t mem_reuslt = paddr_read(val2,8);
+      return mem_reuslt;
+      break;
+    }
     default:
       printf("错误的运算符 %d   %c\n",op,tokens[op].type);
       assert(0);
@@ -433,7 +481,7 @@ int find_main_op(int p,int q)
   SeqStack s = {0};
   int pop_result;
   int i;
-  int level = 2;
+  int level = 4;
   int op = p;
   for (i = p; i <= q; i++)
   {
@@ -442,6 +490,43 @@ int find_main_op(int p,int q)
     #endif
     switch (tokens[i].type)
     {
+      case TK_AND:
+        if (isEmpty(s)) 
+        {
+          #ifdef debug 
+          printf("有括号跳过&\n");
+          #endif
+          break;
+        }
+        else 
+        {
+          if (level > 0)
+          {
+            op = i;
+            level = 0;
+            break;
+          }
+          else break;
+        }
+      case TK_NE:
+      case TK_EQ:
+        if (isEmpty(s)) 
+        {
+          #ifdef debug 
+          printf("有括号跳过== !=\n");
+          #endif
+          break;
+        }
+        else 
+        {
+          if (level > 1)
+          {
+            op = i;
+            level = 2;
+            break;
+          }
+          else break;
+        }
       case '+':
       case '-':
         if (isEmpty(s)) 
@@ -453,29 +538,33 @@ int find_main_op(int p,int q)
         }
         else 
         {
-          if ((i > p && tokens[i-1].type != TK_NUMS && tokens[i-1].type != '(' && tokens[i-1].type != ')'))
+          if (level > 2)
           {
-            #ifdef debug
-            printf("检测到负号，位置更新为%d   ",i-1);
-            #endif
-            op = i - 1;
-            #ifdef debug
-            printf("op = %d\n",op);
-            #endif
+            if ((i > p && tokens[i-1].type != TK_NUMS && tokens[i-1].type != '(' && tokens[i-1].type != ')'))
+            {
+              #ifdef debug
+              printf("检测到负号，位置更新为%d   ",i-1);
+              #endif
+              op = i - 1;
+              #ifdef debug
+              printf("op = %d\n",op);
+              #endif
+            }
+            else if ( i == p )
+            {
+              #ifdef debug
+              printf("检测到表达式头负号,位置更新为%d\n",i);
+              #endif
+              op = i;
+            }
+            else 
+            {
+              op = i;
+              level = 3;
+            }
+            break;
           }
-          else if ( i == p )
-          {
-            #ifdef debug
-            printf("检测到表达式头负号,位置更新为%d\n",i);
-            #endif
-            op = i;
-          }
-          else 
-          {
-            op = i;
-            level = 1;
-          }
-          break;
+          else break;
         }
       case '*':
       case '/':
@@ -488,7 +577,7 @@ int find_main_op(int p,int q)
         }
         else
         {
-          if (level > 1)
+          if (level > 3)
           {
             op = i;
             break;
@@ -528,7 +617,7 @@ int find_main_op(int p,int q)
     }
   }
   #ifdef debug
-  printf("最终位置为%d\n",op);
+  printf("最终位置%d\n",op);
   #endif
   return op;
 }

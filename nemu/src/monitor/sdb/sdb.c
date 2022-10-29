@@ -24,6 +24,7 @@
 
 static int is_batch_mode = false;
 
+
 void init_regex();
 void init_wp_pool();
 
@@ -166,6 +167,24 @@ static int cmd_p(char *args)
   return 0;
 }
 
+static int cmd_x(char *args) 
+{
+  char* input_expr;
+  bool success;
+  uint64_t result;
+  if (args == NULL) 
+  {
+    printf("Error Input!\n");
+  }
+  else 
+  {
+    input_expr = strtok(args," ");
+    result = expr(input_expr,&success);
+    wp_head = new_wp(input_expr,result);
+  }
+  return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -180,6 +199,7 @@ static struct {
   { "info", "Print program status,r regfiles w watchpoints", cmd_info },
   { "x", "Print memory", cmd_x },
   { "p", "Give the result of the expression", cmd_p },
+  { "w", "Set a watchpoint at the expression", cmd_x },
 
   /* TODO: Add more commands */
 
