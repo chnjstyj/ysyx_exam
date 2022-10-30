@@ -23,7 +23,7 @@
 
 
 static int is_batch_mode = false;
-
+WP* wp_head = NULL;
 
 void init_regex();
 void init_wp_pool();
@@ -70,9 +70,17 @@ static int cmd_info(char *args) {
     isa_reg_display();
     break; 
   case ('w'):
-    printf("Not Supported!\n");
+    if (wp_head != NULL)
+    {
+      WP* wp = wp_head;
+      while (wp != NULL)
+      {
+        printf("NO:%d\tEXPR:%s\tVALUE:%ld\n",wp->NO,wp->expr,wp->result_previous);
+       // if (wp->next == NULL) break;
+        wp = wp->next;
+      }
+    }
     break;
-  
   default:
     break;
   }
@@ -115,13 +123,14 @@ static inline int str_hex_to_int(char* str,uint32_t* addr)
 
 static int cmd_x(char *args) 
 {
-  //uint32_t data = 0;
+  uint8_t data = 0;
   //paddr_t addr = 0;
   int nums = 0;
   char* input_expr;
   bool success;
-  //int i;
-  //int j = 0;
+  uint64_t result;
+  int i;
+  int j = 0;
   if (args == NULL)
   {
     printf("Error Input!\n");
@@ -146,7 +155,18 @@ static int cmd_x(char *args)
         j++;
       }
     }*/
-    expr(input_expr,&success);
+    result = expr(input_expr,&success);
+    while(j < nums)
+    {
+      printf("0x%lx:",result + j*4);
+      for (i=3;i >= 0; i--)
+      {
+        data = paddr_read(result + i + (j*4),1);
+        printf("0x%02x   ",data);
+      }
+      putchar('\n');
+      j++;
+    }
   }
   return 0;
 }
@@ -155,6 +175,7 @@ static int cmd_p(char *args)
 {
   char* input_expr;
   bool success;
+  uint64_t result;
   if (args == NULL) 
   {
     printf("Error Input!\n");
@@ -162,12 +183,13 @@ static int cmd_p(char *args)
   else 
   {
     input_expr = strtok(args," ");
-    expr(input_expr,&success);
+    result = expr(input_expr,&success);
+    printf("Result of the expression is :%ld\n",result);
   }
   return 0;
 }
 
-static int cmd_x(char *args) 
+static int cmd_w(char *args) 
 {
   char* input_expr;
   bool success;
@@ -181,6 +203,35 @@ static int cmd_x(char *args)
     input_expr = strtok(args," ");
     result = expr(input_expr,&success);
     wp_head = new_wp(input_expr,result);
+  }
+  return 0;
+}
+
+static int cmd_d(char *args) 
+{
+  int NO;
+  WP* wp_d;
+  if (args == NULL) printf("Please input the NO\n");
+  else
+  {
+    NO = atoi(args);
+    if (wp_head != NULL)
+    {
+      wp_d = wp_head;
+      while (wp_d != NULL)
+      {
+        if (wp_d->NO == NO) 
+        {
+          free_wp(wp_d);
+          return 0;
+        }
+        else 
+        {
+          wp_d = wp_d->next;
+        }
+      }
+      
+    }
   }
   return 0;
 }
@@ -199,7 +250,8 @@ static struct {
   { "info", "Print program status,r regfiles w watchpoints", cmd_info },
   { "x", "Print memory", cmd_x },
   { "p", "Give the result of the expression", cmd_p },
-  { "w", "Set a watchpoint at the expression", cmd_x },
+  { "w", "Set a watchpoint at the expression", cmd_w },
+  { "d", "Delete a watchpoint with NO", cmd_d },
 
   /* TODO: Add more commands */
 

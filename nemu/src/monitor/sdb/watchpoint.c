@@ -36,7 +36,7 @@ WP* new_wp(char* expr,uint64_t result)
 {
   if (free_ != NULL)
   {
-    free_->expr = expr;
+    strcpy(free_->expr,expr);
     free_->result_previous = result;
     WP* next_ = free_->next;
     free_->next = head;
@@ -60,7 +60,10 @@ void free_wp(WP *wp)
   {
     if (s->NO == wp->NO) 
     {
-      break;
+      p->next = s->next;
+      s->next = free_;
+      free_ = s;
+      return;
     }
     else
     {
@@ -68,7 +71,5 @@ void free_wp(WP *wp)
       s = s->next;
     } 
   }
-  p->next = s->next;
-  s->next = free_;
-  free_ = s;
+  printf("Watchpoint Not Found\n");
 }

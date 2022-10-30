@@ -21,15 +21,18 @@
 typedef struct watchpoint {
   int NO;
   struct watchpoint *next;
-  char* expr;
+  char expr[128];
   uint64_t result_previous;
 
   /* TODO: Add more members if necessary */
 
 } WP;
 
-static WP* wp_head;
+extern WP* wp_head;
 
 word_t expr(char *e, bool *success);
+
+WP* new_wp(char* expr,uint64_t result);
+void free_wp(WP *wp);
 
 #endif
