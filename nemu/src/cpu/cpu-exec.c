@@ -41,16 +41,21 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
   if (g_print_step) { IFDEF(CONFIG_ITRACE, puts(_this->logbuf)); }
   IFDEF(CONFIG_DIFFTEST, difftest_step(_this->pc, dnpc));
   #ifdef CONFIG_WATCHPOINT
-  WP* wp = wp_head;
-  bool success;
-  while (wp != NULL)
+  if (wp_head != NULL)
   {
-    uint64_t result_now = expr(wp->expr,&success);
-    if (result_now != wp->result_previous)
+    WP* wp = wp_head;
+    bool success;
+    while(wp != NULL)
     {
-      printf("Value changed!\n");
+      uint64_t result_now = expr(wp->expr,&success);
+      //printf("result now:%ld\n",result_now);
+      if (result_now != wp->result_previous)
+      {
+        printf("%s(%d) Value changed!\nvalue before:%ld\tvalue after:%ld\n",wp->expr,wp->NO,wp->result_previous,result_now);
+        wp->result_previous = result_now;
+      }
+      wp = wp->next;
     }
-    wp = wp->next;
   }
   #endif
 }

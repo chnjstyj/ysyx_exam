@@ -25,7 +25,7 @@
 #include <regex.h>
 #include "SeqStack.h"
 
-#define debug
+//#define debug
 
 uint64_t eval(int p,int q);
 
@@ -215,6 +215,7 @@ static bool make_token(char *e) {
             {
                 tokens[nr_token].str[k] = *(substr_start + k);
             } 
+            tokens[nr_token].str[substr_len] = '\0';
             nr_token++;
           }
         }
@@ -238,6 +239,7 @@ static bool make_token(char *e) {
           {
               tokens[nr_token].str[k] = *(result_str + k);
           } 
+          tokens[nr_token].str[strlen(result_str)] = '\0';
           #ifdef debug 
           printf("dec str:%s\n",tokens[nr_token].str);
           #endif
@@ -285,8 +287,8 @@ word_t expr(char *e, bool *success) {
 
   /* TODO: Insert codes to evaluate the expression. */
   //TODO();
-  #ifdef debug
   int i;
+  #ifdef debug
   for (i = 0; i < nr_token; i ++)
   {
     printf("%c     ",tokens[i].type);
@@ -299,7 +301,7 @@ word_t expr(char *e, bool *success) {
   #endif
 
   for (i = 0; i < nr_token; i ++) {
-  if (tokens[i].type == '*' && (i == 0 || ((tokens[i - 1].type == '(' || tokens[i - 1].type == ')') && tokens[i - 1].type != TK_NUMS))) 
+  if (tokens[i].type == '*' && (i == 0 || ((tokens[i - 1].type == '(' || tokens[i - 1].type == ')' || tokens[i-1].type != TK_REG) && tokens[i - 1].type != TK_NUMS))) 
   {
     tokens[i].type = TK_DEREF;
   }
@@ -354,13 +356,20 @@ uint64_t eval(int p,int q)
       return (uint64_t)atol(tokens[p].str);
     else if(tokens[p].type == TK_REG)
     {
-      reg_value = isa_reg_str2val(tokens[p].str,&success);
-      if (success == true) return reg_value;
+      if (!strcmp(tokens[p].str,"pc"))
+      {
+        return cpu.pc;
+      }
       else 
       {
-        printf("错误的寄存器\n");
-        assert(0);
-        return 0;
+        reg_value = isa_reg_str2val(tokens[p].str,&success);
+        if (success == true) return reg_value;
+        else 
+        {
+          printf("错误的寄存器\n");
+          assert(0);
+          return 0;
+        }
       }
     }
     else 
@@ -540,7 +549,7 @@ int find_main_op(int p,int q)
         {
           if (level > 2)
           {
-            if ((i > p && tokens[i-1].type != TK_NUMS && tokens[i-1].type != '(' && tokens[i-1].type != ')'))
+            if ((i > p && tokens[i-1].type != TK_NUMS && tokens[i-1].type != '(' && tokens[i-1].type != ')' && tokens[i-1].type != TK_REG))
             {
               #ifdef debug
               printf("检测到负号，位置更新为%d   ",i-1);

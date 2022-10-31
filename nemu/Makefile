@@ -59,3 +59,14 @@ else
 # Include rules to build NEMU
 include $(NEMU_HOME)/scripts/native.mk
 endif
+
+LINES = $(shell find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs cat |wc -l)
+
+.PHONY:count
+count:
+	@echo $(LINES)
+	git checkout pa0
+	LINES_ = find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs cat |wc -l
+	@echo LINES_
+
+
