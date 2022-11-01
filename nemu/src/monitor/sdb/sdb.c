@@ -138,8 +138,8 @@ static int cmd_x(char *args)
   else
   {
     nums = str_to_int(strtok(args," "));
-    input_expr = strtok(NULL," ");
-    printf("%d\n",nums);
+    input_expr = strtok(NULL,"");
+    printf("%d   %s\n",nums,input_expr);
     /*
     if (str_hex_to_int(input_expr,&addr) == 0)
     {
@@ -182,7 +182,7 @@ static int cmd_p(char *args)
   }
   else 
   {
-    input_expr = strtok(args," ");
+    input_expr = args;
     result = expr(input_expr,&success);
     printf("Result of the expression is :%ld\n",result);
   }

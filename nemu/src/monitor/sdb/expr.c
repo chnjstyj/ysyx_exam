@@ -25,7 +25,7 @@
 #include <regex.h>
 #include "SeqStack.h"
 
-//#define debug
+#define debug
 
 uint64_t eval(int p,int q);
 
@@ -168,6 +168,10 @@ static bool make_token(char *e) {
 
   nr_token = 0;
 
+  #ifdef debug
+  printf("%s\n",e);
+  #endif
+
   while (e[position] != '\0') {
     /* Try all rules one by one. */
     for (i = 0; i < NR_REGEX; i ++) {
@@ -258,6 +262,10 @@ static bool make_token(char *e) {
         {
           tokens[nr_token].type = rules[i].token_type;
           nr_token++;
+        }
+        else if (rules[i].token_type == TK_NOTYPE)
+        {
+          ;
         }
 
 
