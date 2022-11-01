@@ -61,8 +61,7 @@ include $(NEMU_HOME)/scripts/native.mk
 endif
 
 LINES = $(shell find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs cat |wc -l)
-LINES_ = $(shell git checkout pa0\
-				find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs cat |wc -l )
+LINES_ = $(shell git checkout pa0 | find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs cat |wc -l )
 
 .PHONY:count
 count:
