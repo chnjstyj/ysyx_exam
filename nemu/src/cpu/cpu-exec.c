@@ -53,6 +53,7 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
       {
         printf("%s(%d) Value changed!\nvalue before:%ld\tvalue after:%ld\n",wp->expr,wp->NO,wp->result_previous,result_now);
         wp->result_previous = result_now;
+        nemu_state.state = NEMU_STOP;
       }
       wp = wp->next;
     }
