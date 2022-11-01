@@ -66,7 +66,7 @@ LINES = $(shell find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs
 count:
 	@echo $(LINES)
 	git checkout pa0
-	expr $(find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \) | xargs cat |wc -l) - $(LINES)
+	expr $(shell find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \) | xargs cat |wc -l) - $(LINES)
 	@echo $(lines_)
 	git checkout pa1
 
