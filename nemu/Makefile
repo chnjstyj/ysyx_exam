@@ -62,12 +62,12 @@ endif
 
 LINES = $(shell find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs cat |wc -l)
 LINES_ = $(shell git checkout pa0\
-				find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs cat |wc -l \
-				git checkout pa1)
+				find . \( -name "*.cc" -or -name "*.c" -or -name "*.h" \)| xargs cat |wc -l )
 
 .PHONY:count
 count:
 	@echo $(LINES)
 	@echo $(lines_)
+	git checkout pa1
 
 
