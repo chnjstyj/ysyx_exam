@@ -222,11 +222,7 @@ static int cmd_d(char *args)
       {
         if (wp_d->NO == NO) 
         {
-<<<<<<< HEAD
           wp_head = free_wp(wp_d);
-=======
-          free_wp(wp_d);
->>>>>>> 7d6c1b48773c42f7a52564d92bbcee52acd5013d
           return 0;
         }
         else 

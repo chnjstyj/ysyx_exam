@@ -33,10 +33,6 @@ extern WP* wp_head;
 word_t expr(char *e, bool *success);
 
 WP* new_wp(char* expr,uint64_t result);
-<<<<<<< HEAD
 WP* free_wp(WP *wp);
-=======
-void free_wp(WP *wp);
->>>>>>> 7d6c1b48773c42f7a52564d92bbcee52acd5013d
 
 #endif
