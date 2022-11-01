@@ -60,10 +60,11 @@ else
 include $(NEMU_HOME)/scripts/native.mk
 endif
 
-LINES = $(shell find .  -name "*.cc" -or -name "*.c" -or -name "*.h" | xargs cat |wc -l)
+
 
 .PHONY:count
 count:
+	@LINES=$(shell find . -name "*.cc" -or -name "*.c" -or -name "*.h" | xargs cat |wc -l)
 	@echo $(LINES)
 	git checkout pa1
 
