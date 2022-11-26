@@ -25,7 +25,7 @@
 #include <regex.h>
 #include "SeqStack.h"
 
-#define debug
+//#define debug
 
 uint64_t eval(int p,int q);
 
