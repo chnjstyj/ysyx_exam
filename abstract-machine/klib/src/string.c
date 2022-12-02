@@ -5,12 +5,18 @@
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
 size_t strlen(const char *s) {
-  return (size_t)LENGTH(s);
+  size_t i = 1;
+  while (*(s + i - 1) != '\0')
+  {
+    i ++;
+  }
+  i--;
+  return i;
 }
 
 char *strcpy(char *dst, const char *src) {
-  size_t i = 0;
-  for (i;i < strlen(src); i++)
+  size_t i;
+  for (i = 0;i < strlen(src); i++)
   {
     *(dst+i) = *(src+i);
   }
@@ -42,7 +48,11 @@ char *strcat(char *dst, const char *src) {
 
 int strcmp(const char *s1, const char *s2) {
   size_t i = 0;
-  for (i = 0; s1[i] != '\0' && s2[i] != '\0'; i++);
+  for (i = 0; s1[i] != '\0' && s2[i] != '\0'; i++)
+  {
+    if (s1[i] < s2[i]) return -1;
+    else if (s1[i] > s2[i]) return 1;
+  }
   if (s1[i] == '\0' && s2[i] == '\0') //equal
     return 0;
   else if (s1[i] == '\0')  //less
@@ -53,7 +63,11 @@ int strcmp(const char *s1, const char *s2) {
 
 int strncmp(const char *s1, const char *s2, size_t n) {
   size_t i = 0;
-  for (i = 0; s1[i] != '\0' && s2[i] != '\0' && i < n; i++);
+  for (i = 0; s1[i] != '\0' && s2[i] != '\0' && i < n; i++)
+  {
+    if (s1[i] < s2[i]) return -1;
+    else if (s1[i] > s2[i]) return 1;
+  }
   if ((s1[i] == '\0' && s2[i] == '\0') || i == n) //equal
     return 0;
   else if (s1[i] == '\0')  //less
@@ -68,6 +82,7 @@ void *memset(void *s, int c, size_t n) {
   {
     *((char *)s+i) = c;
   }
+  return s;
 }
 
 void *memmove(void *dst, const void *src, size_t n) {
@@ -93,15 +108,27 @@ void *memmove(void *dst, const void *src, size_t n) {
       i--;
     }
   }
+  return dst;
 }
 
 
 void *memcpy(void *out, const void *in, size_t n) {
-  panic("Not implemented");
+  size_t i;
+  for (i = 0; i < n; i++)
+  {
+    *((char *)out + i) = *((char *)in + i);
+  }
+  return out;
 }
 
 int memcmp(const void *s1, const void *s2, size_t n) {
-  panic("Not implemented");
+  size_t i;
+  for (i = 0; i < n; i++)
+  {
+    if (*(unsigned char *)s1 < *(unsigned char *)s2) return -1;
+    if (*(unsigned char *)s1 > *(unsigned char *)s2) return  1;
+  }
+  return 0;
 }
 
 #endif
