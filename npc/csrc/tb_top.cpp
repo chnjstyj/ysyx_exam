@@ -3,7 +3,7 @@
 #include <assert.h>
 #include <verilated.h>
 #include <verilated_vcd_c.h>
-#include <nvboard.h>
+//#include <nvboard.h>
 #include <iostream>
 #include <unistd.h>
 
@@ -15,16 +15,16 @@ static VerilatedVcdC m_trace;
 #define MAX_SIM_TIME 100
 vluint64_t sim_time = 0;
 
-void nvboard_bind_all_pins(Vtop *top);
+//void nvboard_bind_all_pins(Vtop *top);
 
 static void single_cycle()
 {
   top.clock = 1;top.eval();
   sim_time++;
-  //m_trace.dump(sim_time);
+  m_trace.dump(sim_time);
   top.clock = 0;top.eval();
   sim_time++;
-  //m_trace.dump(sim_time);
+  m_trace.dump(sim_time);
 }
 
 static void reset(int n) {
@@ -35,24 +35,23 @@ static void reset(int n) {
 
 int main()
 {
-
   Verilated::traceEverOn(true);
   //VerilatedVcdC *m_trace = new VerilatedVcdC;
   (&top)->trace(&m_trace, 5);
   m_trace.open("waveform.vcd");
 
-  nvboard_bind_all_pins(&top);
-  nvboard_init();
+  //nvboard_bind_all_pins(&top);
+  //nvboard_init();
   reset(10);
   while (
-    //sim_time <= 307200*4
-    1
+    sim_time <= 200
+    //1
     )
   {
     single_cycle();
-    nvboard_update();
+    //nvboard_update();
   }
   m_trace.close();
-  nvboard_quit();
+  //nvboard_quit();
   return 0;
 }

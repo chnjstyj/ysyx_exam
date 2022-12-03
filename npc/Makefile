@@ -60,7 +60,6 @@ sim:verilog
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by yourself."
 	$(MAKE) verilator
-	$(MAKE) run
 wave:
 	gtkwave waveform.vcd -a waveform.gtkw
 
