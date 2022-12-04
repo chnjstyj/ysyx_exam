@@ -9,7 +9,6 @@ class pc extends Module{
 
     val inst_address = RegInit("h8000_0000".U(32.W))
     io.inst_address := inst_address 
-
     
     inst_address := inst_address + 4.U
 
