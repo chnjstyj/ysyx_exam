@@ -20,7 +20,10 @@ class regfile extends Module{
 
     //read
     io.rs1_rdata := regfile(io.rs1)
+
+
     io.rs2_rdata := regfile(io.rs2)
+
 
 
     //write

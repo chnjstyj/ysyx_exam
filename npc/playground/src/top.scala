@@ -24,6 +24,8 @@ class top extends Module{
     io.alu_result := alu.io.alu_result
 
     inst_if.io.inst_address := pc.io.inst_address
+    inst_if.io.ce := pc.io.ce
+
     id.io.inst := inst_if.io.inst
 
     regfile.io.rs1 := id.io.rs1 

@@ -14,15 +14,17 @@ class alu(alu_control_width:Int) extends Module{
         val alu_result = Output(UInt(64.W))
     })
 
-    val result = RegInit(0.U(64.W))
+    //val result = WireDefault(0.U(64.W))
 
     val real_data_b = WireDefault(Mux(io.alu_src.asBool,io.imm,io.rs2_rdata))
-
-    io.alu_result := result
+    
+    //result :=
+    io.alu_result := "h0000_0000_0000_0000".U
     switch (io.alu_control){
         is ("b0".U){
-            result := io.rs1_rdata + real_data_b
+            io.alu_result := io.rs1_rdata + real_data_b
         }
     }
+
 
 }
