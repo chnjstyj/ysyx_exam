@@ -18,6 +18,7 @@ class top extends Module{
     val id = Module(new id(alu_control_width))
     val regfile = Module(new regfile)
     val alu = Module(new alu(alu_control_width))
+    val stall = Module(new stall)
 
     io.inst := inst_if.io.inst
     io.imm := id.io.imm
@@ -39,6 +40,8 @@ class top extends Module{
     alu.io.rs1_rdata := regfile.io.rs1_rdata
     alu.io.rs2_rdata := regfile.io.rs2_rdata
     alu.io.imm := id.io.imm
+
+    stall.io.exit_debugging := id.io.control_signal.exit_debugging
     
 
 }

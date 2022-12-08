@@ -8,6 +8,8 @@ class control_signal_bundle(alu_control_width:Int) extends Bundle{
     val alu_control = Output(UInt(alu_control_width.W))
     // 1 : write reg; 0 : not write reg
     val reg_wen = Output(UInt(1.W))
+    // 1 : exit; 0 : not exit
+    val exit_debugging = Output(UInt(1.W))
 }
 
 class id(alu_control_width:Int) extends Module{
@@ -42,6 +44,7 @@ class id(alu_control_width:Int) extends Module{
     io.control_signal.alu_src := 0.U
     io.control_signal.alu_control := 0.U
     io.control_signal.reg_wen := 0.U
+    io.control_signal.exit_debugging := 0.U
 
     val funct3 = WireDefault(inst(14,12))
     val opcode = WireDefault(inst(6,0))
@@ -57,6 +60,14 @@ class id(alu_control_width:Int) extends Module{
                     io.control_signal.alu_src := 1.U
                     
                     io.imm := imm_I
+                }
+            }
+        }
+        is ("b1110011".U){
+            //ebreak
+            switch (imm_11_0){
+                is ("b000000000001".U){
+                    io.control_signal.exit_debugging := 1.U
                 }
             }
         }

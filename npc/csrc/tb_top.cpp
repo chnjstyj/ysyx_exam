@@ -9,21 +9,36 @@
 
 #include "Vtop.h"
 
-static VerilatedVcdC m_trace;
+#include "svdpi.h"
+#include "Vtop__Dpi.h"
+
+
+static VerilatedVcdC* m_trace = new VerilatedVcdC;
+static Vtop* top = new Vtop;
 
 #define MAX_SIM_TIME 100
 vluint64_t sim_time = 0;
 
 //void nvboard_bind_all_pins(Vtop *top);
 
+void exit_()
+{
+  m_trace->close();
+  top->final();
+  delete top;
+  //nvboard_quit();
+  printf("ebreak\n");
+  exit(0);
+}
+
 static void single_cycle(Vtop* top)
 {
   top->clock = 1;top->eval();
   sim_time++;
-  m_trace.dump(sim_time);
+  m_trace->dump(sim_time);
   top->clock = 0;top->eval();
   sim_time++;
-  m_trace.dump(sim_time);
+  m_trace->dump(sim_time);
 }
 
 static void reset(int n,Vtop* top) {
@@ -34,24 +49,26 @@ static void reset(int n,Vtop* top) {
 
 int main()
 {
-  Vtop *top = new Vtop;
+  //Vtop *top = new Vtop;
   Verilated::traceEverOn(true);
   //VerilatedVcdC *m_trace = new VerilatedVcdC;
-  top->trace(&m_trace, 10);
-  m_trace.open("waveform.vcd");
+  top->trace(m_trace, 10);
+  m_trace->open("waveform.vcd");
 
   //nvboard_bind_all_pins(&top);
   //nvboard_init();
-  reset(10,top);
+  reset(2,top);
   while (
-    sim_time <= 200
-    //1
+    //sim_time <= 200
+    1
     )
   {
     single_cycle(top);
     //nvboard_update();
   }
-  m_trace.close();
+
+  m_trace->close();
+  top->final();
   delete top;
   //nvboard_quit();
   return 0;
