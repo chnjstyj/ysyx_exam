@@ -18,6 +18,15 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
+#include "ftrace.h"
+#include "monitor.h"
+
+extern ftrace_info* ftrace_infos;
+extern int ftrace_func_nums;
+int ftrace_level = 0;
+void update_ftrace(vaddr_t addr);
+void ret(vaddr_t addr);
+
 #define R(i) gpr(i)
 #define Mr vaddr_read
 #define Mw vaddr_write
@@ -117,8 +126,8 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 101 ????? 0110011",divu,R,R(dest) = src1 / src2);
   
 
-  INSTPAT("? ?????????? ? ???????? ????? 1101111",jal,J,R(dest) = s->snpc;s->dnpc = s->pc + imm;);
-  INSTPAT("???????????? ????? 000 ????? 1100111",jalr,I,R(dest) = s->snpc;s->dnpc = src1 + imm);
+  INSTPAT("? ?????????? ? ???????? ????? 1101111",jal,J,R(dest) = s->snpc;s->dnpc = s->pc + imm;update_ftrace(s->dnpc));
+  INSTPAT("???????????? ????? 000 ????? 1100111",jalr,I,R(dest) = s->snpc;s->dnpc = src1 + imm;dest == 0 ? ret(s->dnpc) : update_ftrace(s->dnpc));
   INSTPAT("??????? ????? ????? 011 ????? 01000 11", sd     , S, Mw(src1 + imm, 8, src2));
   INSTPAT("??????? ????? ????? 010 ????? 0100011",sw,S,Mw(src1 + imm,4,src2));
   INSTPAT("??????? ????? ????? 001 ????? 0100011",sh,S,Mw(src1 + imm,2,src2));
@@ -131,6 +140,46 @@ static int decode_exec(Decode *s) {
   R(0) = 0; // reset $zero to 0
 
   return 0;
+}
+
+void ret(vaddr_t addr)
+{
+  int i = 0;
+  int k = 0;
+  for (; i < ftrace_func_nums; i ++)
+  {
+    if (ftrace_infos[i].addr == addr)
+    {
+      k = ftrace_level;
+      while (k != 0)
+      {
+        printf("\t");
+        k--;
+      }
+      printf("ret  %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
+    }
+  }
+  //ftrace_level --;
+}
+
+void update_ftrace(vaddr_t addr)
+{
+  int i = 0;
+  int k = 0;
+  for (; i < ftrace_func_nums; i ++)
+  {
+    if (ftrace_infos[i].addr == addr)
+    {
+      k = ftrace_level;
+      while (k != 0)
+      {
+        printf("\t");
+        k--;
+      }
+      ftrace_level ++;
+      printf("call %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
+    }
+  }
 }
 
 int isa_exec_once(Decode *s) {
