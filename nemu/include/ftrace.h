@@ -15,6 +15,12 @@ typedef struct
     int level;
 }ftrace_output;
 
+typedef struct 
+{
+    char name[50];
+    vaddr_t return_addr;
+}ftrace_ret;
+
 typedef struct {
     char*      name;
     Elf64_Shdr shdr;
