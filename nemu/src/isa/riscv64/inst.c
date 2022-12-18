@@ -24,6 +24,7 @@
 extern ftrace_info* ftrace_infos;
 extern int ftrace_func_nums;
 int ftrace_level = 0;
+int ftrace_ret_level = 0;
 ftrace_ret ftrace_rets[30];
 void update_ftrace(vaddr_t addr,vaddr_t return_addr);
 void ret(vaddr_t addr);
@@ -128,7 +129,7 @@ static int decode_exec(Decode *s) {
   
 
   INSTPAT("? ?????????? ? ???????? ????? 1101111",jal,J,R(dest) = s->snpc;s->dnpc = s->pc + imm;update_ftrace(s->dnpc,s->snpc));
-  INSTPAT("???????????? ????? 000 ????? 1100111",jalr,I,R(dest) = s->snpc;s->dnpc = src1 + imm;dest == 0 ? ret(s->dnpc) : update_ftrace(s->dnpc,s->snpc));
+  INSTPAT("???????????? ????? 000 ????? 1100111",jalr,I,R(dest) = s->snpc;s->dnpc = src1 + imm;BITS(s->isa.inst.val, 19, 15) == 1 ? ret(s->dnpc) : update_ftrace(s->dnpc,s->snpc));
   INSTPAT("??????? ????? ????? 011 ????? 01000 11", sd     , S, Mw(src1 + imm, 8, src2));
   INSTPAT("??????? ????? ????? 010 ????? 0100011",sw,S,Mw(src1 + imm,4,src2));
   INSTPAT("??????? ????? ????? 001 ????? 0100011",sh,S,Mw(src1 + imm,2,src2));
@@ -148,7 +149,7 @@ void ret(vaddr_t addr)
 {
   int i = 0;
   int k = 0;
-  for (; i < ftrace_level; i ++)
+  for (; i < ftrace_ret_level; i ++)
   {
     if (ftrace_rets[i].return_addr == addr)
     {
@@ -156,7 +157,7 @@ void ret(vaddr_t addr)
       k = ftrace_level;
       while (k != 0)
       {
-        printf("\t");
+        printf(" ");
         k--;
       }
       printf("ret  %s \n",ftrace_rets[i].name);
@@ -169,16 +170,37 @@ void update_ftrace(vaddr_t addr,vaddr_t return_addr)
 {
   int i = 0;
   int k = 0;
+  int j = 0;
   for (; i < ftrace_func_nums; i ++)
   {
     if (ftrace_infos[i].addr == addr)
     {
       k = ftrace_level;
-      strcpy(ftrace_rets[k].name,ftrace_infos[i].name);
-      ftrace_rets[k].return_addr = return_addr;
+      
+      //strcpy(ftrace_rets[k].name,ftrace_infos[i].name);
+      //ftrace_rets[k].return_addr = return_addr;
+      
+      while (j < ftrace_ret_level)
+      {
+        if (!strcmp(ftrace_rets[j].name,ftrace_infos[i].name) && ftrace_rets[j].return_addr == return_addr)
+        {
+          //printf("ret match\n");
+          break;   //exist
+        }
+        j++;
+      } 
+      //printf("k:%d ret level: %d j:%d\n",k,ftrace_ret_level,j);
+      if (j == ftrace_ret_level)  //not exist
+      {
+        //printf("ret dismatch\n");
+        strcpy(ftrace_rets[j].name,ftrace_infos[i].name);
+        ftrace_rets[j].return_addr = return_addr;
+        ftrace_ret_level++;
+      }
+      //printf("k:%d ret level: %d \n",k,ftrace_ret_level);
       while (k != 0)
       {
-        printf("\t");
+        printf(" ");
         k--;
       }
       ftrace_level ++;

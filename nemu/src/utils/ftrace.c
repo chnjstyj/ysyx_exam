@@ -54,7 +54,7 @@ ftrace_info* init_ftrace(const char *elf_file,int *nums)
         m_mpSections[i].shdr = arSection[i];
     }
     // ÕÒµ½·ûºÅ¶Î
-    int strtab_size = 0;
+    //int strtab_size = 0;
     int symtab_size = 0;
     int size_read = 0;
     int strtab_offset = 0;
@@ -64,7 +64,7 @@ ftrace_info* init_ftrace(const char *elf_file,int *nums)
         if (strcmp( m_mpSections[i].name,".strtab") == 0)
         {
             strtab_offset = m_mpSections[i].shdr.sh_offset;
-            strtab_size = m_mpSections[i].shdr.sh_size;
+            //strtab_size = m_mpSections[i].shdr.sh_size;
         }
         else if (strcmp( m_mpSections[i].name,".symtab") == 0)
         {
@@ -73,8 +73,8 @@ ftrace_info* init_ftrace(const char *elf_file,int *nums)
         }
     }
     r = fseek(felf,symtab_offset,SEEK_SET);
-    printf("strtab:%x symtab:%x\n",strtab_offset,symtab_offset);
-    printf("strtab size:%d symtab size:%d\n",strtab_size,symtab_size);
+    //printf("strtab:%x symtab:%x\n",strtab_offset,symtab_offset);
+    //printf("strtab size:%d symtab size:%d\n",strtab_size,symtab_size);
     int offsets[symtab_size/sizeof(m_sym)];
     Elf64_Addr addr[symtab_size/sizeof(m_sym)];
     int j = 0;
@@ -84,13 +84,13 @@ ftrace_info* init_ftrace(const char *elf_file,int *nums)
         //fseek(felf,sizeof(m_sym),SEEK_CUR); 
         if (ELF64_ST_TYPE(m_sym.st_info) == STT_FUNC)
         {
-            printf("offset:%d\n",m_sym.st_name);
+            //printf("offset:%d\n",m_sym.st_name);
             addr[j] = m_sym.st_value;
             offsets[j] = m_sym.st_name;
             j++;
         }
     }
-    printf("j: %d\n",j);
+    //printf("j: %d\n",j);
     ftrace_info* ftrace_infos = (ftrace_info*)malloc(j);
     *nums = j;
     int k = 0;    
@@ -98,7 +98,7 @@ ftrace_info* init_ftrace(const char *elf_file,int *nums)
     {
         fseek(felf,strtab_offset+offsets[k],SEEK_SET);
         r = fscanf(felf,"%50s",ftrace_infos[k].name);
-        printf("%s\n",ftrace_infos[k].name);
+        //printf("%s\n",ftrace_infos[k].name);
         j--;
         k++;
     }
