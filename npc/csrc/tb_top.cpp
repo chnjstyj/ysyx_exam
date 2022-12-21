@@ -16,6 +16,8 @@
 static VerilatedVcdC* m_trace = new VerilatedVcdC;
 static Vtop* top = new Vtop;
 
+static char* image_name = NULL;
+
 #define MAX_SIM_TIME 100
 vluint64_t sim_time = 0;
 
@@ -47,7 +49,7 @@ static void reset(int n,Vtop* top) {
   top->reset = 0;
 }
 
-int main()
+int main(int argc,char *argv[])
 {
   //Vtop *top = new Vtop;
   Verilated::traceEverOn(true);
