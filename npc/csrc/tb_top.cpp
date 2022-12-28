@@ -61,8 +61,8 @@ int main(int argc,char *argv[])
   //nvboard_init();
   reset(2,top);
   while (
-    //sim_time <= 200
-    1
+    sim_time <= 200
+    //1
     )
   {
     single_cycle(top);

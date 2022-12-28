@@ -24,6 +24,9 @@ class top extends Module{
     io.imm := id.io.imm
     io.alu_result := alu.io.alu_result
 
+    pc.io.direct_jump := id.io.control_signal.direct_jump
+    pc.io.direct_jump_addr := alu.io.alu_result
+
     inst_if.io.inst_address := pc.io.inst_address
     inst_if.io.ce := pc.io.ce
 
@@ -33,7 +36,11 @@ class top extends Module{
     regfile.io.rs2 := id.io.rs2 
     regfile.io.rd := id.io.rd 
     regfile.io.reg_wen := id.io.control_signal.reg_wen
+    regfile.io.regfile_output_1 := id.io.control_signal.regfile_output_1
+    regfile.io.inst_address := pc.io.inst_address
     regfile.io.rd_wdata := alu.io.alu_result
+    regfile.io.save_next_inst_addr := id.io.control_signal.save_next_inst_addr
+    regfile.io.next_inst_address := pc.io.next_inst_address
 
     alu.io.alu_control := id.io.control_signal.alu_control
     alu.io.alu_src := id.io.control_signal.alu_src

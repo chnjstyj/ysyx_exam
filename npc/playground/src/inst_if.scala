@@ -7,7 +7,7 @@ import chisel3.util.HasBlackBoxInline
 
 class inst_if(image_file:String = "") extends Module{
     val io = IO(new Bundle{
-        val inst_address = Input(UInt(32.W))
+        val inst_address = Input(UInt(64.W))
         val ce = Input(UInt(1.W))
         val inst = Output(UInt(32.W))
     })
@@ -40,7 +40,7 @@ class inst_if(image_file:String = "") extends Module{
 
     loadMemoryFromFile(mem,image_file)
 
-    val inst_addr = WireDefault(0.U(32.W))
+    val inst_addr = WireDefault(0.U(64.W))
     inst_addr := (io.inst_address & "h7fff_ffff".U)>>2
 
     when (io.ce === 1.U){
