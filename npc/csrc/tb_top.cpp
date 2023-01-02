@@ -29,7 +29,7 @@ void exit_()
   top->final();
   delete top;
   //nvboard_quit();
-  printf("ebreak\n");
+  printf("ebreak\nHIT GOOD TRAP!\n");
   exit(0);
 }
 
@@ -73,5 +73,6 @@ int main(int argc,char *argv[])
   top->final();
   delete top;
   //nvboard_quit();
-  return 0;
+  printf("HIT BAD TRAP\n");
+  return 1;
 }

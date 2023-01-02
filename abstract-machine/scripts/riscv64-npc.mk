@@ -1,5 +1,8 @@
 include $(AM_HOME)/scripts/isa/riscv64.mk
 
+BIN_FILE = build/$(ALL)-$(ARCH).bin
+HEX_FILE = build/$(ALL)-$(ARCH).rom
+
 AM_SRCS := riscv/npc/start.S \
            riscv/npc/trm.c \
            riscv/npc/ioe.c \
@@ -20,4 +23,10 @@ image: $(IMAGE).elf
 	@$(OBJDUMP) -d $(IMAGE).elf > $(IMAGE).txt
 	@echo + OBJCOPY "->" $(IMAGE_REL).bin
 	@$(OBJCOPY) -S --set-section-flags .bss=alloc,contents -O binary $(IMAGE).elf $(IMAGE).bin
+	
+
+run: image
+	hexdump -v -e '1/4 "%08x\n"' $(BIN_FILE) > $(HEX_FILE)
+	cp $(HEX_FILE) $(NPC_HOME)/inst.rom
+	cd $(NPC_HOME) && ./Vtop
 
