@@ -5,36 +5,42 @@ import chisel3.util.experimental.loadMemoryFromFile
 import chisel3.util.experimental.loadMemoryFromFileInline
 import chisel3.util.HasBlackBoxInline
 
-class inst_if(image_file:String = "") extends Module{
+class inst_if(image_file:String = "") extends BlackBox with HasBlackBoxInline{
     val io = IO(new Bundle{
+        val clock = Input(Clock())
         val inst_address = Input(UInt(64.W))
         val ce = Input(UInt(1.W))
         val inst = Output(UInt(32.W))
     })
-    /*
-    setInline("load_image.v",
-    """import "DPI-C" function int get_image_name ();
+    
+    setInline("inst_if.v",
+    """import "DPI-C" function void set_memory_ptr(input logic [31:0] a []);
       |module inst_if(
-      |    input [31:0] inst_address,
+      |    input clock,
+      |    input [63:0] inst_address,
       |    input        ce,
-      |    output [31:0] inst
+      |    output reg [31:0]  inst
       |);
       |reg [31:0] mem[1023:0];
+      |wire [63:0] addr;
+      |assign addr = inst_address & 64'h00000000_7fffffff;
       |initial begin
-      |    $readmemh(get_image_name(),mem);
+      |    $readmemh("inst.rom",mem);
+      |    set_memory_ptr(mem);
       |end
       |always @(*) begin 
       |    if (ce) begin 
-      |        inst <= mem[inst_address[31:2]];
+      |        inst = mem[addr[11:2]];
       |    end
       |    else begin
-      |        inst <= 32'h00000000;
+      |        inst = 32'h00000000;
       |    end
       |end
       |endmodule
     """.stripMargin)
-    */
+    
 
+    /*
     val mem = Mem(1024, UInt(32.W))
     val inst = RegInit(0.U(32.W))
 
@@ -48,5 +54,6 @@ class inst_if(image_file:String = "") extends Module{
     }.otherwise{
         io.inst := "h0000_0000".U
     }
+    */
     
 }

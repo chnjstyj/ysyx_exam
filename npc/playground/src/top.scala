@@ -7,8 +7,7 @@ import chisel3.util.experimental.loadMemoryFromFileInline
 class top extends Module{
     val io = IO(new Bundle{
         val inst = Output(UInt(32.W))
-        val imm = Output(UInt(64.W))
-        val alu_result = Output(UInt(64.W))
+        val inst_address = Output(UInt(64.W))
     })
 
     val alu_control_width = 4
@@ -21,12 +20,12 @@ class top extends Module{
     val stall = Module(new stall)
 
     io.inst := inst_if.io.inst
-    io.imm := id.io.imm
-    io.alu_result := alu.io.alu_result
+    io.inst_address := pc.io.inst_address
 
     pc.io.direct_jump := id.io.control_signal.direct_jump
     pc.io.direct_jump_addr := alu.io.alu_result
 
+    inst_if.io.clock := clock
     inst_if.io.inst_address := pc.io.inst_address
     inst_if.io.ce := pc.io.ce
 
