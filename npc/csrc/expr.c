@@ -27,7 +27,21 @@
 #include <regex.h>
 #include "SeqStack.h"
 
-//#define debug
+#define debug
+
+uint64_t isa_reg_str2val(const char *s, bool *success) {
+  int i;
+  for (i = 0; i < 32; i++)
+  {
+    if (!strcmp(*(regs+i),s))
+    {
+      *success = true;
+      return gpr[i];
+    }
+  }
+  *success = false;
+  return 0;
+}
 
 uint64_t eval(int p,int q);
 
@@ -184,7 +198,7 @@ static bool make_token(char *e) {
 
         int k;
         #ifdef debug
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        printf("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
         #endif
 
@@ -230,7 +244,7 @@ static bool make_token(char *e) {
         {
           tokens[nr_token].type = TK_NUMS;
           uint64_t result = 0;
-          char* result_str = "";
+          char* result_str = (char*)"";
           char hex_str[32] = {'\0'};
           for (k = 0; k < substr_len; k++)
           {
@@ -274,6 +288,7 @@ static bool make_token(char *e) {
 
         switch (rules[i].token_type) {
           default: //TODO();
+          ;
         }
 
         break;
@@ -373,8 +388,7 @@ uint64_t eval(int p,int q)
       }
       else 
       {
-        //reg_value = isa_reg_str2val(tokens[p].str,&success);
-        reg_value = 0;
+        reg_value = isa_reg_str2val(tokens[p].str,&success);
         if (success == true) return reg_value;
         else 
         {
@@ -436,7 +450,7 @@ uint64_t eval(int p,int q)
       #ifdef debug 
       printf("解指针 %lx\n",val2);
       #endif 
-      uint64_t mem_reuslt = memory[val2 + 1] << 32 | memory[val2];
+      uint64_t mem_reuslt = (uint64_t)memory[val2 + 1] << 32 | memory[val2];
       return mem_reuslt;
       break;
     }

@@ -1,7 +1,21 @@
-#include <readline/readline.h>
-#include <readline/history.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "tb_top.h"
+#include "expr.h"
+#include <string.h>
+#include <readline/readline.h>
+#include <readline/history.h>
+/*
+char* readline(char* str)
+{
+	char input[30];
+	printf("%s",str);
+	scanf("%[^\n]", input);
+	char* output = (char*)malloc(strlen(input));
+	strcpy(output,input);
+	return output;
+}
+*/
 
 static inline int str_to_int(char* str)
 {
@@ -33,13 +47,69 @@ static char* rl_gets() {
     line_read = NULL;
   }
 
-  line_read = readline("(nemu) ");
-
+  line_read = readline("(npc) ");
+  
   if (line_read && *line_read) {
     add_history(line_read);
   }
+  
 
   return line_read;
+}
+
+static int cmd_help(char *args);
+
+static int cmd_info(char *args) {
+  int i;
+  switch (*args)
+  {
+  case ('r'):
+    for (i=0; i<32; i++)
+    {
+      printf("%-5s:0x%016lx\n",regs[i],gpr[i]);
+    }
+    break; 
+  default:
+    break;
+  }
+  return 0;
+}
+
+static int cmd_x(char *args) 
+{
+  uint8_t data = 0;
+  //paddr_t addr = 0;
+  int nums = 0;
+  char* input_expr;
+  bool success;
+  uint64_t result;
+  int i;
+  int j = 0;
+  if (args == NULL)
+  {
+    printf("Error Input!\n");
+  }
+  else
+  {
+    nums = str_to_int(strtok(args," "));
+    input_expr = strtok(NULL,"");
+    printf("%d   %s\n",nums,input_expr);
+    result = expr(input_expr,&success);
+    printf("result:%ld\n",result);
+    while(j < nums)
+    {
+      printf("0x%lx:",result + j*4);
+      for (i=3;i >= 0; i--)
+      {
+        //result + i + (j*4)
+        data = *(memory +result + j*4) >> 8 * i;
+        printf("0x%02x   ",data);
+      }
+      putchar('\n');
+      j++;
+    }
+  }
+  return 0;
 }
 
 static struct {
@@ -85,6 +155,7 @@ static int cmd_help(char *args) {
 
 void sdb_mainloop() {
 
+  init_regex();
   for (char *str; (str = rl_gets()) != NULL; ) {
     char *str_end = str + strlen(str);
 

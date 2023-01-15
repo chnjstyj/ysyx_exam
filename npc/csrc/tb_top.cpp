@@ -8,6 +8,7 @@
 #include <unistd.h>
 
 #include "Vtop.h"
+#include "sdb.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -15,6 +16,13 @@
 
 #include <readline/readline.h>
 #include <readline/history.h>
+
+const char *regs[] = {
+  "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+  "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+  "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
+  "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
+};
 
 static VerilatedVcdC* m_trace = new VerilatedVcdC;
 static Vtop* top = new Vtop;
@@ -27,7 +35,8 @@ vluint64_t sim_time = 0;
 //void nvboard_bind_all_pins(Vtop *top);
 
 uint32_t* memory = NULL;
-uint64_t pc = io_inst_address;
+uint64_t* gpr = NULL;
+uint64_t pc = top->io_inst_address;
 
 void exit_()
 {
@@ -44,17 +53,21 @@ void exit_()
 extern "C" void set_memory_ptr(const svOpenArrayHandle r)
 {
   memory = (uint32_t *)(((VerilatedDpiOpenVar*)r)->datap());
-  /*
-  printf("Array Pointer is %x \n", svGetArrayPtr(r) ); 
-	printf(" Lower index %d \n", svLow(r,1)); 
-	printf(" Higher index %d \n", svHigh(r, 1) ); 
-	printf(" Left index %d \n", svLeft(r,1)); 
-	printf(" Right index %d \n", svRight(r, 1) ); 
-	//printf(" Length of array %d \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\n", svLength(r,1) ); 
-	printf(" Incremental %d \n",svIncrement(r,1)); 
-	printf("Dimentions of Array %d \n", svDimensions(r)); 
-	printf("Size of Array in bytes %d \n", svSizeOfArray(r) ); 
-  */
+}
+
+extern "C" void set_gpr_ptr(const svOpenArrayHandle r)
+{
+  gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
+}
+
+static void single_cycle(Vtop* top)
+{
+  top->clock = 1;top->eval();
+  sim_time++;
+  m_trace->dump(sim_time);
+  top->clock = 0;top->eval();
+  sim_time++;
+  m_trace->dump(sim_time);
 }
 
 void cpu_exec(int steps)
@@ -73,16 +86,6 @@ void cpu_exec(int steps)
   }
 }
 
-static void single_cycle(Vtop* top)
-{
-  top->clock = 1;top->eval();
-  sim_time++;
-  m_trace->dump(sim_time);
-  top->clock = 0;top->eval();
-  sim_time++;
-  m_trace->dump(sim_time);
-}
-
 static void reset(int n,Vtop* top) {
   top->reset = 1;
   while (n -- > 0) single_cycle(top);
@@ -96,17 +99,17 @@ int main(int argc,char *argv[])
   //VerilatedVcdC *m_trace = new VerilatedVcdC;
   top->trace(m_trace, 10);
   m_trace->open("waveform.vcd");
-
   //nvboard_bind_all_pins(&top);
   //nvboard_init();
   reset(2,top);
   while (
-    sim_time <= 200
-    //1
+    //sim_time <= 200
+    1
     )
   {
-    single_cycle(top);
+    //single_cycle(top);
     //nvboard_update();
+    sdb_mainloop();
   }
 
   m_trace->close();
