@@ -112,6 +112,12 @@ static int cmd_x(char *args)
   return 0;
 }
 
+static int cmd_q(char *args) 
+{
+  exit_npc();
+  return 0;
+}
+
 static struct {
   const char *name;
   const char *description;
@@ -122,6 +128,7 @@ static struct {
   { "si", "Run one stop", cmd_si },
   { "info", "Print program status,r regfiles w watchpoints", cmd_info },
   { "x", "Print memory", cmd_x },
+  { "q", "Exit", cmd_q },
 
   /* TODO: Add more commands */
 

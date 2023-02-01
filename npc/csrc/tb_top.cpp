@@ -9,6 +9,7 @@
 
 #include "Vtop.h"
 #include "sdb.h"
+#include "disasm.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -38,6 +39,28 @@ uint32_t* memory = NULL;
 uint64_t* gpr = NULL;
 uint64_t pc = top->io_inst_address;
 
+//itrace
+static int iringbuf_head;
+static char iringbuf[16][30];
+
+void print_itrace_buf()
+{
+  int end_point = iringbuf_head;
+  do 
+  {
+    if (iringbuf_head - 1 < 0)
+    {
+      iringbuf_head = 15;
+    }
+    else 
+    {
+      iringbuf_head--;
+    }
+    printf("%s\n",iringbuf[iringbuf_head]);
+  }
+  while (iringbuf_head != end_point);
+}
+
 void exit_()
 {
   m_trace->close();
@@ -48,6 +71,17 @@ void exit_()
   printf("%x\n%x\n",*memory,*(memory+1));
 
   exit(0);
+}
+
+void exit_npc()
+{
+  m_trace->close();
+  top->final();
+  delete top;
+  //nvboard_quit();
+  printf("exit\nHIT BAD TRAP!\n");
+  print_itrace_buf();
+  exit(1);
 }
 
 extern "C" void set_memory_ptr(const svOpenArrayHandle r)
@@ -72,14 +106,27 @@ static void single_cycle(Vtop* top)
 
 void cpu_exec(int steps)
 {
+  int i = steps;
+  int j = 0;
+  char str[30] = "";
   if (steps == -1)
   {
-    while (1)
+    while (j < 10000)
     {
+      j++;
       single_cycle(top);
+      disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
+      strcpy(iringbuf[iringbuf_head],str);
+      if (iringbuf_head == 15)
+      {
+        iringbuf_head = 0;
+      }
+      else 
+      {
+        iringbuf_head++;
+      }
     }
   }
-  int i = steps;
   for (;i > 0; i --)
   {
     single_cycle(top);
@@ -99,6 +146,7 @@ int main(int argc,char *argv[])
   //VerilatedVcdC *m_trace = new VerilatedVcdC;
   top->trace(m_trace, 10);
   m_trace->open("waveform.vcd");
+  init_disasm("riscv64-pc-linux-gnu");
   //nvboard_bind_all_pins(&top);
   //nvboard_init();
   reset(2,top);
