@@ -10,6 +10,7 @@
 #include "Vtop.h"
 #include "sdb.h"
 #include "disasm.h"
+#include "ftrace.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -43,6 +44,11 @@ uint64_t pc = top->io_inst_address;
 static int iringbuf_head;
 static char iringbuf[16][30];
 
+//ftrace
+int ftrace_func_nums = 0;
+ftrace_info* ftrace_infos = NULL;
+bool ftrace_enable = false;
+
 void print_itrace_buf()
 {
   int end_point = iringbuf_head;
@@ -59,6 +65,13 @@ void print_itrace_buf()
     printf("%s\n",iringbuf[iringbuf_head]);
   }
   while (iringbuf_head != end_point);
+}
+
+void call_ftrace_handle()
+{
+  printf("ftrace\n");
+  if (ftrace_enable == true) 
+    printf("ftrace with elf\n");
 }
 
 void exit_()
@@ -147,6 +160,11 @@ int main(int argc,char *argv[])
   top->trace(m_trace, 10);
   m_trace->open("waveform.vcd");
   init_disasm("riscv64-pc-linux-gnu");
+  if (argc >= 2 && strcmp("elf",argv[1]) == 0)
+  {
+    ftrace_enable = true;
+    init_ftrace("inst_rom.elf",&ftrace_func_nums);
+  }
   //nvboard_bind_all_pins(&top);
   //nvboard_init();
   reset(2,top);

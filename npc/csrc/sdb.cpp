@@ -161,7 +161,6 @@ static int cmd_help(char *args) {
 }
 
 void sdb_mainloop() {
-
   init_regex();
   for (char *str; (str = rl_gets()) != NULL; ) {
     char *str_end = str + strlen(str);
