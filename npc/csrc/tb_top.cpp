@@ -11,6 +11,7 @@
 #include "sdb.h"
 #include "disasm.h"
 #include "ftrace.h"
+#include "expr.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -160,14 +161,17 @@ int main(int argc,char *argv[])
   top->trace(m_trace, 10);
   m_trace->open("waveform.vcd");
   init_disasm("riscv64-pc-linux-gnu");
+  init_regex();
   if (argc >= 2 && strcmp("elf",argv[1]) == 0)
   {
     ftrace_enable = true;
-    init_ftrace("inst_rom.elf",&ftrace_func_nums);
+    ftrace_infos = init_ftrace("inst_rom.elf",&ftrace_func_nums);
   }
   //nvboard_bind_all_pins(&top);
   //nvboard_init();
   reset(2,top);
+  sdb_mainloop();
+  /*
   while (
     //sim_time <= 200
     1
@@ -175,8 +179,7 @@ int main(int argc,char *argv[])
   {
     //single_cycle(top);
     //nvboard_update();
-    sdb_mainloop();
-  }
+  }*/
 
   m_trace->close();
   top->final();
