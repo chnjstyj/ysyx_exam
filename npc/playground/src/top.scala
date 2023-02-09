@@ -8,6 +8,7 @@ class top extends Module{
     val io = IO(new Bundle{
         val inst = Output(UInt(32.W))
         val inst_address = Output(UInt(64.W))
+        val next_inst_address = Output(UInt(64.W))
     })
 
     val alu_control_width = 4
@@ -20,7 +21,12 @@ class top extends Module{
     val stall = Module(new stall)
 
     io.inst := inst_if.io.inst
-    io.inst_address := pc.io.inst_address
+    when (pc.io.direct_jump === 1.U){
+        io.inst_address := pc.io.direct_jump_addr | "h8000_0000".U 
+    }.otherwise{
+        io.inst_address := pc.io.inst_address | "h8000_0000".U  
+    }
+    io.next_inst_address := pc.io.next_inst_address
 
     pc.io.direct_jump := id.io.control_signal.direct_jump
     pc.io.direct_jump_addr := alu.io.alu_result

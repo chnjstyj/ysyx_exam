@@ -29,20 +29,6 @@
 
 #define debug
 
-uint64_t isa_reg_str2val(const char *s, bool *success) {
-  int i;
-  for (i = 0; i < 32; i++)
-  {
-    if (!strcmp(*(regs+i),s))
-    {
-      *success = true;
-      return gpr[i];
-    }
-  }
-  *success = false;
-  return 0;
-}
-
 uint64_t eval(int p,int q);
 
 enum {
@@ -162,7 +148,6 @@ void init_regex() {
   int ret;
 
   for (i = 0; i < NR_REGEX; i ++) {
-    printf("test %d\n",i);
     ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
     if (ret != 0) {
       regerror(ret, &re[i], error_msg, 128);

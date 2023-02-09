@@ -5,6 +5,7 @@
 #include <elf.h>
 #include "ftrace.h"
 #include <cstdlib>
+#include "tb_top.h"
 
 extern ftrace_info* ftrace_infos;
 extern int ftrace_func_nums;

@@ -60,6 +60,7 @@ static char* rl_gets() {
 static int cmd_help(char *args);
 
 static int cmd_info(char *args) {
+  extern const char* regs[];
   int i;
   switch (*args)
   {

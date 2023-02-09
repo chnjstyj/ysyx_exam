@@ -12,6 +12,8 @@
 #include "disasm.h"
 #include "ftrace.h"
 #include "expr.h"
+#include "common.h"
+#include "tb_top.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -26,6 +28,21 @@ const char *regs[] = {
   "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
+
+uint64_t isa_reg_str2val(const char *s, bool *success) 
+{
+  int i;
+  for (i = 0; i < 32; i++)
+  {
+    if (!strcmp(*(regs+i),s))
+    {
+      *success = true;
+      return gpr[i];
+    }
+  }
+  *success = false;
+  return 0;
+}
 
 static VerilatedVcdC* m_trace = new VerilatedVcdC;
 static Vtop* top = new Vtop;
@@ -49,6 +66,9 @@ static char iringbuf[16][30];
 int ftrace_func_nums = 0;
 ftrace_info* ftrace_infos = NULL;
 bool ftrace_enable = false;
+#define INST top->io_inst
+#define INST_ADDR top->io_inst_address
+#define NEXT_INST_ADDR top->io_next_inst_address
 
 void print_itrace_buf()
 {
@@ -70,9 +90,15 @@ void print_itrace_buf()
 
 void call_ftrace_handle()
 {
-  printf("ftrace\n");
-  if (ftrace_enable == true) 
-    printf("ftrace with elf\n");
+  if (BITS(INST,6,0) == 0b1101111) //jal 
+  {
+    update_ftrace(INST_ADDR,NEXT_INST_ADDR);
+  }
+  else if (BITS(INST,14,12) == 0 && BITS(INST,6,0) == 0b1100111) //jalr
+  {
+    BITS(INST, 19, 15) == 1 ? ret(INST_ADDR) : 
+    update_ftrace(INST_ADDR,NEXT_INST_ADDR);
+  }
 }
 
 void exit_()
@@ -155,7 +181,6 @@ static void reset(int n,Vtop* top) {
 
 int main(int argc,char *argv[])
 {
-  //Vtop *top = new Vtop;
   Verilated::traceEverOn(true);
   //VerilatedVcdC *m_trace = new VerilatedVcdC;
   top->trace(m_trace, 10);

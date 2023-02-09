@@ -38,10 +38,11 @@ class id(alu_control_width:Int) extends Module{
     val imm_20 = WireDefault(inst(20))
     val imm_19_12 = WireDefault(inst(19,12))
 
-    val imm_J = WireDefault(Cat(Fill(44,imm_sign),
+    val imm_J = WireDefault(Cat(Fill(43,imm_sign),
         Cat(imm_sign,
             Cat(imm_19_12,
-                Cat(imm_20,imm_31_20(10,0))))))
+                Cat(imm_20,
+                    Cat(imm_31_20(10,1),0.U))))))
     val imm_I = WireDefault(Cat(Fill(53,imm_sign),imm_31_20))
     val imm_U = WireDefault(Cat(Fill(32,imm_sign),
         Cat(imm_31_20,

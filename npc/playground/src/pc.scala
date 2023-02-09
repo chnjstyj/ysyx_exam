@@ -19,17 +19,15 @@ class pc extends Module{
     io.next_inst_address := next_inst_address
 
     //ftrace signal
-    val jump_signal = RegInit(0.U(1.W))
+    val jump_signal = WireDefault(io.direct_jump)
     val call_ftrace_handle = Module(new call_ftrace_handle)
     call_ftrace_handle.io.jump_signal := jump_signal
 
     ce := 1.U
-    jump_signal := 0.U
     when (ce === 0.U){
         inst_address := "h0000_0000_8000_0000".U 
     }.elsewhen (io.direct_jump === 1.U){
         inst_address := io.direct_jump_addr
-        jump_signal := 1.U
     }.otherwise{
         inst_address := next_inst_address
     }
