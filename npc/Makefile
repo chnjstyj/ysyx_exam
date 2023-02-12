@@ -42,7 +42,7 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) $(shell llvm-config --cxxflags) -fPIE -DTOP_NAME="\"V$(TOPNAME)\""
+CFLAGS += -g $(INCFLAGS) $(shell llvm-config --cxxflags) -fPIE -DTOP_NAME="\"V$(TOPNAME)\""
 LDFLAGS += -lSDL2 -lSDL2_image -lreadline $(shell llvm-config --libs)
 
 verilator:${VSRCS} $(CSRCS) $(NVBOARD_ARCHIVE) auto_bind.cpp

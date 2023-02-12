@@ -14,6 +14,7 @@
 #include "expr.h"
 #include "common.h"
 #include "tb_top.h"
+#include "dl.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -83,7 +84,8 @@ void print_itrace_buf()
     {
       iringbuf_head--;
     }
-    printf("%s\n",iringbuf[iringbuf_head]);
+    if (iringbuf[iringbuf_head][0] != 0)
+      printf("%s\n",iringbuf[iringbuf_head]);
   }
   while (iringbuf_head != end_point);
 }
@@ -101,7 +103,7 @@ void call_ftrace_handle()
   }
 }
 
-void exit_()
+void exit_ebreak()
 {
   m_trace->close();
   top->final();
@@ -148,7 +150,7 @@ void cpu_exec(int steps)
 {
   int i = steps;
   int j = 0;
-  char str[30] = "";
+  char str[50] = {0};
   if (steps == -1)
   {
     while (j < 10000)
@@ -165,11 +167,15 @@ void cpu_exec(int steps)
       {
         iringbuf_head++;
       }
+      difftest_step();
     }
   }
   for (;i > 0; i --)
   {
     single_cycle(top);
+    disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
+    printf("%s\n",str);
+    difftest_step();
   }
 }
 
@@ -185,6 +191,9 @@ int main(int argc,char *argv[])
   //VerilatedVcdC *m_trace = new VerilatedVcdC;
   top->trace(m_trace, 10);
   m_trace->open("waveform.vcd");
+  reset(2,top);
+  
+  //initial steps
   init_disasm("riscv64-pc-linux-gnu");
   init_regex();
   if (argc >= 2 && strcmp("elf",argv[1]) == 0)
@@ -192,9 +201,10 @@ int main(int argc,char *argv[])
     ftrace_enable = true;
     ftrace_infos = init_ftrace("inst_rom.elf",&ftrace_func_nums);
   }
+  init_difftest("../nemu/build/riscv64-nemu-interpreter-so");
+
   //nvboard_bind_all_pins(&top);
   //nvboard_init();
-  reset(2,top);
   sdb_mainloop();
   /*
   while (

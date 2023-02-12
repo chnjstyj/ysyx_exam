@@ -81,6 +81,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+  
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -98,8 +99,6 @@ static void exec_once(Decode *s, vaddr_t pc) {
   p += space_len;
 
   void disassemble(char *str, int size, uint64_t pc, uint8_t *code, int nbyte);
-  printf("str: %s\nsize: %ld\npc: %lx\ncode: %x\nnbyte: %d\n",p,s->logbuf + sizeof(s->logbuf) - p
-  ,MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), s->isa.inst.val, ilen);
   disassemble(p, s->logbuf + sizeof(s->logbuf) - p,
       MUXDEF(CONFIG_ISA_x86, s->snpc, s->pc), (uint8_t *)&s->isa.inst.val, ilen);
   printf("%s\n\n",p);
@@ -133,6 +132,7 @@ void assert_fail_msg() {
 
 void print_insts_execed()
 {
+  #ifdef CONFIG_ITRACE
   int end_point = iringbuf_head;
   //printf("test %d %s\n",end_point,iringbuf[end_point-1].logbuf);
   do 
@@ -145,9 +145,11 @@ void print_insts_execed()
     {
       iringbuf_head--;
     }
-    printf("%s\n",iringbuf[iringbuf_head].logbuf);
+    if (iringbuf[iringbuf_head].logbuf[0] != 0)
+      printf("%s\n",iringbuf[iringbuf_head].logbuf);
   }
   while (iringbuf_head != end_point);
+  #endif
 }
 
 /* Simulate how the CPU works. */

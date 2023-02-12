@@ -10,14 +10,14 @@ class exit_verilator extends BlackBox with HasBlackBoxInline{
   })
 
   setInline("exit_verilator.v",
-  """import "DPI-C" function void exit_ ();
+  """import "DPI-C" function void exit_ebreak ();
     |module exit_verilator(
     |    input  clk,
     |    input  exit_debugging
     |);
     |always @(negedge clk) begin
     |  if (exit_debugging == 1'b1) begin 
-    |     exit_();
+    |     exit_ebreak();
     |  end
     |  else begin
     |  end
