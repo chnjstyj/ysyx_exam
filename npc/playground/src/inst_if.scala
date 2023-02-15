@@ -4,15 +4,18 @@ import chisel3.experimental._
 import chisel3.util.experimental.loadMemoryFromFile
 import chisel3.util.experimental.loadMemoryFromFileInline
 import chisel3.util.HasBlackBoxInline
+import java.io.File
 
-class inst_if(image_file:String = "") extends BlackBox with HasBlackBoxInline{
+class inst_if(image_file:String = "") extends BlackBox with HasBlackBoxPath{
     val io = IO(new Bundle{
         val clock = Input(Clock())
         val inst_address = Input(UInt(64.W))
         val ce = Input(UInt(1.W))
         val inst = Output(UInt(32.W))
     })
-    
+
+    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/inst_if.v").getCanonicalPath)
+    /*
     setInline("inst_if.v",
     """import "DPI-C" function void set_memory_ptr(input logic [31:0] a []);
       |module inst_if(
@@ -38,7 +41,7 @@ class inst_if(image_file:String = "") extends BlackBox with HasBlackBoxInline{
       |end
       |endmodule
     """.stripMargin)
-    
+    */
 
     /*
     val mem = Mem(1024, UInt(32.W))

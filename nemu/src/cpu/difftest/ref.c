@@ -32,7 +32,6 @@ void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
   {
     for (i = 0; i < n; i++)
     {
-      printf("%x\n",*((uint32_t*)buf+(addr&0x7fffffff)+i));
       paddr_write(addr+i*4,4,*((uint32_t*)buf+(addr&0x7fffffff)+i));
     }
   }

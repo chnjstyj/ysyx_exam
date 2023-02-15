@@ -71,6 +71,9 @@ bool ftrace_enable = false;
 #define INST_ADDR top->io_inst_address
 #define NEXT_INST_ADDR top->io_next_inst_address
 
+//diff
+bool diff_enable = false;
+
 void print_itrace_buf()
 {
   int end_point = iringbuf_head;
@@ -110,8 +113,6 @@ void exit_ebreak()
   delete top;
   //nvboard_quit();
   printf("ebreak\nHIT GOOD TRAP!\n");
-  printf("%x\n%x\n",*memory,*(memory+1));
-
   exit(0);
 }
 
@@ -167,7 +168,8 @@ void cpu_exec(int steps)
       {
         iringbuf_head++;
       }
-      difftest_step();
+      if (diff_enable == true)
+        difftest_step();
     }
   }
   for (;i > 0; i --)
@@ -175,7 +177,8 @@ void cpu_exec(int steps)
     single_cycle(top);
     disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
     printf("%s\n",str);
-    difftest_step();
+    if (diff_enable == true)
+      difftest_step();
   }
 }
 
@@ -187,6 +190,7 @@ static void reset(int n,Vtop* top) {
 
 int main(int argc,char *argv[])
 {
+  int i;
   Verilated::traceEverOn(true);
   //VerilatedVcdC *m_trace = new VerilatedVcdC;
   top->trace(m_trace, 10);
@@ -196,12 +200,19 @@ int main(int argc,char *argv[])
   //initial steps
   init_disasm("riscv64-pc-linux-gnu");
   init_regex();
-  if (argc >= 2 && strcmp("elf",argv[1]) == 0)
+  for (i = 0; i < argc; i++)
   {
-    ftrace_enable = true;
-    ftrace_infos = init_ftrace("inst_rom.elf",&ftrace_func_nums);
+    if (strcmp("elf",argv[i]) == 0)
+    {
+      ftrace_enable = true;
+      ftrace_infos = init_ftrace("inst_rom.elf",&ftrace_func_nums);
+    }
+    if (strcmp("diff",argv[i]) == 0)
+    {
+      diff_enable = true;
+      init_difftest("../nemu/build/riscv64-nemu-interpreter-so");
+    }
   }
-  init_difftest("../nemu/build/riscv64-nemu-interpreter-so");
 
   //nvboard_bind_all_pins(&top);
   //nvboard_init();

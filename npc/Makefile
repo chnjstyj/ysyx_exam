@@ -9,7 +9,7 @@ VERILATOR_CFLAGS += --trace -MMD --build -cc  \
 				-O3 --x-assign fast --x-initial fast --noassert
 
 run:
-	-./Vtop
+	-./Vtop elf diff
 
 test:
 	mill -i __.test

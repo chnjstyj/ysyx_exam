@@ -74,14 +74,13 @@ class id(alu_control_width:Int) extends Module{
     switch (opcode){
         is ("b0010011".U){  
             //addi slti sltiu xori ori andi slli srli srai
+            io.control_signal.reg_wen := 1.U
+            io.control_signal.alu_src := 1.U
+            io.imm := imm_I
             switch (funct3){
                 is ("b000".U){
                     //addi 
                     io.control_signal.alu_control := "b0".U
-                    io.control_signal.reg_wen := 1.U
-                    io.control_signal.alu_src := 1.U
-                    
-                    io.imm := imm_I
                 }
             }
         }

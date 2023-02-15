@@ -36,7 +36,7 @@ void init_difftest(char *ref_so_file)
 
     ref_difftest_init(0);
     ref_difftest_regcpy(gpr,DIFFTEST_TO_REF);
-    ref_difftest_memcpy(0x80000000,memory,20,DIFFTEST_TO_REF);
+    ref_difftest_memcpy(0x80000000,memory,1024,DIFFTEST_TO_REF);
 }
 
 void difftest_fail()

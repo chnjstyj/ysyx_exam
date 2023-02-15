@@ -27,7 +27,7 @@ class regfile extends Module{
     regs.io.rs1 := io.rs1 
     regs.io.rs2 := io.rs2 
     regs.io.rd := io.rd 
-    regs.io.reg_wen := io.reg_wen
+    regs.io.reg_wen := (io.reg_wen | io.save_next_inst_addr)
 
     //read
     when (io.regfile_output_1 === 1.U){

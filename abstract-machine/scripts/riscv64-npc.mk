@@ -2,6 +2,8 @@ include $(AM_HOME)/scripts/isa/riscv64.mk
 
 BIN_FILE = build/$(ALL)-$(ARCH).bin
 HEX_FILE = build/$(ALL)-$(ARCH).rom
+ELF_FILE = build/$(ALL)-$(ARCH).elf
+INST_FILE = build/$(ALL)-$(ARCH).txt
 
 AM_SRCS := riscv/npc/start.S \
            riscv/npc/trm.c \
@@ -28,5 +30,7 @@ image: $(IMAGE).elf
 run: image
 	hexdump -v -e '1/4 "%08x\n"' $(BIN_FILE) > $(HEX_FILE)
 	cp $(HEX_FILE) $(NPC_HOME)/inst.rom
-	cd $(NPC_HOME) && ./Vtop
+	cp $(ELF_FILE) $(NPC_HOME)/inst_rom.elf
+	cp $(INST_FILE) $(NPC_HOME)/inst_rom.txt
+	cd $(NPC_HOME) && ./Vtop elf diff
 
