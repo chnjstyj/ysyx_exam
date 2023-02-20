@@ -43,7 +43,7 @@ class regs extends BlackBox with HasBlackBoxInline{
       |assign rs1_rdata = regs[rs1];
       |assign rs2_rdata = regs[rs2];
       |//write
-      |always @(negedge clock) begin 
+      |always @(posedge clock) begin 
       |    if (reg_wen) begin 
       |        if (rd != 0) begin 
       |            regs[rd] = rd_wdata;

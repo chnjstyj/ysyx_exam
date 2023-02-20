@@ -18,6 +18,13 @@ class control_signal_bundle(alu_control_width:Int) extends Bundle{
     val save_next_inst_addr = Output(UInt(1.W))
     // 1 : exit; 0 : not exit
     val exit_debugging = Output(UInt(1.W))
+    // 1 : write to mem; 0 : not
+    val mem_write_en = Output(UInt(1.W))
+    // b1000 : 8 bytes; 
+    // b0100 : 4 bytes; so on;
+    val mem_wmask = Output(UInt(4.W))
+    // 1 : judge branch; 0 : not
+    val judge_branch = Output(UInt(1.W))
 }
 
 class id(alu_control_width:Int) extends Module{
@@ -27,6 +34,8 @@ class id(alu_control_width:Int) extends Module{
         val rs2 = Output(UInt(5.W))
         val rd = Output(UInt(5.W))
         val imm = Output(UInt(64.W))
+        //to judge_branch
+        val funct3 = Output(UInt(3.W))
 
         val control_signal = new control_signal_bundle(alu_control_width)
 
@@ -38,15 +47,21 @@ class id(alu_control_width:Int) extends Module{
     val imm_20 = WireDefault(inst(20))
     val imm_19_12 = WireDefault(inst(19,12))
 
+    val funct3 = WireDefault(inst(14,12))
+    val opcode = WireDefault(inst(6,0))
+    val funct7 = WireDefault(inst(31,25))
+
     val imm_J = WireDefault(Cat(Fill(43,imm_sign),
         Cat(imm_sign,
             Cat(imm_19_12,
                 Cat(imm_20,
                     Cat(imm_31_20(10,1),0.U))))))
-    val imm_I = WireDefault(Cat(Fill(53,imm_sign),imm_31_20))
+    val imm_I = WireDefault(Cat(Fill(52,imm_sign),imm_31_20))
     val imm_U = WireDefault(Cat(Fill(32,imm_sign),
         Cat(imm_31_20,
             Cat(imm_19_12,Fill(12,0.U)))))
+    val imm_S = WireDefault(Cat(Fill(52,imm_sign),funct7,io.rd))
+    val imm_B = WireDefault(Cat(Fill(52,imm_sign),inst(7),inst(30,25),inst(11,8),0.U(1.W)))
     /*
     val rs1 = WireDefault(inst(19,15))
     //val rs2 = WireDefault(io)
@@ -59,7 +74,9 @@ class id(alu_control_width:Int) extends Module{
     io.rs2 := inst(24,20)
     io.rd := inst(11,7)
     io.imm := 0.U(64.W)
+    io.funct3 := funct3
 
+    //default settings
     io.control_signal.alu_src := 0.U
     io.control_signal.alu_control := 0.U
     io.control_signal.reg_wen := 0.U
@@ -67,9 +84,9 @@ class id(alu_control_width:Int) extends Module{
     io.control_signal.regfile_output_1 := 0.U
     io.control_signal.direct_jump := 0.U
     io.control_signal.save_next_inst_addr := 0.U
-
-    val funct3 = WireDefault(inst(14,12))
-    val opcode = WireDefault(inst(6,0))
+    io.control_signal.mem_write_en := 0.U
+    io.control_signal.mem_wmask := 0.U
+    io.control_signal.judge_branch := 0.U
 
     switch (opcode){
         is ("b0010011".U){  
@@ -81,6 +98,10 @@ class id(alu_control_width:Int) extends Module{
                 is ("b000".U){
                     //addi 
                     io.control_signal.alu_control := "b0".U
+                }
+                is ("b011".U){
+                    //sltiu
+                    io.control_signal.alu_control := "b1".U
                 }
             }
         }
@@ -110,6 +131,13 @@ class id(alu_control_width:Int) extends Module{
 
             io.imm := imm_U
         }
+        is ("b1100011".U){
+            // BEQ BNE BLT BGE BLTU BGEU
+            io.control_signal.judge_branch := 1.U
+            io.control_signal.regfile_output_1 := 0.U
+
+            io.imm := imm_U
+        }
         is ("b1101111".U){
             //jal
             io.control_signal.direct_jump := 1.U
@@ -128,6 +156,20 @@ class id(alu_control_width:Int) extends Module{
             io.control_signal.save_next_inst_addr := 1.U 
 
             io.imm := imm_I
+        }
+        is ("b0100011".U){
+            //store
+            io.control_signal.mem_write_en := 1.U
+            io.control_signal.alu_src := 1.U
+            io.control_signal.alu_control := "b0".U
+
+            io.imm := imm_S
+            switch (funct3){
+                is ("b011".U){
+                    //sd
+                    io.control_signal.mem_wmask := "b1000".U
+                }
+            }
         }
     }
 

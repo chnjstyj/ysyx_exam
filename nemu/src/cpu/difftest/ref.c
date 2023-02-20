@@ -25,14 +25,15 @@ void difftest_memcpy(paddr_t addr, void *buf, size_t n, bool direction) {
   {
     for (i = 0; i < n; i++)
     {
-      *((uint32_t*)buf+addr+i) = paddr_read(addr+i,4);
+      *((uint8_t*)buf+addr+i) = paddr_read(addr+i,1);
     }
   }
   else if (direction == DIFFTEST_TO_REF)
   {
     for (i = 0; i < n; i++)
     {
-      paddr_write(addr+i*4,4,*((uint32_t*)buf+(addr&0x7fffffff)+i));
+      if (buf == NULL) printf("NULL\n");
+      paddr_write(addr+i,1,((char *)buf)[i]);
     }
   }
 }
@@ -61,7 +62,12 @@ void difftest_regcpy(void *dut, bool direction) {
 }
 
 void difftest_exec(uint64_t n) {
-  cpu_exec(n);
+  int i;
+  for (i = 0; i < n; i ++)
+  {
+    printf("(nemu)%lx\n",cpu.pc);
+    cpu_exec(1);
+  }
 }
 
 void difftest_raise_intr(word_t NO) {

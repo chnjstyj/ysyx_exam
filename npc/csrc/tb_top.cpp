@@ -59,6 +59,10 @@ uint32_t* memory = NULL;
 uint64_t* gpr = NULL;
 uint64_t pc = top->io_inst_address;
 
+//memory
+char pmem[1024] = {0};
+//static char pmem_data[1024] = {0};
+
 //itrace
 static int iringbuf_head;
 static char iringbuf[16][30];
@@ -73,6 +77,17 @@ bool ftrace_enable = false;
 
 //diff
 bool diff_enable = false;
+
+void init_pmem(const char* file_name)
+{
+  FILE* fp = fopen(file_name,"r");
+  if (!fp)
+  {
+    printf("Error file\n");
+    assert(0);
+  }
+  fread(pmem,1,1024,fp);
+}
 
 void print_itrace_buf()
 {
@@ -106,6 +121,29 @@ void call_ftrace_handle()
   }
 }
 
+
+//dpi-c
+
+extern "C" void pmem_read(long long raddr, long long *rdata) {
+  // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
+  int i;
+  *rdata = 0;
+  unsigned long long temp;
+  for (i = 0; i < 8; i++)
+  {
+    temp = (pmem[raddr + i] & 0xff);
+    temp = temp << (8 * i);
+    *rdata |= temp;
+  }
+}
+
+extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
+  // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
+  // `wmask`中每比特表示`wdata`中1个字节的掩码,
+  // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
+
+}
+
 void exit_ebreak()
 {
   m_trace->close();
@@ -126,11 +164,12 @@ void exit_npc()
   print_itrace_buf();
   exit(1);
 }
-
+/*
 extern "C" void set_memory_ptr(const svOpenArrayHandle r)
 {
   memory = (uint32_t *)(((VerilatedDpiOpenVar*)r)->datap());
 }
+*/
 
 extern "C" void set_gpr_ptr(const svOpenArrayHandle r)
 {
@@ -176,7 +215,7 @@ void cpu_exec(int steps)
   {
     single_cycle(top);
     disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
-    printf("%s\n",str);
+    printf("%lx %s\n",top->io_inst_address,str);
     if (diff_enable == true)
       difftest_step();
   }
@@ -198,6 +237,7 @@ int main(int argc,char *argv[])
   reset(2,top);
   
   //initial steps
+  init_pmem("inst.bin");
   init_disasm("riscv64-pc-linux-gnu");
   init_regex();
   for (i = 0; i < argc; i++)

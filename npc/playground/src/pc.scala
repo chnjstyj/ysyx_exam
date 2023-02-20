@@ -10,6 +10,9 @@ class pc extends Module{
 
         val direct_jump = Input(UInt(1.W))
         val direct_jump_addr = Input(UInt(64.W))
+
+        val branch_jump = Input(UInt(1.W))
+        val branch_jump_addr = Input(UInt(64.W))
     })
 
     val ce = RegInit(0.U(1.W))
@@ -28,6 +31,8 @@ class pc extends Module{
         inst_address := "h0000_0000_8000_0000".U 
     }.elsewhen (io.direct_jump === 1.U){
         inst_address := io.direct_jump_addr
+    }.elsewhen (io.branch_jump === 1.U){
+        inst_address := io.branch_jump_addr
     }.otherwise{
         inst_address := next_inst_address
     }

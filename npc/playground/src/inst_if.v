@@ -7,7 +7,22 @@ output reg [31:0]  inst
 );
 reg [31:0] mem[1023:0];
 wire [63:0] addr;
+wire [63:0] rdata;
 assign addr = inst_address & 64'h00000000_7fffffff;
+
+mem_read if_mem_read(
+    .addr(addr),
+    .en(ce),
+    .rdata(rdata)
+);
+
+always @(*) begin 
+    inst = rdata[31:0];
+end
+
+
+
+/*
 initial begin
     $readmemh("inst.rom",mem);
     set_memory_ptr(mem);
@@ -19,5 +34,6 @@ always @(*) begin
     else begin
         inst = 32'h00000000;
     end
-end
+end*/
+
 endmodule

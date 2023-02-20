@@ -19,10 +19,12 @@ class top extends Module{
     val regfile = Module(new regfile)
     val alu = Module(new alu(alu_control_width))
     val stall = Module(new stall)
+    val mem = Module(new mem)
+    val judge_branch_m = Module(new judge_branch_m)
 
     io.inst := inst_if.io.inst
     when (pc.io.direct_jump === 1.U){
-        io.inst_address := pc.io.direct_jump_addr | "h8000_0000".U 
+        io.inst_address := pc.io.inst_address | "h8000_0000".U 
     }.otherwise{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
     }
@@ -30,12 +32,21 @@ class top extends Module{
 
     pc.io.direct_jump := id.io.control_signal.direct_jump
     pc.io.direct_jump_addr := alu.io.alu_result
+    pc.io.branch_jump := judge_branch_m.io.branch_jump
+    pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr
 
     inst_if.io.clock := clock
     inst_if.io.inst_address := pc.io.inst_address
     inst_if.io.ce := pc.io.ce
 
     id.io.inst := inst_if.io.inst
+
+    judge_branch_m.io.judge_branch := id.io.control_signal.judge_branch
+    judge_branch_m.io.imm := id.io.imm 
+    judge_branch_m.io.rs1_rdata := regfile.io.rs1_rdata
+    judge_branch_m.io.rs2_rdata := regfile.io.rs2_rdata
+    judge_branch_m.io.inst_address := pc.io.inst_address
+    judge_branch_m.io.funct3 := id.io.funct3
 
     regfile.io.rs1 := id.io.rs1 
     regfile.io.rs2 := id.io.rs2 
@@ -55,5 +66,10 @@ class top extends Module{
 
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     
+    mem.io.clock := clock
+    mem.io.mem_write_addr := alu.io.alu_result
+    mem.io.mem_write_data := regfile.io.rs2_rdata
+    mem.io.mem_write_en := id.io.control_signal.mem_write_en
+    mem.io.mem_wmask := id.io.control_signal.mem_wmask
 
 }

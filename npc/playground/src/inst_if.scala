@@ -15,6 +15,7 @@ class inst_if(image_file:String = "") extends BlackBox with HasBlackBoxPath{
     })
 
     addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/inst_if.v").getCanonicalPath)
+    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem_rw.v").getCanonicalPath)
     /*
     setInline("inst_if.v",
     """import "DPI-C" function void set_memory_ptr(input logic [31:0] a []);

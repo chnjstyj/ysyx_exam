@@ -36,7 +36,7 @@ void init_difftest(char *ref_so_file)
 
     ref_difftest_init(0);
     ref_difftest_regcpy(gpr,DIFFTEST_TO_REF);
-    ref_difftest_memcpy(0x80000000,memory,1024,DIFFTEST_TO_REF);
+    ref_difftest_memcpy(0x80000000,pmem,1024,DIFFTEST_TO_REF);
 }
 
 void difftest_fail()
@@ -47,10 +47,12 @@ void difftest_fail()
 void difftest_step()
 {
     uint64_t ref_regs[32] = {0};
+    //由于下个周期寄存器的值才会改变
+    //先对比上个周期，再执行
+    checkregs(ref_regs);
     //exec 
     ref_difftest_exec(1);
     ref_difftest_regcpy(ref_regs,DIFFTEST_TO_DUT);
-    checkregs(ref_regs);
 }
 
 void checkregs(uint64_t* ref_regs)
@@ -79,6 +81,6 @@ void checkregs(uint64_t* ref_regs)
         {
             printf("%-5s:0x%016lx\n",regs[j],ref_regs[j]);
         }
-        //difftest_fail();
+        difftest_fail();
     }
 }
