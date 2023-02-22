@@ -27,7 +27,7 @@
 #include <regex.h>
 #include "SeqStack.h"
 
-#define debug
+//#define debug
 
 uint64_t eval(int p,int q);
 
@@ -356,7 +356,7 @@ uint64_t eval(int p,int q)
   #endif
   if (p > q)
   {
-    printf("错�??的表达式\n");
+    printf("错�??的表达式\n");
     assert(0);
     return 0;
   }
@@ -370,7 +370,7 @@ uint64_t eval(int p,int q)
     {
       if (!strcmp(tokens[p].str,"pc"))
       {
-        return pc;
+        return *pc;
       }
       else 
       {
@@ -378,7 +378,7 @@ uint64_t eval(int p,int q)
         if (success == true) return reg_value;
         else 
         {
-          printf("错�??的寄存器\n");
+          printf("错误的寄存器\n");
           assert(0);
           return 0;
         }
@@ -405,7 +405,7 @@ uint64_t eval(int p,int q)
   else if (check_parentheses(p,q) == 1)
   {
     #ifdef debug
-    printf("�?号匹配\n");
+    printf("括号匹配\n");
     #endif
     return eval(p + 1,q - 1);
   }
@@ -413,7 +413,7 @@ uint64_t eval(int p,int q)
   {
     int op = find_main_op(p,q);
     #ifdef debug
-    printf("在�?��?�分�?:%d\n",op);
+    printf("在此处分裂:%d\n",op);
     #endif
     uint64_t val1;
     if (op - 1 >= p)
@@ -434,14 +434,14 @@ uint64_t eval(int p,int q)
     case TK_DEREF:
     {
       #ifdef debug 
-      printf("解指�? %lx\n",val2);
+      printf("解指�? %lx\n",val2);
       #endif 
       uint64_t mem_reuslt = (uint64_t)memory[val2 + 1] << 32 | memory[val2];
       return mem_reuslt;
       break;
     }
     default:
-      printf("错�??的运算�?? %d   %c\n",op,tokens[op].type);
+      printf("错误的运算符 %d   %c\n",op,tokens[op].type);
       assert(0);
       return 0;
     }
@@ -465,7 +465,7 @@ int check_parentheses(int p,int q)
           if (!isEmpty(s)) 
           {
             #ifdef debug 
-            printf("�?号不匹配 提前\n");
+            printf("括号不匹配 提前\n");
             #endif
             return 0;
           }
@@ -473,7 +473,7 @@ int check_parentheses(int p,int q)
         else 
         {
           #ifdef debug 
-          printf("�?号不匹配 堆栈溢出\n");
+          printf("括号不匹配 堆栈溢出\n");
           #endif
           return 0;
         }
@@ -515,7 +515,7 @@ int find_main_op(int p,int q)
         if (isEmpty(s)) 
         {
           #ifdef debug 
-          printf("有括号跳�?&\n");
+          printf("有括号跳�?&\n");
           #endif
           break;
         }
@@ -534,7 +534,7 @@ int find_main_op(int p,int q)
         if (isEmpty(s)) 
         {
           #ifdef debug 
-          printf("有括号跳�?== !=\n");
+          printf("有括号跳�?== !=\n");
           #endif
           break;
         }
@@ -553,7 +553,7 @@ int find_main_op(int p,int q)
         if (isEmpty(s)) 
         {
           #ifdef debug 
-          printf("有括号跳�?+-\n");
+          printf("有括号跳�?+-\n");
           #endif
           break;
         }
@@ -564,7 +564,7 @@ int find_main_op(int p,int q)
             if ((i > p && tokens[i-1].type != TK_NUMS && tokens[i-1].type != '(' && tokens[i-1].type != ')' && tokens[i-1].type != TK_REG))
             {
               #ifdef debug
-              printf("检测到负号，位�?更新�?%d   ",i-1);
+              printf("检测到负号，位�?更新�?%d   ",i-1);
               #endif
               op = i - 1;
               #ifdef debug
@@ -574,7 +574,7 @@ int find_main_op(int p,int q)
             else if ( i == p )
             {
               #ifdef debug
-              printf("检测到表达式头负号,位置更新�?%d\n",i);
+              printf("检测到表达式头负号,位置更新�?%d\n",i);
               #endif
               op = i;
             }
@@ -592,7 +592,7 @@ int find_main_op(int p,int q)
         if (isEmpty(s))
         {
           #ifdef debug 
-          printf("有括号跳�?*/\n");
+          printf("有括号跳�?*/\n");
           #endif
           break;
         }
@@ -638,7 +638,7 @@ int find_main_op(int p,int q)
     }
   }
   #ifdef debug
-  printf("最终位�?%d\n",op);
+  printf("最终位�?%d\n",op);
   #endif
   return op;
 }

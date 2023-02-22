@@ -25,6 +25,11 @@ class control_signal_bundle(alu_control_width:Int) extends Bundle{
     val mem_wmask = Output(UInt(4.W))
     // 1 : judge branch; 0 : not
     val judge_branch = Output(UInt(1.W))
+    // 1 : memory load; 0 : not 
+    val mem_read_en = Output(UInt(1.W))
+    // b1000 : 8 bytes
+    // ...
+    val mem_read_size = Output(UInt(4.W))
 }
 
 class id(alu_control_width:Int) extends Module{
@@ -87,6 +92,8 @@ class id(alu_control_width:Int) extends Module{
     io.control_signal.mem_write_en := 0.U
     io.control_signal.mem_wmask := 0.U
     io.control_signal.judge_branch := 0.U
+    io.control_signal.mem_read_en := 0.U 
+    io.control_signal.mem_read_size := "b1000".U
 
     switch (opcode){
         is ("b0010011".U){  
@@ -101,7 +108,19 @@ class id(alu_control_width:Int) extends Module{
                 }
                 is ("b011".U){
                     //sltiu
-                    io.control_signal.alu_control := "b1".U
+                    io.control_signal.alu_control := "b10".U
+                }
+                is ()
+            }
+        }
+        is ("b0110011".U){
+            //add sub sll slt sltu xor srl sra or and
+            io.control_signal.reg_wen := 1.U
+            switch (funct3){
+                is ("b000".U){
+                    //add sub 
+                    //00  01
+                    io.control_signal.alu_control := "b0".U + funct7(5)
                 }
             }
         }
@@ -168,6 +187,20 @@ class id(alu_control_width:Int) extends Module{
                 is ("b011".U){
                     //sd
                     io.control_signal.mem_wmask := "b1000".U
+                }
+            }
+        }
+        is ("b0000011".U){
+            //load 
+            io.control_signal.mem_read_en := 1.U
+            io.control_signal.alu_src := 1.U
+            io.control_signal.alu_control := "b0".U
+
+            io.imm := imm_I
+            switch (funct3){
+                is ("b010".U){
+                    //lw 
+                    io.control_signal.mem_read_size := "b0100".U 
                 }
             }
         }

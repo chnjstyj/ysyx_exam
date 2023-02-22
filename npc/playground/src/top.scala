@@ -54,9 +54,15 @@ class top extends Module{
     regfile.io.reg_wen := id.io.control_signal.reg_wen
     regfile.io.regfile_output_1 := id.io.control_signal.regfile_output_1
     regfile.io.inst_address := pc.io.inst_address
-    regfile.io.rd_wdata := alu.io.alu_result
     regfile.io.save_next_inst_addr := id.io.control_signal.save_next_inst_addr
-    regfile.io.next_inst_address := pc.io.next_inst_address
+    regfile.io.mem_read_en := id.io.control_signal.mem_read_en
+    when (id.io.control_signal.save_next_inst_addr === 1.U){
+        regfile.io.rd_wdata := pc.io.next_inst_address
+    }.elsewhen (id.io.control_signal.mem_read_en === 1.U){
+        regfile.io.rd_wdata := mem.io.mem_read_data
+    }.otherwise{
+        regfile.io.rd_wdata := alu.io.alu_result
+    }
 
     alu.io.alu_control := id.io.control_signal.alu_control
     alu.io.alu_src := id.io.control_signal.alu_src
@@ -67,9 +73,11 @@ class top extends Module{
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     
     mem.io.clock := clock
-    mem.io.mem_write_addr := alu.io.alu_result
+    mem.io.mem_addr := alu.io.alu_result
     mem.io.mem_write_data := regfile.io.rs2_rdata
     mem.io.mem_write_en := id.io.control_signal.mem_write_en
     mem.io.mem_wmask := id.io.control_signal.mem_wmask
+    mem.io.mem_read_en := id.io.control_signal.mem_read_en
+    mem.io.mem_read_size := id.io.control_signal.mem_read_size
 
 }

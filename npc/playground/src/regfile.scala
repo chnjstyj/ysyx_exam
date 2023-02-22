@@ -8,12 +8,12 @@ class regfile extends Module{
         val rs2 = Input(UInt(5.W))
         val rd = Input(UInt(5.W))
         val rd_wdata = Input(UInt(64.W))
-        val next_inst_address = Input(UInt(64.W))
 
         val inst_address = Input(UInt(64.W))
         
         val save_next_inst_addr = Input(UInt(1.W))
         val reg_wen = Input(UInt(1.W))
+        val mem_read_en = Input(UInt(1.W))
         val regfile_output_1 = Input(UInt(2.W))
 
         val rs1_rdata = Output(UInt(64.W))
@@ -27,7 +27,7 @@ class regfile extends Module{
     regs.io.rs1 := io.rs1 
     regs.io.rs2 := io.rs2 
     regs.io.rd := io.rd 
-    regs.io.reg_wen := (io.reg_wen | io.save_next_inst_addr)
+    regs.io.reg_wen := (io.reg_wen | io.save_next_inst_addr | io.mem_read_en)
 
     //read
     when (io.regfile_output_1 === 1.U){
@@ -44,14 +44,8 @@ class regfile extends Module{
     io.rs2_rdata := regs.io.rs2_rdata
 
     //write
-    when (io.reg_wen === 1.U){
-        when (io.rd =/= 0.U){
-            regs.io.rd_wdata := io.rd_wdata
-        }
-    }.elsewhen (io.save_next_inst_addr === 1.U){
-        when (io.rd =/= 0.U){
-            regs.io.rd_wdata := io.next_inst_address
-        }
+    when (io.rd =/= 0.U){
+        regs.io.rd_wdata := io.rd_wdata
     }
 
 }

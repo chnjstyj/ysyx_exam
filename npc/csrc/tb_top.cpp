@@ -57,7 +57,7 @@ vluint64_t sim_time = 0;
 
 uint32_t* memory = NULL;
 uint64_t* gpr = NULL;
-uint64_t pc = top->io_inst_address;
+uint64_t* pc = &(top->io_inst_address);
 
 //memory
 char pmem[1024] = {0};
@@ -127,11 +127,12 @@ void call_ftrace_handle()
 extern "C" void pmem_read(long long raddr, long long *rdata) {
   // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
   int i;
+  long long addr = raddr & 0x7fffffff;
   *rdata = 0;
   unsigned long long temp;
   for (i = 0; i < 8; i++)
   {
-    temp = (pmem[raddr + i] & 0xff);
+    temp = (pmem[addr + i] & 0xff);
     temp = temp << (8 * i);
     *rdata |= temp;
   }

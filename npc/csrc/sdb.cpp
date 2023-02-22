@@ -94,7 +94,6 @@ static int cmd_x(char *args)
   {
     nums = str_to_int(strtok(args," "));
     input_expr = strtok(NULL,"");
-    printf("%d   %s\n",nums,input_expr);
     result = expr(input_expr,&success);
     printf("result:%ld\n",result);
     while(j < nums)
@@ -103,7 +102,7 @@ static int cmd_x(char *args)
       for (i=3;i >= 0; i--)
       {
         //result + i + (j*4)
-        data = *(memory +result + j*4) >> 8 * i;
+        data = *(pmem + result + j*4 + i);
         printf("0x%02x   ",data);
       }
       putchar('\n');

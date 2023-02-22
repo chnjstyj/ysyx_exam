@@ -49,10 +49,10 @@ void difftest_step()
     uint64_t ref_regs[32] = {0};
     //由于下个周期寄存器的值才会改变
     //先对比上个周期，再执行
+    ref_difftest_regcpy(ref_regs,DIFFTEST_TO_DUT);
     checkregs(ref_regs);
     //exec 
     ref_difftest_exec(1);
-    ref_difftest_regcpy(ref_regs,DIFFTEST_TO_DUT);
 }
 
 void checkregs(uint64_t* ref_regs)

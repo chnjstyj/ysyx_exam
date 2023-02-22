@@ -31,6 +31,10 @@ class alu(alu_control_width:Int) extends Module{
             io.alu_result := add_result
         }
         is ("b1".U){
+            // -
+            io.alu_result := sub_result
+        }
+        is ("b10".U){
             //less than
             io.alu_result := less_than_result
         }
