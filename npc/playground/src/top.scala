@@ -56,19 +56,25 @@ class top extends Module{
     regfile.io.inst_address := pc.io.inst_address
     regfile.io.save_next_inst_addr := id.io.control_signal.save_next_inst_addr
     regfile.io.mem_read_en := id.io.control_signal.mem_read_en
+    regfile.io.rd_wdata := MuxCase(alu.io.alu_result,Seq(
+        id.io.control_signal.save_next_inst_addr.asBool -> pc.io.next_inst_address,
+        id.io.control_signal.mem_read_en.asBool -> mem.io.mem_read_data))
+    /*
     when (id.io.control_signal.save_next_inst_addr === 1.U){
         regfile.io.rd_wdata := pc.io.next_inst_address
     }.elsewhen (id.io.control_signal.mem_read_en === 1.U){
         regfile.io.rd_wdata := mem.io.mem_read_data
     }.otherwise{
         regfile.io.rd_wdata := alu.io.alu_result
-    }
+    }*/
 
     alu.io.alu_control := id.io.control_signal.alu_control
     alu.io.alu_src := id.io.control_signal.alu_src
     alu.io.rs1_rdata := regfile.io.rs1_rdata
     alu.io.rs2_rdata := regfile.io.rs2_rdata
     alu.io.imm := id.io.imm
+    alu.io.alu_result_size := id.io.control_signal.alu_result_size
+    alu.io.sign_less_than := id.io.control_signal.sign_less_than
 
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     
@@ -79,5 +85,6 @@ class top extends Module{
     mem.io.mem_wmask := id.io.control_signal.mem_wmask
     mem.io.mem_read_en := id.io.control_signal.mem_read_en
     mem.io.mem_read_size := id.io.control_signal.mem_read_size
+    mem.io.zero_extends := id.io.control_signal.zero_extends
 
 }

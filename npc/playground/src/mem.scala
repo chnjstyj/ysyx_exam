@@ -15,6 +15,7 @@ class mem extends BlackBox with HasBlackBoxPath {
         val mem_read_en = Input(UInt(1.W))
         val mem_read_size = Input(UInt(4.W))
         val mem_read_data = Output(UInt(64.W))
+        val zero_extends = Input(UInt(1.W))
     })
 
     addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem_rw.v").getCanonicalPath)

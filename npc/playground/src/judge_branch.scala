@@ -30,6 +30,9 @@ class judge_branch_m extends Module{
             //beq
             branch_jump_en := equal
         }
+        is ("b001".U){
+            //bne
+            branch_jump_en := !equal
+        }
     }
-
 }

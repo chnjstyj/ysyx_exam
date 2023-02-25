@@ -38,7 +38,7 @@ always @(posedge clk) begin
       4'b0100:pmem_write(addr,wdata,7);
       4'b0010:pmem_write(addr,wdata,3);
       4'b0001:pmem_write(addr,wdata,1);
-      default:pmem_write(addr,wdata,8);
+      default:pmem_write(addr,wdata,15);
     endcase 
   end 
 end

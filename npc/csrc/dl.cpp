@@ -14,6 +14,7 @@ void (*ref_difftest_init)(int port) = NULL;
 void (*ref_difftest_exec)(uint64_t n) = NULL;
 
 void checkregs(uint64_t* ref_regs);
+void init_memcpy();
 
 void init_difftest(char *ref_so_file)
 {
@@ -36,7 +37,19 @@ void init_difftest(char *ref_so_file)
 
     ref_difftest_init(0);
     ref_difftest_regcpy(gpr,DIFFTEST_TO_REF);
-    ref_difftest_memcpy(0x80000000,pmem,1024,DIFFTEST_TO_REF);
+    init_memcpy();
+    //ref_difftest_memcpy(0x80000000,pmem,PMEM_SIZE,DIFFTEST_TO_REF);
+}
+
+void init_memcpy()
+{
+    int i;
+    char data[8] = {0};
+    for (i = 0; i < PMEM_SIZE; i++)
+    {
+        pmem_read(i,(long long *)data);
+        ref_difftest_memcpy(0x80000000+i,&data,1,DIFFTEST_TO_REF);
+    }
 }
 
 void difftest_fail()

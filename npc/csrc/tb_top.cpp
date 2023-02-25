@@ -60,8 +60,7 @@ uint64_t* gpr = NULL;
 uint64_t* pc = &(top->io_inst_address);
 
 //memory
-char pmem[1024] = {0};
-//static char pmem_data[1024] = {0};
+static uint8_t pmem[PMEM_SIZE] = {0};
 
 //itrace
 static int iringbuf_head;
@@ -77,6 +76,7 @@ bool ftrace_enable = false;
 
 //diff
 bool diff_enable = false;
+static int total_steps;
 
 void init_pmem(const char* file_name)
 {
@@ -142,7 +142,14 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
   // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
   // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-
+  long long addr = waddr & 0x7fffffff;
+  char size;
+  int i;
+  size = (wmask + 1)/2;
+  for (i = 0; i < size; i ++)
+  {
+    pmem[addr + i] = (uint8_t)(wdata >> 8 * i);
+  }
 }
 
 void exit_ebreak()
@@ -163,6 +170,7 @@ void exit_npc()
   //nvboard_quit();
   printf("exit\nHIT BAD TRAP!\n");
   print_itrace_buf();
+  printf("total steps:%d\n",total_steps);
   exit(1);
 }
 /*
@@ -197,6 +205,7 @@ void cpu_exec(int steps)
     while (j < 10000)
     {
       j++;
+      total_steps++;
       single_cycle(top);
       disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
       strcpy(iringbuf[iringbuf_head],str);
@@ -214,6 +223,7 @@ void cpu_exec(int steps)
   }
   for (;i > 0; i --)
   {
+    total_steps++;
     single_cycle(top);
     disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
     printf("%lx %s\n",top->io_inst_address,str);
