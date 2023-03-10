@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include "ftrace.h"
 
-#define PMEM_SIZE 1024000
+#define PMEM_SIZE 0x8000000
 
 uint64_t isa_reg_str2val(const char *s, bool *success);
 

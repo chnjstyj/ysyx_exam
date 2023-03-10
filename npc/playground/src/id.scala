@@ -37,6 +37,8 @@ class control_signal_bundle(alu_control_width:Int) extends Bundle{
     val zero_extends = Output(UInt(1.W))
     // 1 : SInt less than; 0 : UInt less than
     val sign_less_than = Output(UInt(1.W))
+    // 1 : sign div/rem; 0 : unsign
+    val sign_divrem = Output(UInt(1.W))
 }
 
 class id(alu_control_width:Int) extends Module{
@@ -99,6 +101,7 @@ class id(alu_control_width:Int) extends Module{
     io.control_signal.alu_result_size := 0.U
     io.control_signal.zero_extends := 0.U
     io.control_signal.sign_less_than := 0.U
+    io.control_signal.sign_divrem := 0.U
     
     switch (opcode){
         is ("b0010011".U){  
@@ -129,6 +132,10 @@ class id(alu_control_width:Int) extends Module{
                     //andi
                     io.control_signal.alu_control := alu_ops.AND
                 }
+                is ("b001".U){
+                    //slli
+                    io.control_signal.alu_control := alu_ops.SLL
+                }
             }
         }
         is ("b0011011".U){
@@ -143,33 +150,95 @@ class id(alu_control_width:Int) extends Module{
                     //addiw 
                     io.control_signal.alu_control := alu_ops.ADD
                 }
+                is ("b001".U){
+                    //slliw 
+                    io.control_signal.alu_control := alu_ops.SLL 
+                }
+                is ("b101".U){
+                    //sraiw srliw
+                    io.control_signal.alu_control := alu_ops.SRL | funct7(5,3)
+                }
             }
         }
         is ("b0111011".U){
             //ADDW SUBW SLLW SRLW SRAW
+            //MULW DIVW DIVUW REMW REMUW
             io.control_signal.alu_result_size := 1.U
             io.control_signal.reg_wen := 1.U
-            switch (funct3){
-                is ("b000".U){
-                    //addw subw 
-                    //00   01 
-                    io.control_signal.alu_control := alu_ops.ADD | funct7(5)
+            when (funct7 =/= "b0000001".U){
+                switch (funct3){
+                    is ("b000".U){
+                        //addw subw 
+                        //00   01 
+                        io.control_signal.alu_control := alu_ops.ADD | funct7(5)
+                    }
+                    is ("b001".U){
+                        //sllw
+                        io.control_signal.alu_control := alu_ops.SLL
+                    }
+                }
+            }.otherwise{            
+                switch (funct3){
+                    is ("b000".U){
+                        //mulw
+                        io.control_signal.alu_control := alu_ops.MUL
+                    }
+                    is ("b100".U){
+                        //divw
+                        io.control_signal.alu_control := alu_ops.DIV
+                        io.control_signal.sign_divrem := 1.U 
+                    }
+                    is ("b101".U){
+                        //divuw 
+                        io.control_signal.alu_control := alu_ops.DIV
+                    }
+                    is ("b110".U){
+                        //remw 
+                        io.control_signal.sign_divrem := 1.U 
+                        io.control_signal.alu_control := alu_ops.REM
+                    }
+                    is ("b111".U){
+                        //remuw 
+                        io.control_signal.alu_control := alu_ops.REM
+                    }
                 }
             }
         }
         is ("b0110011".U){
             //add sub sll slt sltu xor srl sra or and
+            //MUL MULH MULHSU MULHU DIV DIVU REM REMU
             io.control_signal.reg_wen := 1.U
-            switch (funct3){
-                is ("b000".U){
-                    //add sub 
-                    //00  01
-                    io.control_signal.alu_control := alu_ops.ADD | funct7(5)
+            when (funct7 =/= "b0000001".U){
+                switch (funct3){
+                    is ("b000".U){
+                        //add sub 
+                        //00  01
+                        io.control_signal.alu_control := alu_ops.ADD | funct7(5)
+                    }
+                    is ("b011".U){
+                        //sltu
+                        io.control_signal.alu_control := alu_ops.LESS_THAN
+                    }
+                    is ("b111".U){
+                        //and 
+                        io.control_signal.alu_control := alu_ops.AND
+                    }
+                    is ("b110".U){
+                        //or 
+                        io.control_signal.alu_control := alu_ops.OR
+                    }
+                    is ("b010".U){
+                        //slt
+                        io.control_signal.sign_less_than := 1.U 
+                        io.control_signal.alu_control := alu_ops.LESS_THAN
+                    }
                 }
-                is ("b011".U){
-                    //sltu
-                    io.control_signal.alu_control := alu_ops.LESS_THAN
-                    io.control_signal.sign_less_than := 1.U
+            }.otherwise{
+                switch (funct3){
+                    is ("b000".U){
+                        //mul 
+                        io.control_signal.alu_control := alu_ops.MUL
+                    }
                 }
             }
         }
@@ -259,9 +328,26 @@ class id(alu_control_width:Int) extends Module{
             io.control_signal.alu_control := alu_ops.ADD
             io.imm := imm_I
             switch (funct3){
+                is ("b011".U){
+                    //ld
+                    io.control_signal.mem_read_size := "b1000".U
+                }
                 is ("b010".U){
                     //lw 
                     io.control_signal.mem_read_size := "b0100".U 
+                }
+                is ("b001".U){
+                    //lh 
+                    io.control_signal.mem_read_size := "b0010".U
+                }
+                is ("b101".U){
+                    //lhu
+                    io.control_signal.mem_read_size := "b0010".U
+                    io.control_signal.zero_extends := 1.U
+                }
+                is ("b000".U){
+                    //lb
+                    io.control_signal.mem_read_size := "b0001".U
                 }
                 is ("b100".U){
                     //lbu

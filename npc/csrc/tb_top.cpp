@@ -86,7 +86,8 @@ void init_pmem(const char* file_name)
     printf("Error file\n");
     assert(0);
   }
-  fread(pmem,1,1024,fp);
+  fread(pmem,1,PMEM_SIZE,fp);
+  fclose(fp);
 }
 
 void print_itrace_buf()

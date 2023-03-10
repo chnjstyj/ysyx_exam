@@ -75,6 +75,7 @@ class top extends Module{
     alu.io.imm := id.io.imm
     alu.io.alu_result_size := id.io.control_signal.alu_result_size
     alu.io.sign_less_than := id.io.control_signal.sign_less_than
+    alu.io.sign_divrem := id.io.control_signal.sign_divrem
 
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     

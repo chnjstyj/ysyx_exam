@@ -19,6 +19,8 @@ class judge_branch_m extends Module{
 
     //equal ： 0；
     val xor_result = WireDefault(io.rs1_rdata ^ io.rs2_rdata)
+    val less_than_result_S = WireDefault(io.rs1_rdata.asSInt < io.rs2_rdata.asSInt) 
+    val less_than_result_U = WireDefault(io.rs1_rdata < io.rs2_rdata) 
 
     val equal = WireDefault(!xor_result)
 
@@ -33,6 +35,22 @@ class judge_branch_m extends Module{
         is ("b001".U){
             //bne
             branch_jump_en := !equal
+        }
+        is ("b101".U){
+            //bge 
+            branch_jump_en := !less_than_result_S
+        }
+        is ("b100".U){
+            //blt 
+            branch_jump_en := less_than_result_S
+        }
+        is ("b110".U){
+            //bltu
+            branch_jump_en := less_than_result_U
+        }
+        is ("b111".U){
+            //bgeu
+            branch_jump_en := !less_than_result_U
         }
     }
 }

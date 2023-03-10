@@ -29,9 +29,9 @@ image: $(IMAGE).elf
 
 run: image
 	hexdump -v -e '1/4 "%08x\n"' $(BIN_FILE) > $(HEX_FILE)
-	cp $(BIN_FILE) $(NPC_HOME)/inst.bin
 	cp $(HEX_FILE) $(NPC_HOME)/inst.rom
+	cp $(BIN_FILE) $(NPC_HOME)/inst.bin
 	cp $(ELF_FILE) $(NPC_HOME)/inst_rom.elf
 	cp $(INST_FILE) $(NPC_HOME)/inst_rom.txt
-	cd $(NPC_HOME) && ./Vtop elf diff
+	cd $(NPC_HOME) && ./Vtop diff elf
 
