@@ -34,4 +34,13 @@ static inline bool in_pmem(paddr_t addr) {
 word_t paddr_read(paddr_t addr, int len);
 void paddr_write(paddr_t addr, int len, word_t data);
 
+#ifdef CONFIG_MTRACE
+typedef struct 
+{
+  char mode[6];
+  paddr_t addr;
+}mtrace_info;
+
+#endif
+
 #endif

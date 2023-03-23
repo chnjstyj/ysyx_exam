@@ -24,6 +24,29 @@ static uint8_t *pmem = NULL;
 static uint8_t pmem[CONFIG_MSIZE] PG_ALIGN = {};
 #endif
 
+#ifdef CONFIG_MTRACE
+static mtrace_info mtrace[50];
+static int mtrace_head;
+void print_mtrace_message()
+{
+  int end_point = mtrace_head;
+  printf("Mode\tAddr\n");
+  do 
+  {
+    if (mtrace_head - 1 < 0)
+    {
+      mtrace_head = 49;
+    }
+    else 
+    {
+      mtrace_head--;
+    }
+    printf("%s\t0x%x\n",mtrace[mtrace_head].mode,mtrace[mtrace_head].addr);
+  }
+  while (mtrace_head != end_point);
+}
+#endif
+
 uint8_t* guest_to_host(paddr_t paddr) { return pmem + paddr - CONFIG_MBASE; }
 paddr_t host_to_guest(uint8_t *haddr) { return haddr - pmem + CONFIG_MBASE; }
 
@@ -39,6 +62,9 @@ static void pmem_write(paddr_t addr, int len, word_t data) {
 static void out_of_bound(paddr_t addr) {
   panic("address = " FMT_PADDR " is out of bound of pmem [" FMT_PADDR ", " FMT_PADDR "] at pc = " FMT_WORD,
       addr, PMEM_LEFT, PMEM_RIGHT, cpu.pc);
+  #ifdef CONFIG_MTRACE
+  print_mtrace_message();
+  #endif
 }
 
 void init_mem() {
@@ -57,6 +83,21 @@ void init_mem() {
 }
 
 word_t paddr_read(paddr_t addr, int len) {
+  #ifdef CONFIG_MTRACE
+  if (mtrace_head != 49)
+  {
+    strcpy(mtrace[mtrace_head].mode,"read");
+    mtrace[mtrace_head].addr = addr;
+    mtrace_head++;
+  }
+  else 
+  {
+    mtrace_head = 0;
+    strcpy(mtrace[mtrace_head].mode,"read");
+    mtrace[mtrace_head].addr = addr;
+    mtrace_head++;
+  }
+  #endif
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
   out_of_bound(addr);
@@ -64,6 +105,21 @@ word_t paddr_read(paddr_t addr, int len) {
 }
 
 void paddr_write(paddr_t addr, int len, word_t data) {
+  #ifdef CONFIG_MTRACE
+  if (mtrace_head != 49)
+  {
+    strcpy(mtrace[mtrace_head].mode,"write");
+    mtrace[mtrace_head].addr = addr;
+    mtrace_head++;
+  }
+  else 
+  {
+    mtrace_head = 0;
+    strcpy(mtrace[mtrace_head].mode,"write");
+    mtrace[mtrace_head].addr = addr;
+    mtrace_head++;
+  }
+  #endif
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
   out_of_bound(addr);

@@ -13,11 +13,13 @@
 * See the Mulan PSL v2 for more details.
 ***************************************************************************************/
 
-#include <isa.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
-#include <memory/paddr.h>
+#include <stdint.h>
+#include <string.h>
+#include <assert.h>
+#include "tb_top.h"
 
 /* We use the POSIX regex functions to process regular expressions.
  * Type 'man regex' for more information about POSIX regex functions.
@@ -61,6 +63,7 @@ static struct rule {
   {"&&", TK_NE},        // equal
 };
 
+#define ARRLEN(arr) (int)(sizeof(arr) / sizeof(arr[0]))
 #define NR_REGEX ARRLEN(rules)
 
 static regex_t re[NR_REGEX] = {};
@@ -148,7 +151,7 @@ void init_regex() {
     ret = regcomp(&re[i], rules[i].regex, REG_EXTENDED);
     if (ret != 0) {
       regerror(ret, &re[i], error_msg, 128);
-      panic("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
+      printf("regex compilation failed: %s\n%s", error_msg, rules[i].regex);
     }
   }
 }
@@ -181,7 +184,7 @@ static bool make_token(char *e) {
 
         int k;
         #ifdef debug
-        Log("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
+        printf("match rules[%d] = \"%s\" at position %d with len %d: %.*s",
             i, rules[i].regex, position, substr_len, substr_len, substr_start);
         #endif
 
@@ -227,7 +230,7 @@ static bool make_token(char *e) {
         {
           tokens[nr_token].type = TK_NUMS;
           uint64_t result = 0;
-          char* result_str = "";
+          char* result_str = (char*)"";
           char hex_str[32] = {'\0'};
           for (k = 0; k < substr_len; k++)
           {
@@ -271,6 +274,7 @@ static bool make_token(char *e) {
 
         switch (rules[i].token_type) {
           default: //TODO();
+          ;
         }
 
         break;
@@ -287,7 +291,7 @@ static bool make_token(char *e) {
 }
 
 
-word_t expr(char *e, bool *success) {
+uint64_t expr(char *e, bool *success) {
   if (!make_token(e)) {
     *success = false;
     return 0;
@@ -352,13 +356,13 @@ uint64_t eval(int p,int q)
   #endif
   if (p > q)
   {
-    printf("错误的表达式\n");
+    printf("错�??的表达式\n");
     assert(0);
     return 0;
   }
   else if(p == q)
   {
-    bool success;
+    bool success = true;
     uint64_t reg_value;
     if (tokens[p].type == TK_NUMS)
       return (uint64_t)atol(tokens[p].str);
@@ -366,7 +370,7 @@ uint64_t eval(int p,int q)
     {
       if (!strcmp(tokens[p].str,"pc"))
       {
-        return cpu.pc;
+        return *pc;
       }
       else 
       {
@@ -430,9 +434,9 @@ uint64_t eval(int p,int q)
     case TK_DEREF:
     {
       #ifdef debug 
-      printf("解指针 %lx\n",val2);
+      printf("解指�? %lx\n",val2);
       #endif 
-      uint64_t mem_reuslt = paddr_read(val2,8);
+      uint64_t mem_reuslt = (uint64_t)memory[val2 + 1] << 32 | memory[val2];
       return mem_reuslt;
       break;
     }
@@ -511,7 +515,7 @@ int find_main_op(int p,int q)
         if (isEmpty(s)) 
         {
           #ifdef debug 
-          printf("有括号跳过&\n");
+          printf("有括号跳�?&\n");
           #endif
           break;
         }
@@ -530,7 +534,7 @@ int find_main_op(int p,int q)
         if (isEmpty(s)) 
         {
           #ifdef debug 
-          printf("有括号跳过== !=\n");
+          printf("有括号跳�?== !=\n");
           #endif
           break;
         }
@@ -549,7 +553,7 @@ int find_main_op(int p,int q)
         if (isEmpty(s)) 
         {
           #ifdef debug 
-          printf("有括号跳过+-\n");
+          printf("有括号跳�?+-\n");
           #endif
           break;
         }
@@ -560,7 +564,7 @@ int find_main_op(int p,int q)
             if ((i > p && tokens[i-1].type != TK_NUMS && tokens[i-1].type != '(' && tokens[i-1].type != ')' && tokens[i-1].type != TK_REG))
             {
               #ifdef debug
-              printf("检测到负号，位置更新为%d   ",i-1);
+              printf("检测到负号，位�?更新�?%d   ",i-1);
               #endif
               op = i - 1;
               #ifdef debug
@@ -570,7 +574,7 @@ int find_main_op(int p,int q)
             else if ( i == p )
             {
               #ifdef debug
-              printf("检测到表达式头负号,位置更新为%d\n",i);
+              printf("检测到表达式头负号,位置更新�?%d\n",i);
               #endif
               op = i;
             }
@@ -588,7 +592,7 @@ int find_main_op(int p,int q)
         if (isEmpty(s))
         {
           #ifdef debug 
-          printf("有括号跳过*/\n");
+          printf("有括号跳�?*/\n");
           #endif
           break;
         }
@@ -634,7 +638,7 @@ int find_main_op(int p,int q)
     }
   }
   #ifdef debug
-  printf("最终位置%d\n",op);
+  printf("最终位�?%d\n",op);
   #endif
   return op;
 }

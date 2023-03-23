@@ -9,7 +9,7 @@ VERILATOR_CFLAGS += --trace -MMD --build -cc  \
 				-O3 --x-assign fast --x-initial fast --noassert
 
 run:
-	-./Vtop
+	-./Vtop elf diff
 
 test:
 	mill -i __.test
@@ -42,14 +42,14 @@ include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
-CFLAGS += $(INCFLAGS) -DTOP_NAME="\"V$(TOPNAME)\""
-LDFLAGS += -lSDL2 -lSDL2_image
+CFLAGS += -g $(INCFLAGS) $(shell llvm-config --cxxflags) -fPIE -DTOP_NAME="\"V$(TOPNAME)\""
+LDFLAGS += -lSDL2 -lSDL2_image -lreadline $(shell llvm-config --libs)
 
 verilator:${VSRCS} $(CSRCS) $(NVBOARD_ARCHIVE) auto_bind.cpp
 	verilator $(VERILATOR_CFLAGS) \
 	--top-module $(top_name) $^ \
 	$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
-	--exe -o ../Vtop
+	--exe -o ../Vtop 
 
 auto_bind.cpp: constr/${top_name}.nxdc
 	python3 $(NVBOARD_HOME)/scripts/auto_pin_bind.py $^ $@
@@ -60,7 +60,6 @@ sim:verilog
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	@echo "Write this Makefile by yourself."
 	$(MAKE) verilator
-	$(MAKE) run
 wave:
 	gtkwave waveform.vcd -a waveform.gtkw
 

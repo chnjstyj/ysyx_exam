@@ -18,6 +18,7 @@
 #include <cpu/difftest.h>
 #include <locale.h>
 #include "../monitor/sdb/sdb.h"
+#include <memory/paddr.h>
 
 /* The assembly code of instructions executed is only output to the screen
  * when the number of instructions executed is less than this value.
@@ -30,6 +31,10 @@ CPU_state cpu = {};
 uint64_t g_nr_guest_inst = 0;
 static uint64_t g_timer = 0; // unit: us
 static bool g_print_step = false;
+
+static int iringbuf_head;
+//static int iringbuf_tail;
+static Decode iringbuf[16];
 
 void device_update();
 
@@ -59,6 +64,16 @@ static void trace_and_difftest(Decode *_this, vaddr_t dnpc) {
     }
   }
   #endif
+  iringbuf[iringbuf_head] = *_this;
+  if (iringbuf_head == 15)
+  {
+    iringbuf_head = 0;
+  }
+  else 
+  {
+    iringbuf_head++;
+  }
+  
 }
 
 static void exec_once(Decode *s, vaddr_t pc) {
@@ -66,6 +81,7 @@ static void exec_once(Decode *s, vaddr_t pc) {
   s->snpc = pc;
   isa_exec_once(s);
   cpu.pc = s->dnpc;
+  
 #ifdef CONFIG_ITRACE
   char *p = s->logbuf;
   p += snprintf(p, sizeof(s->logbuf), FMT_WORD ":", s->pc);
@@ -113,6 +129,28 @@ void assert_fail_msg() {
   statistic();
 }
 
+void print_insts_execed()
+{
+  #ifdef CONFIG_ITRACE
+  int end_point = iringbuf_head;
+  //printf("test %d %s\n",end_point,iringbuf[end_point-1].logbuf);
+  do 
+  {
+    if (iringbuf_head - 1 < 0)
+    {
+      iringbuf_head = 15;
+    }
+    else 
+    {
+      iringbuf_head--;
+    }
+    if (iringbuf[iringbuf_head].logbuf[0] != 0)
+      printf("%s\n",iringbuf[iringbuf_head].logbuf);
+  }
+  while (iringbuf_head != end_point);
+  #endif
+}
+
 /* Simulate how the CPU works. */
 void cpu_exec(uint64_t n) {
   g_print_step = (n < MAX_INST_TO_PRINT);
@@ -129,7 +167,7 @@ void cpu_exec(uint64_t n) {
 
   uint64_t timer_end = get_time();
   g_timer += timer_end - timer_start;
-
+  
   switch (nemu_state.state) {
     case NEMU_RUNNING: nemu_state.state = NEMU_STOP; break;
 
@@ -139,6 +177,7 @@ void cpu_exec(uint64_t n) {
            (nemu_state.halt_ret == 0 ? ANSI_FMT("HIT GOOD TRAP", ANSI_FG_GREEN) :
             ANSI_FMT("HIT BAD TRAP", ANSI_FG_RED))),
           nemu_state.halt_pc);
+      if (nemu_state.halt_ret == 1) print_insts_execed();
       // fall through
     case NEMU_QUIT: statistic();
   }

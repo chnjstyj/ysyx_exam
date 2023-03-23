@@ -28,6 +28,13 @@ WP* wp_head = NULL;
 void init_regex();
 void init_wp_pool();
 
+static inline int str_to_int(char* str)
+{
+  //int width = strlen(str);
+  int result = atoi(str);
+  return result;
+}
+
 /* We use the `readline' library to provide more flexibility to read from stdin. */
 static char* rl_gets() {
   static char *line_read = NULL;
@@ -59,7 +66,11 @@ static int cmd_q(char *args) {
 
 static int cmd_si(char *args) {
   if (args == NULL) cpu_exec(1);
-  else cpu_exec(*args - 48);
+  else
+  {
+    int steps = str_to_int(strtok(args, " "));
+    cpu_exec(steps);
+  } 
   return 0;
 }
 
@@ -85,13 +96,6 @@ static int cmd_info(char *args) {
     break;
   }
   return 0;
-}
-
-static inline int str_to_int(char* str)
-{
-  //int width = strlen(str);
-  int result = atoi(str);
-  return result;
 }
 
 static inline int check_hex_num(char* str)
