@@ -15,6 +15,7 @@
 #include "common.h"
 #include "tb_top.h"
 #include "dl.h"
+#include "mtrace.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -131,6 +132,7 @@ extern "C" void pmem_read(long long raddr, long long *rdata) {
   long long addr = raddr & 0x7fffffff;
   *rdata = 0;
   unsigned long long temp;
+  update_mtrace("read",raddr);
   for (i = 0; i < 8; i++)
   {
     temp = (pmem[addr + i] & 0xff);
@@ -147,6 +149,7 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
   char size;
   int i;
   size = (wmask + 1)/2;
+  update_mtrace("write",waddr);
   for (i = 0; i < size; i ++)
   {
     pmem[addr + i] = (uint8_t)(wdata >> 8 * i);
@@ -283,6 +286,7 @@ int main(int argc,char *argv[])
   top->final();
   delete top;
   //nvboard_quit();
+  void print_mtrace_message();
   printf("HIT BAD TRAP\n");
   return 1;
 }
