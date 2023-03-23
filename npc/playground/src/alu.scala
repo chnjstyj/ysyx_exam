@@ -27,6 +27,7 @@ class alu(alu_control_width:Int) extends Module{
         val alu_result_size = Input(UInt(1.W))
         val sign_less_than = Input(UInt(1.W))
         val sign_divrem = Input(UInt(1.W))
+        val funct3 = Input(UInt(3.W))
         
         val rs1_rdata = Input(UInt(64.W))
         val rs2_rdata = Input(UInt(64.W)) 
@@ -35,7 +36,9 @@ class alu(alu_control_width:Int) extends Module{
         val alu_result = Output(UInt(64.W))
     })
     import ALU.ALU_OPS
+
     val alu_ops = new ALU_OPS
+    val mul = Module(new mul)
 
     val result = Wire(UInt(64.W))
 
@@ -44,6 +47,10 @@ class alu(alu_control_width:Int) extends Module{
     val real_data_b = WireDefault(Mux(io.alu_src.asBool,io.imm,io.rs2_rdata))
     val real_data_b_w = WireDefault(Mux(io.alu_result_size.asBool,
         Cat(Fill(32,real_data_b(31)),real_data_b(31,0)),real_data_b))
+    
+    mul.io.funct3 := io.funct3
+    mul.io.data_a := real_data_a_w
+    mul.io.data_b := real_data_b_w
 
     val add_result = WireDefault(real_data_a_w + real_data_b_w)
     val sub_result = WireDefault(real_data_a_w - real_data_b_w)
@@ -61,7 +68,7 @@ class alu(alu_control_width:Int) extends Module{
     val xor_result = WireDefault(real_data_a_w ^ real_data_b_w)
     val and_result = WireDefault(real_data_a_w & real_data_b_w)
     val or_result  = WireDefault(real_data_a_w | real_data_b_w)
-    val mul_result = WireDefault((real_data_a_w * real_data_b_w)(63,0))
+    val mul_result = WireDefault(mul.io.result)
     val div_result = Wire(UInt(64.W))
     div_result := Mux(io.sign_divrem.asBool,
     ((real_data_a_w.asSInt(63,0)) / (real_data_b_w.asSInt(63,0))).asUInt,
@@ -87,35 +94,5 @@ class alu(alu_control_width:Int) extends Module{
         (io.alu_control === alu_ops.DIV) -> (div_result),
         (io.alu_control === alu_ops.REM) -> (rem_result)
     ))
-    /*
-    result := "h0000_0000_0000_0000".U
-    switch (io.alu_control){
-        is ("b0".U){
-            // +
-            result := add_result
-        }
-        is ("b1".U){
-            // -
-            result := sub_result
-        }
-        is ("b10".U){
-            //less than
-            result := less_than_result
-        }
-        is ("b11".U){
-            //arithmetic right shift
-            result := sra_result
-        }
-        is ("b100".U){
-            //logic right shift
-        }
-        is ("b101".U){
-            //logic left shift
-        }
-        is ("b110".U){
-            //xor
-        }
-    }*/
-
-
+    
 }

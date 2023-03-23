@@ -53,12 +53,12 @@ static struct rule {
   {"\\/", '/'},         // div
   {"^[0][x][0-9a-z]+",TK_HEX_NUMS}, //hex numbers
   {"[0-9]+", TK_NUMS},         // numbers
-  {"^[$][0-9a-z]+",TK_REG}, //reg
+  {"^[$][a-z]+[0-9a-z]+",TK_REG}, //reg
   {"\\(", '('},         // left bracket
   {"\\)", ')'},         // right bracket
   {"==", TK_EQ},        // equal
-  {"!=", TK_NE},        // equal
-  {"&&", TK_NE},        // equal
+  {"!=", TK_NE},        // not equal
+  {"&&", TK_NE},        // and 
 };
 
 #define NR_REGEX ARRLEN(rules)

@@ -5,19 +5,37 @@
 
 #if !defined(__ISA_NATIVE__) || defined(__NATIVE_USE_KLIB__)
 
+typedef void(*putch_ptr)(char);
 char* itoa(int num,char* str,int radix);
+void print_direction(int direction,const char ch,char *out,putch_ptr p);
+int print_body(int direction,char *out,putch_ptr p, const char *fmt, va_list ap);
 
 int printf(const char *fmt, ...) {
-  panic("Not implemented");
+  va_list ap;
+  va_start(ap,fmt);
+  return print_body(0,NULL,putch,fmt,ap);
 }
 
 int vsprintf(char *out, const char *fmt, va_list ap) {
-  panic("Not implemented");
+  return print_body(1,out,NULL,fmt,ap);
 }
 
 int sprintf(char *out, const char *fmt, ...) {
   va_list ap;
   va_start(ap,fmt);
+  return vsprintf(out,fmt,ap);
+}
+
+int snprintf(char *out, size_t n, const char *fmt, ...) {
+  panic("Not implemented");
+}
+
+int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
+  panic("Not implemented");
+}
+
+int print_body(int direction,char *out,putch_ptr p, const char *fmt, va_list ap)
+{
   size_t i = 0;
   size_t j = 0;
   size_t k = 0;
@@ -31,7 +49,8 @@ int sprintf(char *out, const char *fmt, ...) {
       char * num_str = itoa(va_arg(ap,int),str,10);
       while (num_str[k] != '\0')
       {
-      	out[j] = num_str[k];
+      	//out[j] = num_str[k];
+        print_direction(direction,num_str[k],out+j,p);
       	j++;k++;
       }
       i += 2;
@@ -42,28 +61,35 @@ int sprintf(char *out, const char *fmt, ...) {
       s = va_arg(ap,char *);
       while (s[k] != '\0')
       {
-      	out[j] = s[k];
+      	//out[j] = s[k];
+        print_direction(direction,s[k],out+j,p);
       	j++;k++;
       }
       i += 2;
     }
-    else 
+    else
     {
-      *(out + j) = *(fmt + i);
+      //*(out + j) = *(fmt + i);
+      print_direction(direction,*(fmt+i),out+j,p);
       j++;i++;
     }
   }
-  *(out + j) = '\0';
+  //*(out + j) = '\0';''
+  print_direction(direction,'\0',out+j,p);
   va_end(ap);
   return j;
 }
 
-int snprintf(char *out, size_t n, const char *fmt, ...) {
-  panic("Not implemented");
-}
-
-int vsnprintf(char *out, size_t n, const char *fmt, va_list ap) {
-  panic("Not implemented");
+void print_direction(int direction,const char ch,char *out,putch_ptr p)
+{
+    if (direction)
+    {
+      *out = ch;
+    }
+    else
+    {
+      p(ch);
+    }
 }
 
 char* itoa(int num,char* str,int radix)

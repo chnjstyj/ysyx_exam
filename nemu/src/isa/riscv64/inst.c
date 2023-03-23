@@ -157,10 +157,10 @@ void ret(vaddr_t addr)
       k = ftrace_level;
       while (k != 0)
       {
-        printf(" ");
+        //printf(" ");
         k--;
       }
-      printf("ret  %s \n",ftrace_rets[i].name);
+      //printf("ret  %s \n",ftrace_rets[i].name);
       break;
     }
   }
@@ -200,11 +200,11 @@ void update_ftrace(vaddr_t addr,vaddr_t return_addr)
       //printf("k:%d ret level: %d \n",k,ftrace_ret_level);
       while (k != 0)
       {
-        printf(" ");
+        //printf(" ");
         k--;
       }
       ftrace_level ++;
-      printf("call %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
+      //printf("call %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
     }
   }
 }

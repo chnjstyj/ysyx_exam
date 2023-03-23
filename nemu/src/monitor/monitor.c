@@ -152,12 +152,13 @@ void init_monitor(int argc, char *argv[]) {
   /*Initialize the function tracer*/
   if (elf_file != NULL)
   {
-    int i;
+    //int i;
     ftrace_infos = init_ftrace(elf_file,&ftrace_func_nums);
+    /*
     for (i = 0; i < ftrace_func_nums; i++)
     {
       printf("%lx   %s\n",ftrace_infos[i].addr,ftrace_infos[i].name);
-    }
+    }*/
   }
 
   /* Display welcome message. */
