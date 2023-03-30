@@ -84,19 +84,13 @@ void init_mem() {
 
 word_t paddr_read(paddr_t addr, int len) {
   #ifdef CONFIG_MTRACE
-  if (mtrace_head != 49)
-  {
-    strcpy(mtrace[mtrace_head].mode,"read");
-    mtrace[mtrace_head].addr = addr;
-    mtrace_head++;
-  }
-  else 
+  if (mtrace_head == 49)
   {
     mtrace_head = 0;
-    strcpy(mtrace[mtrace_head].mode,"read");
-    mtrace[mtrace_head].addr = addr;
-    mtrace_head++;
   }
+  strcpy(mtrace[mtrace_head].mode,"read");
+  mtrace[mtrace_head].addr = addr;
+  mtrace_head++;
   #endif
   if (likely(in_pmem(addr))) return pmem_read(addr, len);
   IFDEF(CONFIG_DEVICE, return mmio_read(addr, len));
@@ -106,19 +100,13 @@ word_t paddr_read(paddr_t addr, int len) {
 
 void paddr_write(paddr_t addr, int len, word_t data) {
   #ifdef CONFIG_MTRACE
-  if (mtrace_head != 49)
-  {
-    strcpy(mtrace[mtrace_head].mode,"write");
-    mtrace[mtrace_head].addr = addr;
-    mtrace_head++;
-  }
-  else 
+  if (mtrace_head == 49)
   {
     mtrace_head = 0;
-    strcpy(mtrace[mtrace_head].mode,"write");
-    mtrace[mtrace_head].addr = addr;
-    mtrace_head++;
   }
+  strcpy(mtrace[mtrace_head].mode,"write");
+  mtrace[mtrace_head].addr = addr;
+  mtrace_head++;
   #endif
   if (likely(in_pmem(addr))) { pmem_write(addr, len, data); return; }
   IFDEF(CONFIG_DEVICE, mmio_write(addr, len, data); return);
