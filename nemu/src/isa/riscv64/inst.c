@@ -18,14 +18,16 @@
 #include <cpu/ifetch.h>
 #include <cpu/decode.h>
 
-#include "ftrace.h"
 #include "monitor.h"
 
+#ifdef CONFIG_FTRACE
+#include "ftrace.h"
 extern ftrace_info* ftrace_infos;
 extern int ftrace_func_nums;
 int ftrace_level = 0;
 int ftrace_ret_level = 0;
-ftrace_ret ftrace_rets[30];
+ftrace_ret ftrace_rets[256];
+#endif
 void update_ftrace(vaddr_t addr,vaddr_t return_addr);
 void ret(vaddr_t addr);
 
@@ -147,6 +149,7 @@ static int decode_exec(Decode *s) {
 
 void ret(vaddr_t addr)
 {
+  #ifdef CONFIG_FTRACE
   int i = 0;
   int k = 0;
   for (; i < ftrace_ret_level; i ++)
@@ -164,10 +167,12 @@ void ret(vaddr_t addr)
       break;
     }
   }
+  #endif
 }
 
 void update_ftrace(vaddr_t addr,vaddr_t return_addr)
 {
+  #ifdef CONFIG_FTRACE
   int i = 0;
   int k = 0;
   int j = 0;
@@ -193,7 +198,7 @@ void update_ftrace(vaddr_t addr,vaddr_t return_addr)
       if (j == ftrace_ret_level)  //not exist
       {
         //printf("ret dismatch\n");
-        strcpy(ftrace_rets[j].name,ftrace_infos[i].name);
+        memcpy(ftrace_rets[j].name,ftrace_infos[i].name,sizeof(ftrace_infos[i].name));
         ftrace_rets[j].return_addr = return_addr;
         ftrace_ret_level++;
       }
@@ -207,6 +212,7 @@ void update_ftrace(vaddr_t addr,vaddr_t return_addr)
       //printf("call %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
     }
   }
+  #endif
 }
 
 int isa_exec_once(Decode *s) {

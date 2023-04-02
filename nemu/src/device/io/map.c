@@ -32,6 +32,34 @@ uint8_t* new_space(int size) {
   return p;
 }
 
+#ifdef CONFIG_DTRACE
+static dtrace_info dtrace[20];
+static int dtrace_head;
+void update_dtrace(int direction,const char* device_name,uint64_t addr)
+{
+  int length = sizeof(device_name);
+  //read
+  if (dtrace_head == 19)
+  {
+    dtrace_head = 0;
+  }
+  if (!direction)
+  {
+    strcpy(dtrace[dtrace_head].mode,"read");
+  }
+  else //write
+  {  
+    strcpy(dtrace[dtrace_head].mode,"write");
+  }
+  if (dtrace[dtrace_head].device_name != NULL) free(dtrace[dtrace_head].device_name);
+  dtrace[dtrace_head].device_name = (char*)malloc(length);
+  memcpy(dtrace[dtrace_head].device_name,device_name,length);
+  dtrace[dtrace_head].addr = addr;
+  dtrace_head++;
+}
+#endif
+extern void print_mtrace_message();
+
 static void check_bound(IOMap *map, paddr_t addr) {
   if (map == NULL) {
     Assert(map != NULL, "address (" FMT_PADDR ") is out of bound at pc = " FMT_WORD, addr, cpu.pc);
@@ -56,7 +84,10 @@ word_t map_read(paddr_t addr, int len, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
   paddr_t offset = addr - map->low;
-  //printf("%d %x %x\n",offset,addr,map->low);
+  #ifdef CONFIG_DTRACE
+  update_dtrace(0,map->name,addr);
+  //printf("dtrace:%s %s %x\n",dtrace[(dtrace_head-1)].mode,dtrace[(dtrace_head-1)].device_name,dtrace[(dtrace_head-1)].addr);
+  #endif
   invoke_callback(map->callback, offset, len, false); // prepare data to read
   word_t ret = host_read(map->space + offset, len);
   return ret;
@@ -66,6 +97,9 @@ void map_write(paddr_t addr, int len, word_t data, IOMap *map) {
   assert(len >= 1 && len <= 8);
   check_bound(map, addr);
   paddr_t offset = addr - map->low;
+  #ifdef CONFIG_DTRACE
+  update_dtrace(1,map->name,addr);
+  #endif
   host_write(map->space + offset, len, data);
   invoke_callback(map->callback, offset, len, true);
 }

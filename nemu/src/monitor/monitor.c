@@ -127,6 +127,13 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize memory. */
   init_mem();
 
+  IFDEF(CONFIG_ITRACE, init_disasm(
+    MUXDEF(CONFIG_ISA_x86,     "i686",
+    MUXDEF(CONFIG_ISA_mips32,  "mipsel",
+    MUXDEF(CONFIG_ISA_riscv32, "riscv32",
+    MUXDEF(CONFIG_ISA_riscv64, "riscv64", "bad")))) "-pc-linux-gnu"
+  ));
+
   /* Initialize devices. */
   IFDEF(CONFIG_DEVICE, init_device());
 
@@ -139,27 +146,25 @@ void init_monitor(int argc, char *argv[]) {
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
 
+
+
+
   /* Initialize the simple debugger. */
   init_sdb();
 
-  IFDEF(CONFIG_ITRACE, init_disasm(
-    MUXDEF(CONFIG_ISA_x86,     "i686",
-    MUXDEF(CONFIG_ISA_mips32,  "mipsel",
-    MUXDEF(CONFIG_ISA_riscv32, "riscv32",
-    MUXDEF(CONFIG_ISA_riscv64, "riscv64", "bad")))) "-pc-linux-gnu"
-  ));
-
   /*Initialize the function tracer*/
+  #ifdef CONFIG_FTRACE
   if (elf_file != NULL)
   {
-    //int i;
     ftrace_infos = init_ftrace(elf_file,&ftrace_func_nums);
-    /*
+    
+    int i;
     for (i = 0; i < ftrace_func_nums; i++)
     {
       printf("%lx   %s\n",ftrace_infos[i].addr,ftrace_infos[i].name);
-    }*/
+    }
   }
+  #endif
 
   /* Display welcome message. */
   //printf("elf file:%s\n",elf_file);
