@@ -58,6 +58,7 @@ void update_dtrace(int direction,const char* device_name,uint64_t addr)
   dtrace_head++;
 }
 #endif
+extern void print_mtrace_message();
 
 static void check_bound(IOMap *map, paddr_t addr) {
   if (map == NULL) {
