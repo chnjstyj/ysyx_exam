@@ -128,6 +128,7 @@ static int decode_exec(Decode *s) {
   INSTPAT("0000001 ????? ????? 111 ????? 0111011",remuw,R,R(dest) = SEXT(BITS(((uint32_t)src1 % (uint32_t)src2),31,0),32));
   INSTPAT("0000001 ????? ????? 111 ????? 0110011",remu,R,R(dest) = src1 % src2);
   INSTPAT("0000001 ????? ????? 101 ????? 0110011",divu,R,R(dest) = src1 / src2);
+  INSTPAT("0000001 ????? ????? 100 ????? 0110011",div,R,R(dest) = (int64_t)src1 / (int64_t)src2);
   
 
   INSTPAT("? ?????????? ? ???????? ????? 1101111",jal,J,R(dest) = s->snpc;s->dnpc = s->pc + imm;update_ftrace(s->dnpc,s->snpc));
@@ -163,7 +164,7 @@ void ret(vaddr_t addr)
         //printf(" ");
         k--;
       }
-      //printf("ret  %s \n",ftrace_rets[i].name);
+      printf("ret  %s \n",ftrace_rets[i].name);
       break;
     }
   }
@@ -205,11 +206,11 @@ void update_ftrace(vaddr_t addr,vaddr_t return_addr)
       //printf("k:%d ret level: %d \n",k,ftrace_ret_level);
       while (k != 0)
       {
-        //printf(" ");
+        printf(" ");
         k--;
       }
       ftrace_level ++;
-      //printf("call %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
+      printf("call %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
     }
   }
   #endif
