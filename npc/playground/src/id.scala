@@ -234,12 +234,31 @@ class id(alu_control_width:Int) extends Module{
                     }
                 }
             }.otherwise{
+                //mul ..
+                io.control_signal.alu_control := alu_ops.MUL
                 switch (funct3){
-                    is ("b000".U){
-                        //mul 
-                        io.control_signal.alu_control := alu_ops.MUL
+                    is ("b100".U){
+                        //div 
+                        io.control_signal.alu_control := alu_ops.DIV
+                        io.control_signal.sign_divrem := 1.U
+                    }
+                    is ("b101".U){
+                        //divu 
+                        io.control_signal.alu_control := alu_ops.DIV
+                        io.control_signal.sign_divrem := 0.U
+                    }
+                    is ("b110".U){
+                        //rem 
+                        io.control_signal.alu_control := alu_ops.REM
+                        io.control_signal.sign_divrem := 1.U
+                    }
+                    is ("b111".U){
+                        //remu 
+                        io.control_signal.alu_control := alu_ops.REM
+                        io.control_signal.sign_divrem := 0.U
                     }
                 }
+
             }
         }
         is ("b1110011".U){

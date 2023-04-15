@@ -166,8 +166,7 @@ ftrace_info* init_ftrace(const char *elf_file,int *nums)
             j++;
         }
     }
-    //printf("j: %d\n",j);
-    ftrace_info* ftrace_infos = (ftrace_info*)malloc(j);
+    ftrace_info* ftrace_infos = (ftrace_info*)malloc(j * sizeof(ftrace_info));
     *nums = j;
     int k = 0;    
     while (j != 0)
@@ -184,7 +183,8 @@ ftrace_info* init_ftrace(const char *elf_file,int *nums)
         ftrace_infos[k].addr = addr[k];
         k++;
     }
-    r++;
+    //r++;
+    r = fseek(felf, 0, SEEK_SET);
     r = fclose(felf);
     return ftrace_infos;
 }

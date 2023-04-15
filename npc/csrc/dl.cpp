@@ -43,12 +43,12 @@ void init_difftest(char *ref_so_file)
 
 void init_memcpy()
 {
-    int i;
+    uint64_t i;
     char data[8] = {0};
-    for (i = 0; i < PMEM_SIZE; i++)
+    for (i = 0x80000000; i < 0x80000000 + PMEM_SIZE; i++)
     {
         pmem_read(i,(long long *)data);
-        ref_difftest_memcpy(0x80000000+i,&data,1,DIFFTEST_TO_REF);
+        ref_difftest_memcpy(i,&data,1,DIFFTEST_TO_REF);
     }
 }
 

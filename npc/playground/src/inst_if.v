@@ -8,10 +8,10 @@ output reg [31:0]  inst
 reg [31:0] mem[1023:0];
 wire [63:0] addr;
 wire [63:0] rdata;
-assign addr = inst_address & 64'h00000000_7fffffff;
+//assign addr = inst_address & 64'h00000000_7fffffff;
 
 mem_read if_mem_read(
-    .addr(addr),
+    .addr(inst_address),
     .en(ce),
     .rdata(rdata)
 );

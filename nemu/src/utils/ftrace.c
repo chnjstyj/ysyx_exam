@@ -91,7 +91,7 @@ ftrace_info* init_ftrace(const char *elf_file,int *nums)
         }
     }
     //printf("j: %d\n",j);
-    ftrace_info* ftrace_infos = (ftrace_info*)malloc(j);
+    ftrace_info* ftrace_infos = (ftrace_info*)malloc(j * sizeof(ftrace_info));
     *nums = j;
     int k = 0;    
     while (j != 0)

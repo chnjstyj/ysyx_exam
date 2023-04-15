@@ -39,12 +39,27 @@ void MyAudioCallback(void* userdata,Uint8* stream,int len)
     int i = 0;
     
     int slen = audio_base[reg_count];
-    len = (len > slen ? slen : len);
+    //len = (len > slen ? slen : len);
     //SDL_MixAudio(stream,sbuf,len,SDL_MIX_MAXVOLUME);
-    for (i = 0; i < len; i++)
+    if (len > slen)
     {
-      *(stream+i) = *(sbuf + i); 
+      for (i = 0; i < slen; i++)
+      {
+        *(stream+i) = *(sbuf + i); 
+      }
+      for (;i < len; i++)
+      {
+        *(stream+i) = 0; 
+      }
     }
+    else 
+    {
+      for (i = 0; i < len; i++)
+      {
+        *(stream+i) = *(sbuf + i); 
+      }
+    }
+    len = (len > slen ? slen : len);
     memcpy(sbuf,sbuf+len,slen-len);
     audio_base[reg_count] -= len;
     

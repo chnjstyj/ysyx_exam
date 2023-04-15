@@ -6,6 +6,7 @@
 //#include <nvboard.h>
 #include <iostream>
 #include <unistd.h>
+#include <sys/time.h>
 
 #include "Vtop.h"
 #include "sdb.h"
@@ -61,7 +62,8 @@ uint64_t* gpr = NULL;
 uint64_t* pc = &(top->io_inst_address);
 
 //memory
-static uint8_t pmem[PMEM_SIZE] = {0};
+//static uint8_t pmem[PMEM_SIZE] = {0};
+static uint8_t* pmem = NULL;
 
 //itrace
 static int iringbuf_head;
@@ -81,6 +83,7 @@ static int total_steps;
 
 void init_pmem(const char* file_name)
 {
+  pmem = (uint8_t*)malloc(PMEM_SIZE);
   FILE* fp = fopen(file_name,"r");
   if (!fp)
   {
@@ -123,21 +126,33 @@ void call_ftrace_handle()
   }
 }
 
+static uint64_t boot_time = 0; 
 
 //dpi-c
-
 extern "C" void pmem_read(long long raddr, long long *rdata) {
   // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
   int i;
-  long long addr = raddr & 0x7fffffff;
   *rdata = 0;
   unsigned long long temp;
-  update_mtrace("read",raddr);
-  for (i = 0; i < 8; i++)
+  if (raddr == RTC_ADDR)
   {
-    temp = (pmem[addr + i] & 0xff);
-    temp = temp << (8 * i);
-    *rdata |= temp;
+    struct timeval now;
+    gettimeofday(&now, NULL);
+    uint64_t us = now.tv_sec * 1000000 + now.tv_usec;
+    if (boot_time == 0) boot_time = us;
+    //printf("%lld\n",us - boot_time);
+    *rdata = (long long)(us - boot_time);
+  }
+  else if (raddr >= 0x80000000)
+  {
+    long long addr = raddr & 0x7fffffff;
+    update_mtrace("read",raddr);
+    for (i = 0; i < 8; i++)
+    {
+      temp = (pmem[addr + i] & 0xff);
+      temp = temp << (8 * i);
+      *rdata |= temp;
+    }
   }
 }
 
@@ -145,14 +160,21 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
   // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
   // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-  long long addr = waddr & 0x7fffffff;
   char size;
   int i;
   size = (wmask + 1)/2;
   update_mtrace("write",waddr);
-  for (i = 0; i < size; i ++)
+  if (waddr == SERIAL_PORT)
   {
-    pmem[addr + i] = (uint8_t)(wdata >> 8 * i);
+    putchar((uint8_t)wdata);
+  }
+  else if (waddr >= 0x80000000)
+  {
+    uint64_t addr = (uint64_t)waddr & (uint64_t)0x7fffffff;
+    for (i = 0; i < size; i ++)
+    {
+      pmem[addr + i] = (uint8_t)(wdata >> 8 * i);
+    }
   }
 }
 
@@ -161,6 +183,8 @@ void exit_ebreak()
   m_trace->close();
   top->final();
   delete top;
+  delete pmem;
+  delete ftrace_infos;
   //nvboard_quit();
   printf("ebreak\nHIT GOOD TRAP!\n");
   exit(0);
@@ -171,6 +195,8 @@ void exit_npc()
   m_trace->close();
   top->final();
   delete top;
+  delete pmem;
+  delete ftrace_infos;
   //nvboard_quit();
   printf("exit\nHIT BAD TRAP!\n");
   print_itrace_buf();
@@ -193,10 +219,10 @@ static void single_cycle(Vtop* top)
 {
   top->clock = 1;top->eval();
   sim_time++;
-  m_trace->dump(sim_time);
+  //m_trace->dump(sim_time);
   top->clock = 0;top->eval();
   sim_time++;
-  m_trace->dump(sim_time);
+  //m_trace->dump(sim_time);
 }
 
 void cpu_exec(int steps)
@@ -206,7 +232,7 @@ void cpu_exec(int steps)
   char str[50] = {0};
   if (steps == -1)
   {
-    while (j < 10000)
+    while (1)
     {
       j++;
       total_steps++;
@@ -257,12 +283,12 @@ int main(int argc,char *argv[])
   init_regex();
   for (i = 0; i < argc; i++)
   {
-    if (strcmp("elf",argv[i]) == 0)
+    if (memcmp("elf",argv[i],3) == 0)
     {
       ftrace_enable = true;
       ftrace_infos = init_ftrace("inst_rom.elf",&ftrace_func_nums);
     }
-    if (strcmp("diff",argv[i]) == 0)
+    if (memcmp("diff",argv[i],4) == 0)
     {
       diff_enable = true;
       init_difftest("../nemu/build/riscv64-nemu-interpreter-so");
@@ -285,6 +311,8 @@ int main(int argc,char *argv[])
   m_trace->close();
   top->final();
   delete top;
+  delete pmem;
+  delete ftrace_infos;
   //nvboard_quit();
   void print_mtrace_message();
   printf("HIT BAD TRAP\n");
