@@ -166,6 +166,10 @@ void init_monitor(int argc, char *argv[]) {
   }
   #endif
 
+  #ifdef CONFIG_DIFFTEST
+  cpu.csr[0] = 0xa00001800;
+  #endif 
+
   /* Display welcome message. */
   //printf("elf file:%s\n",elf_file);
   welcome();

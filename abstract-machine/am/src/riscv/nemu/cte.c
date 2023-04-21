@@ -5,6 +5,13 @@
 static Context* (*user_handler)(Event, Context*) = NULL;
 
 Context* __am_irq_handle(Context *c) {
+  int i;
+  printf("Context in c:\ngpr:\n");
+  for (i = 0; i < 32; i ++)
+  {
+    printf("%02d:0x%08x\n",i,c->gpr[i]);
+  }
+  printf("csr:%x\t%x\t%x\n",c->mcause,c->mstatus,c->mepc);
   if (user_handler) {
     Event ev = {0};
     switch (c->mcause) {
