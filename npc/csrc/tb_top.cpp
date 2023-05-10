@@ -25,6 +25,8 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#define waveform 1
+
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
   "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
@@ -180,7 +182,9 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
 
 void exit_ebreak()
 {
+  #ifdef waveform
   m_trace->close();
+  #endif
   top->final();
   delete top;
   delete pmem;
@@ -192,7 +196,9 @@ void exit_ebreak()
 
 void exit_npc()
 {
+  #ifdef waveform
   m_trace->close();
+  #endif
   top->final();
   delete top;
   delete pmem;
@@ -219,10 +225,14 @@ static void single_cycle(Vtop* top)
 {
   top->clock = 1;top->eval();
   sim_time++;
-  //m_trace->dump(sim_time);
+  #ifdef waveform
+  m_trace->dump(sim_time);
+  #endif
   top->clock = 0;top->eval();
   sim_time++;
-  //m_trace->dump(sim_time);
+  #ifdef waveform
+  m_trace->dump(sim_time);
+  #endif
 }
 
 void cpu_exec(int steps)
@@ -271,10 +281,11 @@ static void reset(int n,Vtop* top) {
 int main(int argc,char *argv[])
 {
   int i;
+  #ifdef waveform
   Verilated::traceEverOn(true);
-  //VerilatedVcdC *m_trace = new VerilatedVcdC;
   top->trace(m_trace, 10);
-  m_trace->open("waveform.vcd");
+  m_trace->open("./waveform.vcd");
+  #endif
   reset(2,top);
   
   //initial steps
@@ -307,8 +318,9 @@ int main(int argc,char *argv[])
     //single_cycle(top);
     //nvboard_update();
   }*/
-
+  #ifdef waveform
   m_trace->close();
+  #endif
   top->final();
   delete top;
   delete pmem;

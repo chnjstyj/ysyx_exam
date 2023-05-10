@@ -59,6 +59,9 @@ class top extends Module{
     regfile.io.rd_wdata := MuxCase(alu.io.alu_result,Seq(
         id.io.control_signal.save_next_inst_addr.asBool -> pc.io.next_inst_address,
         id.io.control_signal.mem_read_en.asBool -> mem.io.mem_read_data))
+    regfile.io.csr_wen := id.io.control_signal.csr_wen
+    regfile.io.csr_sen := id.io.control_signal.csr_sen
+    regfile.io.csr_addr := id.io.imm
     /*
     when (id.io.control_signal.save_next_inst_addr === 1.U){
         regfile.io.rd_wdata := pc.io.next_inst_address
@@ -77,6 +80,8 @@ class top extends Module{
     alu.io.sign_less_than := id.io.control_signal.sign_less_than
     alu.io.sign_divrem := id.io.control_signal.sign_divrem
     alu.io.funct3 := id.io.funct3 
+    alu.io.csr_sen := id.io.control_signal.csr_sen
+    alu.io.csr_rdata := regfile.io.csr_rdata
 
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     

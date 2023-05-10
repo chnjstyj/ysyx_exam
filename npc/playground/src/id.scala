@@ -6,6 +6,7 @@ import ALU.ALU_OPS
 class control_signal_bundle(alu_control_width:Int) extends Bundle{
     // 1 : imm; 0 : rs2
     val alu_src = Output(UInt(1.W))
+    //ops
     val alu_control = Output(UInt(alu_control_width.W))
     // 1 : write reg; 0 : not write reg
     val reg_wen = Output(UInt(1.W))
@@ -39,6 +40,10 @@ class control_signal_bundle(alu_control_width:Int) extends Bundle{
     val sign_less_than = Output(UInt(1.W))
     // 1 : sign div/rem; 0 : unsign
     val sign_divrem = Output(UInt(1.W))
+    // 1 : csr write; 0 : not , addr = immI
+    val csr_wen = Output(UInt(1.W))
+    // 1 : csr set; 0 : not
+    val csr_sen = Output(UInt(1.W))
 }
 
 class id(alu_control_width:Int) extends Module{
@@ -102,6 +107,8 @@ class id(alu_control_width:Int) extends Module{
     io.control_signal.zero_extends := 0.U
     io.control_signal.sign_less_than := 0.U
     io.control_signal.sign_divrem := 0.U
+    io.control_signal.csr_wen := 0.U
+    io.control_signal.csr_sen := 0.U
     
     switch (opcode){
         is ("b0010011".U){  
@@ -175,6 +182,11 @@ class id(alu_control_width:Int) extends Module{
                     is ("b001".U){
                         //sllw
                         io.control_signal.alu_control := alu_ops.SLL
+                    }
+                    is ("b101".U){
+                        //srlw sraw
+                        // 00   01
+                        io.control_signal.alu_control := alu_ops.SRL | funct7(5,3)
                     }
                 }
             }.otherwise{            
@@ -262,10 +274,28 @@ class id(alu_control_width:Int) extends Module{
             }
         }
         is ("b1110011".U){
-            //ebreak
-            switch (imm_31_20){
-                is ("b000000000001".U){
-                    io.control_signal.exit_debugging := 1.U
+            //ebreak CSRRW CSRRS CSRRC CSRRWI CSRRSI CSRRCI
+            switch (funct3){
+                is ("b000".U){
+                    switch (imm_31_20){
+                        //ebreak
+                        is ("b000000000001".U){
+                            io.control_signal.exit_debugging := 1.U
+                        }
+                    }
+                }
+                is ("b001".U){
+                    //CSRRW
+                    io.control_signal.csr_wen := 1.U 
+                    io.imm := imm_I
+                    io.control_signal.reg_wen := 1.U
+                }
+                is ("b010".U){
+                    //CSRRS
+                    io.control_signal.csr_sen := (io.rs1 =/= 0.U)
+                    io.imm := imm_I
+                    io.control_signal.reg_wen := 1.U
+                    io.control_signal.alu_control := alu_ops.OR
                 }
             }
         }

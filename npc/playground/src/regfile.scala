@@ -6,6 +6,7 @@ class regfile extends Module{
     val io = IO(new Bundle{
         val rs1 = Input(UInt(5.W))
         val rs2 = Input(UInt(5.W))
+        val csr_addr = Input(UInt(12.W))
         val rd = Input(UInt(5.W))
         val rd_wdata = Input(UInt(64.W))
 
@@ -15,19 +16,31 @@ class regfile extends Module{
         val reg_wen = Input(UInt(1.W))
         val mem_read_en = Input(UInt(1.W))
         val regfile_output_1 = Input(UInt(2.W))
+        val csr_wen = Input(UInt(1.W))
+        val csr_sen = Input(UInt(1.W))
 
         val rs1_rdata = Output(UInt(64.W))
         val rs2_rdata = Output(UInt(64.W))
+        val csr_rdata = Output(UInt(64.W))
 
     })
+
+    val csr_write_to_reg = WireDefault(io.rd =/= 0.U && io.csr_wen === 1.U)
+    val csr_rdata = Wire(UInt(64.W))
 
     //val regfile = RegInit(RegInit(VecInit(Seq.fill(31)(0.U(64.W)))))
     val regs= Module(new regs)
     regs.io.clock := clock 
     regs.io.rs1 := io.rs1 
-    regs.io.rs2 := io.rs2 
+    regs.io.rs2 := io.rs2
+    regs.io.csr_addr := io.csr_addr
     regs.io.rd := io.rd 
-    regs.io.reg_wen := (io.reg_wen | io.save_next_inst_addr | io.mem_read_en)
+    regs.io.reg_wen := (io.reg_wen | io.save_next_inst_addr | io.mem_read_en | csr_write_to_reg)
+    regs.io.csr_wen := io.csr_wen
+    regs.io.csr_sen := io.csr_sen
+
+    csr_rdata := regs.io.csr_rdata
+    io.csr_rdata := csr_rdata
 
     //read
     when (io.regfile_output_1 === 1.U){
@@ -44,8 +57,10 @@ class regfile extends Module{
     io.rs2_rdata := regs.io.rs2_rdata
 
     //write
-    when (io.rd =/= 0.U){
+    when (io.rd =/= 0.U && csr_write_to_reg =/= 1.U){
         regs.io.rd_wdata := io.rd_wdata
+    }.elsewhen (io.rd =/= 0.U && csr_write_to_reg === 1.U){
+        regs.io.rd_wdata := csr_rdata
     }
 
 }

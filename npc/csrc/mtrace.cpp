@@ -18,7 +18,7 @@ void print_mtrace_message()
     {
       mtrace_head--;
     }
-    printf("%s\t0x%x\n",mtrace[mtrace_head].mode,mtrace[mtrace_head].addr);
+    printf("%s\t0x%lx\n",mtrace[mtrace_head].mode,mtrace[mtrace_head].addr);
   }
   while (mtrace_head != end_point);
 }

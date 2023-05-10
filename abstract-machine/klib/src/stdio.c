@@ -118,8 +118,9 @@ int print_body(int direction,char *out,putch_ptr p, const char *fmt, va_list ap)
         case 'p':
           k = 0;
           uint64_t addr = va_arg(ap,uint64_t);
-          char * p_addr = (char *)malloc(8);
-          p_addr = itoa(addr,p_addr,16);
+          char * p_addr = (char *)malloc(16);
+          //p_addr =
+          itoa(addr,p_addr,16);
           while (p_addr[k] != '\0')
           {
             //out[j] = s[k];

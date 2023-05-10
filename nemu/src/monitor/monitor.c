@@ -166,7 +166,7 @@ void init_monitor(int argc, char *argv[]) {
   }
   #endif
 
-  #ifdef CONFIG_DIFFTEST
+  #ifdef CONFIG_TARGET_SHARE
   cpu.csr[0] = 0xa00001800;
   #endif 
 

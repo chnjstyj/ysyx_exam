@@ -18,6 +18,7 @@ class ALU_OPS{
     val DIV = "b1010".U
     val REM = "b1011".U
 }
+
 }
 
 class alu(alu_control_width:Int) extends Module{
@@ -28,9 +29,11 @@ class alu(alu_control_width:Int) extends Module{
         val sign_less_than = Input(UInt(1.W))
         val sign_divrem = Input(UInt(1.W))
         val funct3 = Input(UInt(3.W))
+        val csr_sen = Input(UInt(1.W))
         
         val rs1_rdata = Input(UInt(64.W))
         val rs2_rdata = Input(UInt(64.W)) 
+        val csr_rdata = Input(UInt(64.W))
         val imm = Input(UInt(64.W))
 
         val alu_result = Output(UInt(64.W))
@@ -43,8 +46,10 @@ class alu(alu_control_width:Int) extends Module{
     val result = Wire(UInt(64.W))
 
     val real_data_a_w = WireDefault(Mux(io.alu_result_size.asBool,
-    Cat(Fill(32,io.rs1_rdata(31)),io.rs1_rdata(31,0)),io.rs1_rdata))
-    val real_data_b = WireDefault(Mux(io.alu_src.asBool,io.imm,io.rs2_rdata))
+    //Cat(Fill(32,io.rs1_rdata(31)),io.rs1_rdata(31,0)),io.rs1_rdata))
+    Cat(Fill(32,0.U(1.W)),io.rs1_rdata(31,0)),io.rs1_rdata))
+    val real_data_b = WireDefault(Mux(io.alu_src.asBool,io.imm,
+    Mux(io.csr_sen.asBool,io.csr_rdata,io.rs2_rdata)))
     val real_data_b_w = WireDefault(Mux(io.alu_result_size.asBool,
         Cat(Fill(32,real_data_b(31)),real_data_b(31,0)),real_data_b))
     
@@ -58,12 +63,19 @@ class alu(alu_control_width:Int) extends Module{
     less_than_result := Mux(io.sign_less_than.asBool,
         Cat(Fill(63,0.U(1.W)),real_data_a_w.asSInt < real_data_b_w.asSInt),
         Cat(Fill(63,0.U(1.W)),sub_result(63) ^ real_data_a_w(63)))
-    val sra_result = WireDefault((real_data_a_w.asSInt >> real_data_b_w(5,0)).asUInt)
+
+    val sra_result = Wire(UInt(64.W))
+    sra_result := Mux(io.alu_result_size.asBool,
+    Cat(Fill(32,real_data_a_w(31)),(real_data_a_w(31,0).asSInt >> real_data_b_w(5,0)).asUInt),
+    (real_data_a_w.asSInt >> real_data_b_w(5,0)).asUInt)
+    //WireDefault((real_data_a_w.asSInt >> real_data_b_w(5,0)).asUInt)
     //val srl_result = WireDefault(real_data_a_w.asUInt >> real_data_b_w(5,0))
+
     val srl_result = Wire(UInt(64.W))
     srl_result := Mux(io.alu_result_size.asBool,
     Cat(Fill(32,0.U),real_data_a_w(31,0) >> real_data_b_w(5,0)),
     real_data_a_w.asUInt >> real_data_b_w(5,0))
+
     val sll_result = WireDefault(real_data_a_w << real_data_b_w(5,0))
     val xor_result = WireDefault(real_data_a_w ^ real_data_b_w)
     val and_result = WireDefault(real_data_a_w & real_data_b_w)
