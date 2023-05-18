@@ -27,3 +27,6 @@ run: image
 
 gdb: image
 	$(MAKE) -C $(NEMU_HOME) ISA=$(ISA) gdb ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
+
+valgrind: image
+	$(MAKE) -C $(NEMU_HOME) ISA=$(ISA) valgrind ARGS="$(NEMUFLAGS)" IMG=$(IMAGE).bin
