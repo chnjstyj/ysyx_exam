@@ -45,9 +45,14 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
    * Then return the address of the interrupt/exception vector.
    */
   #ifdef CONFIG_ETRACE
+  if (eringbuf_head == 16)
+  {
+    eringbuf_head = 0;
+  }
+  else eringbuf_head++;
   eringbuf[eringbuf_head].NO = NO;
   eringbuf[eringbuf_head].epc = epc;
-  eringbuf_head++;
+  
   #endif
   csr(mepc) = epc;
   csr(mcause) = NO;
