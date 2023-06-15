@@ -1,0 +1,22 @@
+#include <stdio.h>
+#include <sys/time.h>
+#include <stdint.h>
+#include "NDL.h"
+
+int main()
+{
+    uint32_t time = 0;
+    uint32_t i = 0;
+    struct timeval time_ = {0};
+    NDL_Init(0);
+    while (1)
+    {
+        time = NDL_GetTicks();
+        if (time - i * 500000 >= 500000)
+        {
+            i++;
+            printf("time has passed 0.5 sec NDL version %d\n",time);
+        }
+    }
+    return 1;
+}

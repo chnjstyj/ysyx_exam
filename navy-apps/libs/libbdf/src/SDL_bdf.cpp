@@ -1,12 +1,17 @@
 #include <SDL_bdf.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <errno.h>
 
 SDL_Surface* BDF_CreateSurface(BDF_Font *font, char ch, uint32_t fg, uint32_t bg) {
   uint32_t *bm = font->font[ch];
   if (!bm) return NULL;
   int w = font->w, h = font->h;
   uint32_t *pixels = (uint32_t *)malloc(w * h * sizeof(uint32_t));
+  if (pixels == NULL) {
+    printf("%d %d\n",font->w,font->h);
+    perror("malloc failed");
+  }
   assert(pixels);
   for (int j = 0; j < h; j ++) {
     for (int i = 0; i < w; i ++) {

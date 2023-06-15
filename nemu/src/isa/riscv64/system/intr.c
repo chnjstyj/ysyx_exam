@@ -49,10 +49,10 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   {
     eringbuf_head = 0;
   }
-  else eringbuf_head++;
+  //else 
   eringbuf[eringbuf_head].NO = NO;
   eringbuf[eringbuf_head].epc = epc;
-  
+  eringbuf_head++;
   #endif
   csr(mepc) = epc;
   csr(mcause) = NO;

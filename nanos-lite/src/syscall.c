@@ -1,10 +1,20 @@
 #include <common.h>
 #include <stddef.h>
 #include "syscall.h"
+#include "fs.h"
+#include <sys/time.h>
+
+typedef struct 
+{
+  int syscall_id;
+  int syscall_inputs[4];
+  int syscall_ret;
+}strace_info;
 
 static int stracebuf_head;
 //static int iringbuf_tail;
 static strace_info stracebuf[16];
+void * pb = NULL;
 
 void init_strace()
 {
@@ -31,6 +41,7 @@ void update_strace(Context *c)
 }
 
 int64_t write(int fd, const void *buf, size_t count);
+int _gettimeofday(struct timeval *tv, struct timezone *tz);
 
 void do_syscall(Context *c) {
   uintptr_t a[4];
@@ -41,21 +52,25 @@ void do_syscall(Context *c) {
     case SYS_yield:yield(); break;
     case SYS_exit :halt(c->GPR2) ; break;
     case SYS_write:c->GPRx = write(c->GPR2,(void *)c->GPR3,c->GPR4); break;
+    case SYS_brk:pb = (void *)c->GPR2;c->GPRx = 0;break;
+    case SYS_open:c->GPRx = fs_open((const char*)c->GPR2,c->GPR3,c->GPR4);break;
+    case SYS_read:c->GPRx = fs_read(c->GPR2,(void *)c->GPR3,c->GPR4);break;
+    case SYS_lseek:c->GPRx = fs_lseek(c->GPR2,c->GPR3,c->GPR4);break;
+    case SYS_close:c->GPRx = fs_close(c->GPR2);break;
+    case SYS_gettimeofday:c->GPRx = _gettimeofday((struct timeval *)c->GPR2,(struct timezone *)c->GPR3);break;
     default: panic("Unhandled syscall ID = %d", a[0]);
   }
+}
+
+int _gettimeofday(struct timeval *tv, struct timezone *tz)
+{
+  tv->tv_usec = io_read(AM_TIMER_UPTIME).us;
+  return 0;
 }
 
 int64_t write(int fd, const void *buf, size_t count)
 {
   int i = 0;
-  //printf("\nnum:%d\n",count);
-  if (fd == 1 || fd == 2)
-  {
-    for (i = 0; i < count; i ++)
-    {
-      //printf("\nt:%c\n",*((char*)buf + i));
-      putch(*((char*)buf + i));
-    }
-  }
+  i = fs_write(fd,buf,count);
   return i;
 }

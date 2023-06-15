@@ -7,12 +7,73 @@
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+  int src_base,dst_base;
+  if (srcrect != NULL && dstrect != NULL) 
+  {
+    printf("case1\n");
+    assert(0);
+  }
+  else if (srcrect == NULL)//the entire surface is copied
+  {
+    src_base = 0;
+    int i,j;
+    for (i = dstrect->y; i < src->h + dstrect->y; i++)
+    {
+      for (j = dstrect->x; j < src->w + dstrect->x; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        {
+          *(dst->pixels + i * dst->w + j) = *(src->pixels + src_base);
+        }
+        src_base++;
+      }
+    }
+  }
+  else if (dstrect == NULL)
+  {
+    printf("case3\n");
+    assert(0);
+  }
+  else 
+  {
+    printf("case4\n");
+    assert(0);
+  }
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+  //根据dstrect中的坐标计算dst中pixel的偏移，将color填充进去。
+  int i,j;
+  if (dstrect != NULL)
+  {
+    int base = dstrect->y * dst->w + dstrect->x;
+    for (i = dstrect->y; i < dstrect->y + dstrect->h; i++)
+    {
+      for (j = 0; j < dstrect->w; j++)
+      {
+        *(dst->pixels + base + j) = color;
+      }
+      base + dst->w;  //next line
+    }
+  }
+  else 
+  {
+    for (i = 0; i < dst->h * dst->w; i++)
+    {
+      *(dst->pixels + i) = color;
+    }
+  }
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+  if (w == 0 && h == 0)
+  {
+    NDL_DrawRect(s->pixels,x,y,s->w,s->h);
+  }
+  else 
+  {
+    NDL_DrawRect(s->pixels,x,y,w,h);
+  }
 }
 
 // APIs below are already implemented.
