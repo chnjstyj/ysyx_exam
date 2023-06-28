@@ -60,26 +60,22 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len) {
 
 extern uint32_t* fb;
 size_t fb_write(const void *buf, size_t offset, size_t len) {
-  //printf("offset : %d\n",offset);
   AM_GPU_CONFIG_T t = io_read(AM_GPU_CONFIG);
-  /*
-  int h = offset / t.height - 1;
-  int w = offset % t.height - 1;
+  //offset = canvas_w
+  int canvas_w = offset;
+  int canvas_h;
+  if (canvas_w != 0)
+    canvas_h = (int)len / (int)canvas_w;
+  else
+    canvas_h = 0; 
   int i,j,k = 0;
-  for (i = h;i < t.height;i++)
+  for (i = 0;i < canvas_h; i++)
   {
-    for (j = w;j < t.width;j++)
+    for (j = 0; j < canvas_w; j++)
     {
-      *(fb + k) = *((uint32_t*)buf + k);
+      *(fb + i * t.width + j) = *((uint32_t *)buf + k);
       k++;
-      if (k == len) return k;
     }
-  }
-  */
-  int i;
-  for (i = 0;i < len;i ++)
-  {
-    *(fb + offset + i) = *((uint32_t*)buf + i);
   }
   io_write(AM_GPU_FBDRAW,0,0,fb,t.width,t.height,true);
   return i;

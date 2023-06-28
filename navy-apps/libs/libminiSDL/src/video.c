@@ -3,42 +3,62 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
   int src_base,dst_base;
+  int i,j,k;
   if (srcrect != NULL && dstrect != NULL) 
   {
     printf("case1\n");
     assert(0);
   }
-  else if (srcrect == NULL)//the entire surface is copied
+  if (srcrect == NULL && dstrect != NULL)//the entire surface is copied
   {
+    //printf("%d %d\n",dst->h,dst->w);
     src_base = 0;
-    int i,j;
-    for (i = dstrect->y; i < src->h + dstrect->y; i++)
+    dst_base = 0;
+    for (i = dstrect->y; i < dstrect->y + src->h; i++)
     {
-      for (j = dstrect->x; j < src->w + dstrect->x; j++)
+      for (j = dstrect->x; j < dstrect->x + src->w; j++)
       {
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
         {
-          *(dst->pixels + i * dst->w + j) = *(src->pixels + src_base);
+          *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
         }
         src_base++;
       }
     }
+    return;
   }
-  else if (dstrect == NULL)
+  else if (srcrect != NULL && dstrect == NULL) //copied to entire surface
   {
-    printf("case3\n");
-    assert(0);
+    src_base = srcrect->y * src->w + srcrect->x;
+    dst_base = 0;
+    for (i = 0; i < srcrect->h; i++)
+    {
+      for (j = 0; j < srcrect->w; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        {
+          *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+        }
+        src_base++;
+      }
+      src_base = (srcrect->y + i) * src->w + srcrect->x;
+    }
+    return;
   }
   else 
   {
     printf("case4\n");
     assert(0);
   }
+  printf("case5\n");
+  printf("%x %x\n",srcrect,dstrect);
+  assert(0);
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
@@ -46,34 +66,35 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   int i,j;
   if (dstrect != NULL)
   {
-    int base = dstrect->y * dst->w + dstrect->x;
     for (i = dstrect->y; i < dstrect->y + dstrect->h; i++)
     {
-      for (j = 0; j < dstrect->w; j++)
+      for (j = dstrect->x; j < dstrect->w + dstrect->x; j++)
       {
-        *(dst->pixels + base + j) = color;
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+          *((uint32_t*)dst->pixels + i * dst->w + j) = color;
       }
-      base + dst->w;  //next line
     }
   }
   else 
   {
     for (i = 0; i < dst->h * dst->w; i++)
     {
-      *(dst->pixels + i) = color;
+      *((uint32_t*)dst->pixels + i) = color;
     }
   }
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
-  if (w == 0 && h == 0)
+  int a_w,a_h;
+  if (w == 0)
   {
-    NDL_DrawRect(s->pixels,x,y,s->w,s->h);
+    a_w = s->w;
   }
-  else 
+  if (h == 0) 
   {
-    NDL_DrawRect(s->pixels,x,y,w,h);
+    a_h = s->h;
   }
+  NDL_DrawRect(s->pixels,x,y,a_w,a_h);
 }
 
 // APIs below are already implemented.

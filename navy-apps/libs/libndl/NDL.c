@@ -15,7 +15,7 @@ int gpu_fb;
 uint32_t NDL_GetTicks() {
   struct timeval time_now = {0};
   gettimeofday(&time_now,NULL);
-  return time_now.tv_usec - setup_time.tv_usec;
+  return (time_now.tv_usec - setup_time.tv_usec)/1000;
 }
 
 int NDL_PollEvent(char *buf, int len) {
@@ -25,11 +25,12 @@ int NDL_PollEvent(char *buf, int len) {
     return 1;
   }
   else 
-  return 0;
+    return 0;
 }
 
 uint32_t * canvas = NULL;
 int canvas_h;
+int canvas_w;
 void NDL_OpenCanvas(int *w, int *h) {
   if (getenv("NWM_APP")) {
     int fbctl = 4;
@@ -51,42 +52,47 @@ void NDL_OpenCanvas(int *w, int *h) {
   char str[50] = {0};
   int i = read(gpu_config,str,50);
   sscanf(str,"WIDTH:%d\nHEIGHT:%d\n",&screen_w,&screen_h);
+  if (canvas != NULL) free(canvas);
   if (*h != 0 && *w != 0)
   {
-    canvas = (uint32_t*)malloc((screen_w) * (*h) * sizeof(uint32_t));
+    canvas = (uint32_t*)malloc((*w) * (*h) * sizeof(uint32_t));
     canvas_h = *h;
+    canvas_w = *w;
     printf("Canvas Width : %d\nCanvas Height : %d\n",*w,*h);
   }
   else 
   {    
     canvas = (uint32_t*)malloc((screen_w) * (screen_h) * sizeof(uint32_t));
+    canvas_w = screen_w;
     canvas_h = screen_h;
     printf("Canvas Width : %d\nCanvas Height : %d\n",screen_w,screen_h);
+    *w = screen_w;
+    *h = screen_h;
   }
 }
 
 void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
-  
+  /*
   int i,j,k = 0;
   for (i = y; i < y + h; i++)
   {
     lseek(gpu_fb,(i * screen_w) + x,SEEK_SET);
     k += write(gpu_fb,pixels + k,w);
-  }
-  /*
+  }*/
   int i,j,k = 0;
-  lseek(gpu_fb,0,SEEK_SET);
-  for (i = y;i < canvas_h; i++)
+  for (i = y;i < y + h; i++)
   {
-    for (j = x; j < screen_w; j++)
+    for (j = x; j < x + w; j++)
     {
-      if (j >= x && j < x + w)
+      if (i >= 0 && j >= 0 && i < canvas_h && j < canvas_w)
       {
-        *(canvas + i*screen_w + j) = *(pixels + i*w + j);
+        *(canvas + i * canvas_w + j) = *(pixels + i * canvas_w + j);
       }
+      k++;
     }
   }
-  write(gpu_fb,canvas,screen_w * canvas_h);*/
+  lseek(gpu_fb,canvas_w,SEEK_SET);
+  write(gpu_fb,canvas,canvas_w * canvas_h); 
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {

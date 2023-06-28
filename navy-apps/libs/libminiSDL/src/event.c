@@ -15,36 +15,67 @@ int SDL_PushEvent(SDL_Event *ev) {
 }
 
 int SDL_PollEvent(SDL_Event *ev) {
-  return 0;
-}
-
-int SDL_WaitEvent(SDL_Event *event) {
   int i;
   char str[64] = {0};
-  if (NDL_PollEvent(str,sizeof(str)))
+  if (NDL_PollEvent(str,sizeof(str)) == 1)
   {
     if (strncmp(str,"kd",2) == 0)
     {
-      event->type = SDL_KEYDOWN;
+      ev->type = SDL_KEYDOWN;
       for (i = 0; i < sizeof(keyname); i++)
       {
         if (strcmp(str + 3,keyname[i]) == 0)
         {
-          (event->key).keysym.sym = i;
+          (ev->key).keysym.sym = i;
           return 1;
         }
       }
     }
     else if (strncmp(str,"ku",2) == 0)
     {
-      event->type = SDL_KEYUP;
+      ev->type = SDL_KEYUP;
       for (i = 0; i < sizeof(keyname); i++)
       {
         if (strcmp(str + 3,keyname[i]) == 0)
         {
-          (event->key).keysym.sym = i;
+          (ev->key).keysym.sym = i;
           return 1;
         }
+      }
+    }
+  }
+  return 0;
+}
+
+int SDL_WaitEvent(SDL_Event *event) {
+  int i;
+  char str[64] = {0};
+  while (NDL_PollEvent(str,sizeof(str)) == 0)
+  {
+    ;
+  }
+
+  if (strncmp(str,"kd",2) == 0)
+  {
+    event->type = SDL_KEYDOWN;
+    for (i = 0; i < sizeof(keyname); i++)
+    {
+      if (strcmp(str + 3,keyname[i]) == 0)
+      {
+        (event->key).keysym.sym = i;
+        return 1;
+      }
+    }
+  }
+  else if (strncmp(str,"ku",2) == 0)
+  {
+    event->type = SDL_KEYUP;
+    for (i = 0; i < sizeof(keyname); i++)
+    {
+      if (strcmp(str + 3,keyname[i]) == 0)
+      {
+        (event->key).keysym.sym = i;
+        return 1;
       }
     }
   }

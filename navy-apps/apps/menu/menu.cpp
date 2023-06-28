@@ -142,8 +142,10 @@ static void display_menu(int n) {
   clear_display();
   //x = -128
   SDL_Rect rect = { .x = screen->w - logo_sf->w, .y = 0 };
-  SDL_BlitSurface(logo_sf, NULL, screen, &rect);
-  printf("%d %d %d\n",font->w,font->h,rect.x);
+  //SDL_Rect rect = { .x = 0, .y = 0 };
+  SDL_BlitSurface(logo_sf, 0, screen, &rect);
+  //FIXME
+  SDL_UpdateRect(screen, 0, 0, 0, 0);
   printf("Available applications:\n");
   char buf[80];
   int i;
@@ -175,6 +177,7 @@ static void display_menu(int n) {
   draw_text_row(buf, i);
   i ++;
 
+  printf("update screen\n");
   SDL_UpdateRect(screen, 0, 0, 0, 0);
 
   printf("========================================\n");
