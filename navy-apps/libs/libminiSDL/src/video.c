@@ -106,6 +106,11 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   //根据dstrect中的坐标计算dst中pixel的偏移，将color填充进去。
   int i,j;
+  if (dst->format->BitsPerPixel == 8)
+  {
+    printf("fill error\n");
+    assert(0);
+  }
   if (dstrect != NULL)
   {
     for (i = dstrect->y; i < dstrect->y + dstrect->h; i++)
@@ -138,9 +143,14 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
   }
   if (s->format->BitsPerPixel == 8)
   {
+    /*
     uint32_t* pixels = (uint32_t*)malloc(sizeof(uint32_t) * a_w * a_h);
     SDL_PixelFormat* fmt = (SDL_PixelFormat*)malloc(sizeof(SDL_PixelFormat));
     fmt->BytesPerPixel = 4;
+    fmt->Rshift = 0;
+    fmt->Gshift = 8;
+    fmt->Bshift = 16;
+    fmt->Ashift = 24;
     for (int i = 0; i < a_w * a_h; i++)
     {
       
@@ -148,7 +158,21 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
       s->format->palette->colors[*((uint8_t*)s->pixels + i)].b,s->format->palette->colors[*((uint8_t*)s->pixels + i)].a);
     }
     NDL_DrawRect(pixels,x,y,a_w,a_h);
-    free(pixels);
+    free(pixels);*/
+    SDL_Surface* surface = SDL_CreateRGBSurface(0, a_w, a_h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
+    uint32_t* pixels = (uint32_t*)surface->pixels;
+    for (int y = 0; y < surface->h; y++) {
+    for (int x = 0; x < surface->w; x++) {
+        uint8_t r = s->format->palette->colors[*((uint8_t*)s->pixels + y * surface->h + surface->w)].r;  // 获取红色分量值
+        uint8_t g = s->format->palette->colors[*((uint8_t*)s->pixels + y * surface->h + surface->w)].g;  // 获取绿色分量值
+        uint8_t b = s->format->palette->colors[*((uint8_t*)s->pixels + y * surface->h + surface->w)].b;  // 获取蓝色分量值
+        uint8_t a = s->format->palette->colors[*((uint8_t*)s->pixels + y * surface->h + surface->w)].a;
+        uint32_t pixel = SDL_MapRGBA(surface->format, r, g, b, a);  // 将RGB值转换为32位像素值
+
+        pixels[y * surface->w + x] = pixel;  // 存储像素值到像素数据中
+    }
+    NDL_DrawRect(pixels,x,y,a_w,a_h);
+    }
   }
   else 
   {
