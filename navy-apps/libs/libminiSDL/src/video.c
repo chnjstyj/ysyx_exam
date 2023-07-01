@@ -12,8 +12,29 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   int i,j,k;
   if (srcrect != NULL && dstrect != NULL) 
   {
+    //FIXME srcrect < 0
     printf("case1\n");
-    assert(0);
+    src_base = srcrect->y * src->w + srcrect->x;
+    dst_base = 0;
+    if (dst->format->BitsPerPixel == 8)
+      printf("palette %d\n",src_base);
+    for (i = dstrect->y; i < dstrect->y + srcrect->h; i++)
+    {
+      src_base = (srcrect->y + i) * src->w + srcrect->x;
+      for (j = dstrect->x; j < dstrect->x + srcrect->w; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        {
+          if (dst->format->BitsPerPixel == 8)
+            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+          else
+            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+        }
+        src_base++;
+      }
+    }
+    printf("finish\n");
+    return;
   }
   if (srcrect == NULL && dstrect != NULL)//the entire surface is copied
   {
@@ -26,7 +47,10 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
       {
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
         {
-          *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+          if (dst->format->BitsPerPixel == 8)
+            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+          else 
+            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
         }
         src_base++;
       }
@@ -35,26 +59,44 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   }
   else if (srcrect != NULL && dstrect == NULL) //copied to entire surface
   {
-    src_base = srcrect->y * src->w + srcrect->x;
+    //src_base = srcrect->y * src->w + srcrect->x;
     dst_base = 0;
     for (i = 0; i < srcrect->h; i++)
     {
+      src_base = (srcrect->y + i) * src->w + srcrect->x;
       for (j = 0; j < srcrect->w; j++)
       {
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
         {
-          *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+          if (dst->format->BitsPerPixel == 8)
+            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+          else 
+            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
         }
         src_base++;
       }
-      src_base = (srcrect->y + i) * src->w + srcrect->x;
     }
     return;
   }
   else 
   {
     printf("case4\n");
-    assert(0);
+    dst_base = 0;
+    for (i = 0; i < src->h; i++)
+    {
+      for (j = 0; j < src->w; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        {
+          if (dst->format->BitsPerPixel == 8)
+            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+          else 
+            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+        }
+        src_base++;
+      }
+    }
+    return;
   }
   printf("case5\n");
   printf("%x %x\n",srcrect,dstrect);
@@ -85,7 +127,7 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
-  int a_w,a_h;
+  int a_w = w,a_h = h;
   if (w == 0)
   {
     a_w = s->w;
@@ -94,7 +136,24 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
   {
     a_h = s->h;
   }
-  NDL_DrawRect(s->pixels,x,y,a_w,a_h);
+  if (s->format->BitsPerPixel == 8)
+  {
+    uint32_t* pixels = (uint32_t*)malloc(sizeof(uint32_t) * a_w * a_h);
+    SDL_PixelFormat* fmt = (SDL_PixelFormat*)malloc(sizeof(SDL_PixelFormat));
+    fmt->BytesPerPixel = 4;
+    for (int i = 0; i < a_w * a_h; i++)
+    {
+      
+      pixels[i] = SDL_MapRGBA(fmt,s->format->palette->colors[*((uint8_t*)s->pixels + i)].r,s->format->palette->colors[*((uint8_t*)s->pixels + i)].g,
+      s->format->palette->colors[*((uint8_t*)s->pixels + i)].b,s->format->palette->colors[*((uint8_t*)s->pixels + i)].a);
+    }
+    NDL_DrawRect(pixels,x,y,a_w,a_h);
+    free(pixels);
+  }
+  else 
+  {
+    NDL_DrawRect(s->pixels,x,y,a_w,a_h);
+  }
 }
 
 // APIs below are already implemented.

@@ -16,7 +16,6 @@
 #include "sim.h"
 #include "../../include/common.h"
 #include <difftest-def.h>
-#include <stdio.h>
 
 #ifdef CONFIG_ISA_riscv32
 #undef DEFAULT_ISA

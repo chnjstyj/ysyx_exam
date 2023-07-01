@@ -71,18 +71,21 @@ size_t ramdisk_read(void *buf, size_t offset, size_t len);
 size_t fs_read(int fd, void *buf, size_t len)
 {
   int num;
-  if (file_table[fd].size < len && !(fd < 6)) // out of range
+  size_t r_len = len;
+  if (file_table[fd].size - (open_offset[fd] - file_table[fd].disk_offset) < len && !(fd < 6)) // out of range
   {
-    Log("Too long lens fd:%d",fd);
-    assert(0);
+    printf("Too long lens fd:%d size:%ld len:%ld rlen:%ld offset:%d %s\n",fd,file_table[fd].size,len,file_table[fd].size - (open_offset[fd] - file_table[fd].disk_offset),open_offset[fd],file_table[fd].name);
+    r_len = file_table[fd].size - (open_offset[fd] - file_table[fd].disk_offset);
+    //assert(0);
   }
+  if (open_offset[fd] == file_table[fd].disk_offset + file_table[fd].size && !(fd < 6)) return 0;
   if (file_table[fd].read == NULL)
   {
-    num = ramdisk_read(buf,open_offset[fd],len);
+    num = ramdisk_read(buf,open_offset[fd],r_len);
   }
   else 
   {
-    num = file_table[fd].read(buf,open_offset[fd],len);
+    num = file_table[fd].read(buf,open_offset[fd],r_len);
   }
   open_offset[fd] += num;
   return num;

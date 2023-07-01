@@ -2,6 +2,7 @@
 #include <SDL.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define keyname(k) #k,
 
@@ -87,5 +88,7 @@ int SDL_PeepEvents(SDL_Event *ev, int numevents, int action, uint32_t mask) {
 }
 
 uint8_t* SDL_GetKeyState(int *numkeys) {
-  return NULL;
+  //TODO
+  
+  return (uint8_t*)malloc(sizeof(uint8_t) * sizeof(keyname) / sizeof(char *));
 }
