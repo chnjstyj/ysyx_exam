@@ -9,15 +9,16 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
   int src_base,dst_base;
-  int i,j,k;
+  int i,j,k = 0;
   if (srcrect != NULL && dstrect != NULL) 
   {
     //FIXME srcrect < 0
+    printf("case1\n");
     src_base = srcrect->y * src->w + srcrect->x;
     dst_base = 0;
     for (i = dstrect->y; i < dstrect->y + srcrect->h; i++)
     {
-      src_base = (srcrect->y + i) * src->w + srcrect->x;
+      src_base = (srcrect->y + k) * src->w + srcrect->x;
       for (j = dstrect->x; j < dstrect->x + srcrect->w; j++)
       {
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
@@ -29,11 +30,13 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
         }
         src_base++;
       }
+      k++;
     }
     return;
   }
   if (srcrect == NULL && dstrect != NULL)//the entire surface is copied
   {
+    printf("case2\n");
     //printf("%d %d\n",dst->h,dst->w);
     src_base = 0;
     dst_base = 0;
@@ -55,6 +58,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   }
   else if (srcrect != NULL && dstrect == NULL) //copied to entire surface
   {
+    printf("case3\n");
     //src_base = srcrect->y * src->w + srcrect->x;
     dst_base = 0;
     for (i = 0; i < srcrect->h; i++)
@@ -76,6 +80,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   }
   else 
   {
+    printf("case4\n");
     dst_base = 0;
     for (i = 0; i < src->h; i++)
     {
@@ -167,47 +172,22 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
   }
   if (s->format->BitsPerPixel == 8)
   {
-    
     uint32_t* pixels = (uint32_t*)malloc(sizeof(uint32_t) * a_w * a_h);
     SDL_PixelFormat* fmt = (SDL_PixelFormat*)malloc(sizeof(SDL_PixelFormat));
     SDL_Palette* palette = s->format->palette;
-    /*
-    fmt->BytesPerPixel = 4;
-    fmt->Rshift = 0;
-    fmt->Gshift = 8;
-    fmt->Bshift = 16;
-    fmt->Ashift = 24;*/
-
     for (int i = 0; i < a_w * a_h; i++)
     {
-      uint8_t index = *((uint8_t*)s->pixels + x + y * s->pitch + i);
+      uint8_t index = *((uint8_t*)s->pixels + i);//x + y * s->pitch + i);
       uint8_t r = palette->colors[index].r;  // 获取红色分量值
       uint8_t g = palette->colors[index].g;  // 获取绿色分量值
       uint8_t b = palette->colors[index].b;  // 获取蓝色分量值
       uint8_t a = palette->colors[index].a;
       
-      //pixels[i] = SDL_MapRGBA(fmt,s->format->palette->colors[*((uint8_t*)s->pixels + i)].r,s->format->palette->colors[*((uint8_t*)s->pixels + i)].g,
-      //s->format->palette->colors[*((uint8_t*)s->pixels + i)].b,s->format->palette->colors[*((uint8_t*)s->pixels + i)].a);
       pixels[i] = (r << 16) | (g << 8) | (b << 0) | (a << 24);
     }
     NDL_DrawRect(pixels,x,y,a_w,a_h);
     free(pixels);
-    /*
-    SDL_Surface* surface = SDL_CreateRGBSurface(0, a_w, a_h, 32, 0xFF000000, 0x00FF0000, 0x0000FF00, 0x000000FF);
-    uint32_t* pixels = (uint32_t*)surface->pixels;
-    for (int y = 0; y < surface->h; y++) {
-    for (int x = 0; x < surface->w; x++) {
-        uint8_t r = s->format->palette->colors[*((uint8_t*)s->pixels + y * surface->h + surface->w)].r;  // 获取红色分量值
-        uint8_t g = s->format->palette->colors[*((uint8_t*)s->pixels + y * surface->h + surface->w)].g;  // 获取绿色分量值
-        uint8_t b = s->format->palette->colors[*((uint8_t*)s->pixels + y * surface->h + surface->w)].b;  // 获取蓝色分量值
-        uint8_t a = s->format->palette->colors[*((uint8_t*)s->pixels + y * surface->h + surface->w)].a;
-        uint32_t pixel = SDL_MapRGBA(surface->format, r, g, b, a);  // 将RGB值转换为32位像素值
-
-        pixels[y * surface->w + x] = pixel;  // 存储像素值到像素数据中
-    }
-    NDL_DrawRect(pixels,x,y,a_w,a_h);
-    }
-    */
+    free(fmt);
   }
   else 
   {
