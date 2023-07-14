@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/time.h>
 
 static int evtdev = -1;
 static int fbdev = -1;
@@ -11,6 +12,8 @@ struct timeval setup_time = {0};
 int key_fd;
 int gpu_config;
 int gpu_fb;
+int audio_sb;
+int audio_config;
 
 uint32_t NDL_GetTicks() {
   struct timeval time_now = {0};
@@ -96,17 +99,25 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
+  audio_config = open("/dev/sbctl",0,0);
+  audio_sb = open("/dev/sb",0,0); 
+  int buf[3] = {freq,channels,samples};
+  write(audio_config,buf,3 * sizeof(int));
 }
 
 void NDL_CloseAudio() {
+  close(audio_config);
+  close(audio_sb);
 }
 
 int NDL_PlayAudio(void *buf, int len) {
-  return 0;
+  return write(audio_sb,buf,len);
 }
 
 int NDL_QueryAudio() {
-  return 0;
+  int length;
+  read(audio_config,&length,sizeof(int));
+  return length;
 }
 
 int NDL_Init(uint32_t flags) {
@@ -116,7 +127,7 @@ int NDL_Init(uint32_t flags) {
   //system setup time
   gettimeofday(&setup_time,NULL);
   key_fd = open("/dev/events",0,0);
-  gpu_config = open("/proc/dispinfo",0,0);
+  gpu_config = open("/dev/dispinfo",0,0);
   gpu_fb = open("/dev/fb",0,0);
   return 0;
 }

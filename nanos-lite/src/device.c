@@ -58,6 +58,34 @@ size_t dispinfo_read(void *buf, size_t offset, size_t len) {
   return len;
 }
 
+size_t sbctl_read(void *buf, size_t offset, size_t len) {
+  //int i;
+  AM_AUDIO_STATUS_T t = io_read(AM_AUDIO_STATUS);
+  AM_AUDIO_CONFIG_T s = io_read(AM_AUDIO_CONFIG);
+  *((int*)buf) = s.bufsize - t.count;
+  return len;
+}
+
+size_t sbctl_write(void *buf, size_t offset, size_t len)
+{
+  int freq = *((int*)buf);
+  int channels = *((int*)buf + 1);
+  int samples = *((int*)buf + 2);
+  io_write(AM_AUDIO_CTRL,freq,channels,samples);
+  return len;
+}
+
+size_t sb_write(const void *buf, size_t offset, size_t len)
+{
+  Area a = {0};
+  void* ptr = (void*)buf;
+  void* ptr_ = (uint8_t*)ptr + len;
+  a.start = ( void *)ptr;
+  a.end = ( void *)ptr_;
+  io_write(AM_AUDIO_PLAY,a);
+  return len;
+}
+
 extern uint32_t* fb;
 size_t fb_write(const void *buf, size_t offset, size_t len) {
   AM_GPU_CONFIG_T t = io_read(AM_GPU_CONFIG);

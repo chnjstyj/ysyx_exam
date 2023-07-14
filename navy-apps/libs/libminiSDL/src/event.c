@@ -23,6 +23,7 @@ int SDL_PushEvent(SDL_Event *ev) {
 int SDL_PollEvent(SDL_Event *ev) {
   int i;
   char str[64] = {0};
+  CallbackHelper();
   if (NDL_PollEvent(str,sizeof(str)) == 1)
   {
     if (strncmp(str,"kd",2) == 0)

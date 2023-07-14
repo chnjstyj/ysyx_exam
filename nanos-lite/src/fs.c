@@ -28,6 +28,9 @@ size_t serial_write(const void *buf, size_t offset, size_t len);
 size_t events_read(void *buf, size_t offset, size_t len);
 size_t dispinfo_read(void *buf, size_t offset, size_t len);
 size_t fb_write(const void *buf, size_t offset, size_t len);
+size_t sbctl_read(void *buf, size_t offset, size_t len);
+size_t sbctl_write(const void *buf, size_t offset, size_t len);
+size_t sb_write(const void *buf, size_t offset, size_t len);
 /* This is the information about all files in disk. */
 static Finfo file_table[] __attribute__((used)) = {
   [FD_STDIN]  = {"stdin", 0, 0, invalid_read, },
@@ -35,7 +38,9 @@ static Finfo file_table[] __attribute__((used)) = {
   [FD_STDERR] = {"stderr", 0, 0, invalid_read, serial_write},
   [3]         = {"/dev/events",0,0,events_read,invalid_write},
   [4]         = {"/dev/fb",0,0,invalid_read,fb_write},
-  [5]         = {"/proc/dispinfo",0,0,dispinfo_read,invalid_write},
+  [5]         = {"/dev/dispinfo",0,0,dispinfo_read,invalid_write},
+  [6]         = {"/dev/sb",0,0,invalid_read,sb_write},
+  [7]         = {"/dev/sbctl",0,0,sbctl_read,sbctl_write},
 #include "files.h"
 };
 
@@ -72,10 +77,10 @@ size_t fs_read(int fd, void *buf, size_t len)
 {
   int num;
   size_t r_len = len;
-  if (file_table[fd].size - (open_offset[fd] - file_table[fd].disk_offset) < len && !(fd < 6)) // out of range
+  if (file_table[fd].size - (open_offset[fd] - file_table[fd].disk_offset) < len && !(fd < 8)) // out of range
   {
-    printf("Too long lens fd:%d size:%ld len:%ld rlen:%ld offset:%d %s\n",fd,file_table[fd].size,len,file_table[fd].size - (open_offset[fd] - file_table[fd].disk_offset),open_offset[fd],file_table[fd].name);
     r_len = file_table[fd].size - (open_offset[fd] - file_table[fd].disk_offset);
+    printf("Too long lens fd:%d size:%ld len:%ld rlen:%ld offset:%d %s\n",fd,file_table[fd].size,len,r_len,open_offset[fd],file_table[fd].name);
     //assert(0);
   }
   if (open_offset[fd] == file_table[fd].disk_offset + file_table[fd].size && !(fd < 6)) return 0;
