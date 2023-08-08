@@ -168,7 +168,7 @@ static inline fixedpt fixedpt_ceil(fixedpt A) {
 		if (A > 0)
 			int_part++;
 		else
-			int_part++;
+			int_part--;
 	}
 	fixedpt ceil_val = int_part << FIXEDPT_FBITS;
 	return ceil_val;

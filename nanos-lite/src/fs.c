@@ -100,7 +100,7 @@ size_t ramdisk_write(const void *buf, size_t offset, size_t len);
 size_t fs_write(int fd, const void *buf, size_t len)
 {
   int num;
-  if (file_table[fd].size < len && !(fd < 6)) // out of range
+  if (file_table[fd].size < len && !(fd < 8)) // out of range
   {
     Log("Too long lens fd:%d",fd);
     assert(0);

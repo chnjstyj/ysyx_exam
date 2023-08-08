@@ -240,6 +240,20 @@ static int cmd_d(char *args)
   return 0;
 }
 
+int diff_enable = 1;
+
+static int cmd_de(char *args) 
+{
+  diff_enable = 0;
+  return 0;
+}
+
+static int cmd_at(char *args) 
+{
+  diff_enable = 1;
+  return 0;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -256,6 +270,8 @@ static struct {
   { "p", "Give the result of the expression", cmd_p },
   { "w", "Set a watchpoint at the expression", cmd_w },
   { "d", "Delete a watchpoint with NO", cmd_d },
+  { "detach","Detach difftest", cmd_de},
+  { "attach","Attach difftest", cmd_at},
 
   /* TODO: Add more commands */
 
