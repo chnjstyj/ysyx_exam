@@ -69,7 +69,7 @@ int fs_open(const char *pathname, int flags, int mode)
     }
   }
   Log("File not exists %s",pathname);
-  assert(0);
+  //assert(0);
   return -1;
 }
 size_t ramdisk_read(void *buf, size_t offset, size_t len);
