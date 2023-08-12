@@ -36,7 +36,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   }
   if (srcrect == NULL && dstrect != NULL)//the entire surface is copied
   {
-    printf("case2\n");
+    //printf("case2\n");
     //printf("%d %d\n",dst->h,dst->w);
     src_base = 0;
     dst_base = 0;

@@ -112,6 +112,7 @@ static int parse_args(int argc, char *argv[]) {
   return 0;
 }
 
+long img_size = 0;
 void init_monitor(int argc, char *argv[]) {
   /* Perform some global initialization. */
 
@@ -141,7 +142,7 @@ void init_monitor(int argc, char *argv[]) {
   init_isa();
 
   /* Load the image to memory. This will overwrite the built-in image. */
-  long img_size = load_img();
+  img_size = load_img();
 
   /* Initialize differential testing. */
   init_difftest(diff_so_file, img_size, difftest_port);
