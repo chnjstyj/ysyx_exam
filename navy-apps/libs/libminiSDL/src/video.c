@@ -13,7 +13,6 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   if (srcrect != NULL && dstrect != NULL) 
   {
     //FIXME srcrect < 0
-    printf("case1\n");
     src_base = srcrect->y * src->w + srcrect->x;
     dst_base = 0;
     for (i = dstrect->y; i < dstrect->y + srcrect->h; i++)
@@ -58,7 +57,6 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   }
   else if (srcrect != NULL && dstrect == NULL) //copied to entire surface
   {
-    printf("case3\n");
     //src_base = srcrect->y * src->w + srcrect->x;
     dst_base = 0;
     for (i = 0; i < srcrect->h; i++)
@@ -80,7 +78,6 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   }
   else 
   {
-    printf("case4\n");
     dst_base = 0;
     for (i = 0; i < src->h; i++)
     {
