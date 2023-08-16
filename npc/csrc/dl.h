@@ -7,5 +7,6 @@ enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
 
 void init_difftest(char *ref_so_file);
 void difftest_step();
+void difftest_skip();
 
 #endif

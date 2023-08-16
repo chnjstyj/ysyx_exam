@@ -17,6 +17,7 @@
 #include "tb_top.h"
 #include "dl.h"
 #include "mtrace.h"
+#include "gpu.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -145,7 +146,12 @@ extern "C" void pmem_read(long long raddr, long long *rdata) {
     //printf("%lld\n",us - boot_time);
     *rdata = (long long)(us - boot_time);
   }
-  else if (raddr >= 0x80000000)
+  else if (raddr == VGACTL_ADDR)
+  {
+    printf("screen %x\n",SCREEN_W << 16 | SCREEN_H);
+    *rdata = SCREEN_W << 16 | SCREEN_H;
+  }
+  else if (raddr >= 0x80000000 && raddr < 0x90000000)
   {
     long long addr = raddr & 0x7fffffff;
     update_mtrace("read",raddr);
@@ -155,6 +161,11 @@ extern "C" void pmem_read(long long raddr, long long *rdata) {
       temp = temp << (8 * i);
       *rdata |= temp;
     }
+  }
+  else 
+  {
+    printf("invalid address %llx\n",raddr);
+    assert(0);
   }
 }
 
@@ -170,13 +181,18 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
   {
     putchar((uint8_t)wdata);
   }
-  else if (waddr >= 0x80000000)
+  else if (waddr >= 0x80000000 && waddr < 0x90000000)
   {
     uint64_t addr = (uint64_t)waddr & (uint64_t)0x7fffffff;
     for (i = 0; i < size; i ++)
     {
       pmem[addr + i] = (uint8_t)(wdata >> 8 * i);
     }
+  }
+  else 
+  {
+    printf("invalid address %llx\n",waddr);
+    assert(0);
   }
 }
 
@@ -221,7 +237,7 @@ extern "C" void set_gpr_ptr(const svOpenArrayHandle r)
   gpr = (uint64_t *)(((VerilatedDpiOpenVar*)r)->datap());
 }
 
-static void single_cycle(Vtop* top)
+void single_cycle(Vtop* top)
 {
   top->clock = 1;top->eval();
   sim_time++;
@@ -258,7 +274,22 @@ void cpu_exec(int steps)
         iringbuf_head++;
       }
       if (diff_enable == true)
-        difftest_step();
+      {
+        uint32_t inst = top->io_inst;
+        uint32_t inst_6_0 = inst & 0x7f;
+        uint32_t inst_31_20 = (inst & 0xfff00000) >> 20;
+        uint32_t inst_31_25 = (inst & 0xfe000000) >> 20;
+        uint32_t inst_11_7  = (inst & 0xf80     ) >> 7 ;
+        uint32_t inst_19_15 = (inst & 0xf8000   ) >> 15;
+        uint32_t offset = inst_6_0 == 3 ? inst_31_20: inst_31_25 | inst_11_7;
+        uint32_t address = offset + gpr[inst_19_15];
+        if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+        {
+          difftest_skip();
+        }
+        else
+         difftest_step();
+      }
     }
   }
   for (;i > 0; i --)
@@ -268,7 +299,23 @@ void cpu_exec(int steps)
     disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
     printf("%lx %s\n",top->io_inst_address,str);
     if (diff_enable == true)
-      difftest_step();
+    {
+      uint32_t inst = top->io_inst;
+      uint32_t inst_6_0 = inst & 0x7f;
+      uint32_t inst_31_20 = (inst & 0xfff00000) >> 20;
+      uint32_t inst_31_25 = (inst & 0xfe000000) >> 20;
+      uint32_t inst_11_7  = (inst & 0xf80     ) >> 7 ;
+      uint32_t inst_19_15 = (inst & 0xf8000   ) >> 15;
+      uint32_t offset = inst_6_0 == 3 ? inst_31_20: inst_31_25 | inst_11_7;
+      uint32_t address = offset + gpr[inst_19_15];
+      if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+      {
+        printf("skip\n");
+        difftest_skip();
+      }
+      else
+        difftest_step();
+    }
   }
 }
 
@@ -292,6 +339,7 @@ int main(int argc,char *argv[])
   init_pmem("inst.bin");
   init_disasm("riscv64-pc-linux-gnu");
   init_regex();
+  init_gpu();
   for (i = 0; i < argc; i++)
   {
     if (memcmp("elf",argv[i],3) == 0)
