@@ -3,6 +3,14 @@
 
 #include <stdint.h>
 
+#define MMIO_BASE 0xa0000000
+#define DEVICE_BASE 0xa0000000
+
+#define RTC_ADDR        (DEVICE_BASE + 0x0000048)
+#define VGACTL_ADDR     (DEVICE_BASE + 0x0000100)
+#define FB_ADDR         (MMIO_BASE   + 0x1000000)
+#define SERIAL_PORT     (DEVICE_BASE + 0x00003f8)
+
 static inline uint8_t  inb(uintptr_t addr) { return *(volatile uint8_t  *)addr; }
 static inline uint16_t inw(uintptr_t addr) { return *(volatile uint16_t *)addr; }
 static inline uint32_t inl(uintptr_t addr) { return *(volatile uint32_t *)addr; }

@@ -12,19 +12,20 @@ class regs extends BlackBox with HasBlackBoxPath{
 
         val rs1 = Input(UInt(5.W))
         val rs2 = Input(UInt(5.W))
-        val csr_addr = Input(UInt(12.W))
+        //val csr_addr = Input(UInt(12.W))
         val rs1_rdata = Output(UInt(64.W))
         val rs2_rdata = Output(UInt(64.W))
-        val csr_rdata = Output(UInt(64.W))
+        //val csr_rdata = Output(UInt(64.W))
 
         val rd = Input(UInt(5.W))
         val rd_wdata = Input(UInt(64.W))
         val reg_wen = Input(UInt(1.W))
-        val csr_wen = Input(UInt(1.W))
-        val csr_sen = Input(UInt(1.W))
+        //val csr_wen = Input(UInt(1.W))
+        //val csr_sen = Input(UInt(1.W))
     })
 
     addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/regs.v").getCanonicalPath)
+    //addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/csrs.v").getCanonicalPath)
     /*
     setInline("regs.v",
     """import "DPI-C" function void set_gpr_ptr(input logic [63:0] a []);

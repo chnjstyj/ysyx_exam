@@ -34,6 +34,7 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
     fs_read(fd,m_elf_phs + i,sizeof(Elf_Phdr));
   }
 
+  /*
   for (i = 0; i < m_elf.e_phnum; i++)
   {
     if ((m_elf_phs + i)->p_type == PT_LOAD)
@@ -41,6 +42,8 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
       //start_p = (m_elf_phs + i)->p_vaddr;
     }
   }
+  */
+ 
   for (i = 0; i < m_elf.e_phnum; i++)
   {
     //LOAD

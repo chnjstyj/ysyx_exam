@@ -227,6 +227,10 @@ class id(alu_control_width:Int) extends Module{
                         //00  01
                         io.control_signal.alu_control := alu_ops.ADD | funct7(5)
                     }
+                    is ("b001".U){
+                        //sll
+                        io.control_signal.alu_control := alu_ops.SLL 
+                    }
                     is ("b011".U){
                         //sltu
                         io.control_signal.alu_control := alu_ops.LESS_THAN
@@ -238,6 +242,15 @@ class id(alu_control_width:Int) extends Module{
                     is ("b110".U){
                         //or 
                         io.control_signal.alu_control := alu_ops.OR
+                    }
+                    is ("b100".U){
+                        //xor
+                        io.control_signal.alu_control := alu_ops.XOR 
+                    }
+                    is ("b101".U){
+                        //srl sra
+                        //011 111
+                        io.control_signal.alu_control := alu_ops.SRL | funct7(5,3)
                     }
                     is ("b010".U){
                         //slt

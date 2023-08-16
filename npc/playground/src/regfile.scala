@@ -29,17 +29,22 @@ class regfile extends Module{
     val csr_rdata = Wire(UInt(64.W))
 
     //val regfile = RegInit(RegInit(VecInit(Seq.fill(31)(0.U(64.W)))))
-    val regs= Module(new regs)
+    val regs = Module(new regs)
+    val csrs = Module(new csrs)
+
     regs.io.clock := clock 
     regs.io.rs1 := io.rs1 
     regs.io.rs2 := io.rs2
-    regs.io.csr_addr := io.csr_addr
     regs.io.rd := io.rd 
     regs.io.reg_wen := (io.reg_wen | io.save_next_inst_addr | io.mem_read_en | csr_write_to_reg)
-    regs.io.csr_wen := io.csr_wen
-    regs.io.csr_sen := io.csr_sen
 
-    csr_rdata := regs.io.csr_rdata
+    csrs.io.clock := clock
+    csrs.io.rs1_rdata := regs.io.rs1_rdata
+    csrs.io.rd_wdata := io.rd_wdata
+    csrs.io.csr_wen := io.csr_wen
+    csrs.io.csr_sen := io.csr_sen
+    csrs.io.csr_addr := io.csr_addr
+    csr_rdata := csrs.io.csr_rdata
     io.csr_rdata := csr_rdata
 
     //read
