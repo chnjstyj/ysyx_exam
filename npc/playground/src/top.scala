@@ -34,6 +34,10 @@ class top extends Module{
     pc.io.direct_jump_addr := alu.io.alu_result
     pc.io.branch_jump := judge_branch_m.io.branch_jump
     pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr
+    pc.io.ecall := id.io.control_signal.ecall
+    pc.io.ecall_addr := regfile.io.csr_rdata
+    pc.io.mret := id.io.control_signal.mret
+    pc.io.mret_addr := regfile.io.mret_addr
 
     inst_if.io.clock := clock
     inst_if.io.inst_address := pc.io.inst_address
@@ -62,6 +66,8 @@ class top extends Module{
     regfile.io.csr_wen := id.io.control_signal.csr_wen
     regfile.io.csr_sen := id.io.control_signal.csr_sen
     regfile.io.csr_addr := id.io.imm
+    regfile.io.ecall := id.io.control_signal.ecall
+    regfile.io.csr_write_to_reg := id.io.control_signal.csr_write_to_reg
     /*
     when (id.io.control_signal.save_next_inst_addr === 1.U){
         regfile.io.rd_wdata := pc.io.next_inst_address

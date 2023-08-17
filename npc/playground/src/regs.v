@@ -9,11 +9,16 @@ output [63:0] rs2_rdata,
 //output reg [63:0] csr_rdata,
 input [4:0] rd,
 input [63:0] rd_wdata,
-input reg_wen
+input reg_wen,
+input ecall,
+output wire [63:0] ecall_idx
 //input csr_wen,
 //input csr_sen
 );
 reg [63:0] regs[31:0];
+
+assign ecall_idx = regs[17];
+
 //wire [63:0] csr_wdata = csr_wen ? rs1_rdata : 
 //csr_sen ? rd_wdata : 64'h0;
 //immI[7:0]

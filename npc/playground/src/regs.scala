@@ -22,6 +22,8 @@ class regs extends BlackBox with HasBlackBoxPath{
         val reg_wen = Input(UInt(1.W))
         //val csr_wen = Input(UInt(1.W))
         //val csr_sen = Input(UInt(1.W))
+        val ecall = Input(UInt(1.W))
+        val ecall_idx = Output(UInt(64.W))
     })
 
     addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/regs.v").getCanonicalPath)

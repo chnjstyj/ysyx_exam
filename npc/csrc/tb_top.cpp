@@ -26,7 +26,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define waveform 1
+//#define waveform 1
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -207,6 +207,7 @@ void exit_ebreak()
   delete ftrace_infos;
   //nvboard_quit();
   printf("ebreak\nHIT GOOD TRAP!\n");
+  printf("total steps:%d\n",total_steps);
   exit(0);
 }
 

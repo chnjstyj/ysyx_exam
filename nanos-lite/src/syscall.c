@@ -61,7 +61,7 @@ void do_syscall(Context *c) {
     case SYS_close:c->GPRx = fs_close(c->GPR2);break;
     case SYS_gettimeofday:c->GPRx = _gettimeofday((struct timeval *)c->GPR2,(struct timezone *)c->GPR3);break;
     case SYS_execve:naive_uload(NULL,(const char *)c->GPR2);
-    default: panic("Unhandled syscall ID = %d", a[0]);
+    default: panic("Unhandled syscall ID = %x", a[0]);
   }
 }
 

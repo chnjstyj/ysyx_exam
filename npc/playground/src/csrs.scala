@@ -15,6 +15,10 @@ class csrs extends BlackBox with HasBlackBoxPath{
         val rd_wdata = Input(UInt(64.W))
         val csr_wen = Input(UInt(1.W))
         val csr_sen = Input(UInt(1.W))
+        val ecall = Input(UInt(1.W))
+        val ecall_idx = Input(UInt(64.W))
+        val pc = Input(UInt(64.W))
+        val mret_addr = Output(UInt(64.W))
     })
     addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/csrs.v").getCanonicalPath)
 }

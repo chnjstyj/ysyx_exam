@@ -18,19 +18,24 @@ class regfile extends Module{
         val regfile_output_1 = Input(UInt(2.W))
         val csr_wen = Input(UInt(1.W))
         val csr_sen = Input(UInt(1.W))
+        val ecall = Input(UInt(1.W))
+        val csr_write_to_reg = Input(UInt(1.W))
 
         val rs1_rdata = Output(UInt(64.W))
         val rs2_rdata = Output(UInt(64.W))
         val csr_rdata = Output(UInt(64.W))
+        val mret_addr = Output(UInt(64.W))
 
     })
 
-    val csr_write_to_reg = WireDefault(io.rd =/= 0.U && io.csr_wen === 1.U)
+    val csr_write_to_reg = WireDefault(io.rd =/= 0.U && io.csr_write_to_reg === 1.U)
     val csr_rdata = Wire(UInt(64.W))
 
     //val regfile = RegInit(RegInit(VecInit(Seq.fill(31)(0.U(64.W)))))
     val regs = Module(new regs)
     val csrs = Module(new csrs)
+
+    io.mret_addr := csrs.io.mret_addr
 
     regs.io.clock := clock 
     regs.io.rs1 := io.rs1 
@@ -44,6 +49,9 @@ class regfile extends Module{
     csrs.io.csr_wen := io.csr_wen
     csrs.io.csr_sen := io.csr_sen
     csrs.io.csr_addr := io.csr_addr
+    csrs.io.ecall := io.ecall
+    csrs.io.ecall_idx := regs.io.ecall_idx
+    csrs.io.pc := io.inst_address
     csr_rdata := csrs.io.csr_rdata
     io.csr_rdata := csr_rdata
 

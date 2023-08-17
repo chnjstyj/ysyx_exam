@@ -13,6 +13,12 @@ class pc extends Module{
 
         val branch_jump = Input(UInt(1.W))
         val branch_jump_addr = Input(UInt(64.W))
+
+        val ecall = Input(UInt(1.W))
+        val ecall_addr = Input(UInt(64.W))
+
+        val mret = Input(UInt(1.W))
+        val mret_addr = Input(UInt(64.W))
     })
 
     val ce = RegInit(0.U(1.W))
@@ -33,6 +39,10 @@ class pc extends Module{
         inst_address := io.direct_jump_addr
     }.elsewhen (io.branch_jump === 1.U){
         inst_address := io.branch_jump_addr
+    }.elsewhen (io.ecall === 1.U){
+        inst_address := io.ecall_addr
+    }.elsewhen (io.mret === 1.U){
+        inst_address := io.mret_addr
     }.otherwise{
         inst_address := next_inst_address
     }

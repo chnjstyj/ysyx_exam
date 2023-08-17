@@ -44,6 +44,12 @@ class control_signal_bundle(alu_control_width:Int) extends Bundle{
     val csr_wen = Output(UInt(1.W))
     // 1 : csr set; 0 : not
     val csr_sen = Output(UInt(1.W))
+    // 1 : ecall; 0 : not
+    val ecall = Output(UInt(1.W))
+    // 1 : csr write to reg; 0 : not
+    val csr_write_to_reg = Output(UInt(1.W))
+    // 1 : mret; 0 : not
+    val mret = Output(UInt(1.W))
 }
 
 class id(alu_control_width:Int) extends Module{
@@ -109,7 +115,10 @@ class id(alu_control_width:Int) extends Module{
     io.control_signal.sign_divrem := 0.U
     io.control_signal.csr_wen := 0.U
     io.control_signal.csr_sen := 0.U
-    
+    io.control_signal.ecall := 0.U
+    io.control_signal.csr_write_to_reg := 0.U
+    io.control_signal.mret := 0.U
+
     switch (opcode){
         is ("b0010011".U){  
             //addi slti sltiu xori ori andi slli srli srai
@@ -295,19 +304,27 @@ class id(alu_control_width:Int) extends Module{
                         is ("b000000000001".U){
                             io.control_signal.exit_debugging := 1.U
                         }
+                        //ecall
+                        is ("b000000000000".U){
+                            io.control_signal.ecall := 1.U
+                        }
+                        //mret
+                        is ("b001100000010".U){
+                            io.control_signal.mret := 1.U
+                        }
                     }
                 }
                 is ("b001".U){
                     //CSRRW
                     io.control_signal.csr_wen := 1.U 
                     io.imm := imm_I
-                    io.control_signal.reg_wen := 1.U
+                    io.control_signal.csr_write_to_reg := 1.U
                 }
                 is ("b010".U){
                     //CSRRS
                     io.control_signal.csr_sen := (io.rs1 =/= 0.U)
                     io.imm := imm_I
-                    io.control_signal.reg_wen := 1.U
+                    io.control_signal.csr_write_to_reg := 1.U
                     io.control_signal.alu_control := alu_ops.OR
                 }
             }
