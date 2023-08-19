@@ -4,7 +4,12 @@
 #define SCREEN_W 400
 #define SCREEN_H 300
 
+#include <stdint.h>
+
 void init_gpu();
-inline void update_screen();
+void vga_update_screen();
+
+extern uint8_t vgasync;
+extern void *vmem;
 
 #endif 

@@ -30,6 +30,7 @@ typedef struct {
 extern "C"  ftrace_info* init_ftrace(const char *elf_file,int *nums);
 extern int ftrace_func_nums;
 extern ftrace_info* ftrace_infos;
+extern FILE* flog_file;
 void update_ftrace(vaddr_t addr,vaddr_t return_addr);
 void ret(vaddr_t addr);
 

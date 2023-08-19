@@ -164,7 +164,8 @@ extern "C" void pmem_read(long long raddr, long long *rdata) {
   }
   else 
   {
-    printf("invalid address %llx\n",raddr);
+    printf("invalid read address %llx\n",raddr);
+    printf("total steps:%d\n",total_steps);
     assert(0);
   }
 }
@@ -181,6 +182,18 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
   {
     putchar((uint8_t)wdata);
   }
+  else if (waddr == SYNC_ADDR)
+  {
+    vgasync = (uint8_t)wdata;
+  }
+  else if (waddr >= FB_ADDR && waddr < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
+  {
+    uint64_t addr = (uint64_t)waddr - FB_ADDR;
+    for (i = 0; i < size; i ++)
+    {
+      *((uint8_t*)vmem + addr + i) = (uint8_t)(wdata >> 8 * i);
+    }
+  }
   else if (waddr >= 0x80000000 && waddr < 0x90000000)
   {
     uint64_t addr = (uint64_t)waddr & (uint64_t)0x7fffffff;
@@ -191,7 +204,8 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
   }
   else 
   {
-    printf("invalid address %llx\n",waddr);
+    printf("invalid write address %llx\n",waddr);
+    printf("total steps:%d\n",total_steps);
     assert(0);
   }
 }
@@ -205,6 +219,7 @@ void exit_ebreak()
   delete top;
   delete pmem;
   delete ftrace_infos;
+  fclose(flog_file);
   //nvboard_quit();
   printf("ebreak\nHIT GOOD TRAP!\n");
   printf("total steps:%d\n",total_steps);
@@ -220,12 +235,14 @@ void exit_npc()
   delete top;
   delete pmem;
   delete ftrace_infos;
+  fclose(flog_file);
   //nvboard_quit();
   printf("exit\nHIT BAD TRAP!\n");
   print_itrace_buf();
   printf("total steps:%d\n",total_steps);
   exit(1);
 }
+
 /*
 extern "C" void set_memory_ptr(const svOpenArrayHandle r)
 {
@@ -252,6 +269,11 @@ void single_cycle(Vtop* top)
   #endif
 }
 
+void inline update_device()
+{
+  vga_update_screen();
+}
+
 void cpu_exec(int steps)
 {
   int i = steps;
@@ -266,6 +288,7 @@ void cpu_exec(int steps)
       single_cycle(top);
       disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
       strcpy(iringbuf[iringbuf_head],str);
+      update_device();
       if (iringbuf_head == 15)
       {
         iringbuf_head = 0;
@@ -347,6 +370,7 @@ int main(int argc,char *argv[])
     {
       ftrace_enable = true;
       ftrace_infos = init_ftrace("inst_rom.elf",&ftrace_func_nums);
+      flog_file = fopen("ftrace.log","w");
     }
     if (memcmp("diff",argv[i],4) == 0)
     {
@@ -374,6 +398,7 @@ int main(int argc,char *argv[])
   delete top;
   delete pmem;
   delete ftrace_infos;
+  fclose(flog_file);
   //nvboard_quit();
   void print_mtrace_message();
   printf("HIT BAD TRAP\n");

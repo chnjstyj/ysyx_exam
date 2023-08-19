@@ -127,9 +127,7 @@ int NDL_Init(uint32_t flags) {
   //system setup time
   gettimeofday(&setup_time,NULL);
   key_fd = open("/dev/events",0,0);
-  printf("test1\n");
   gpu_config = open("/dev/dispinfo",0,0);
-  printf("test2\n");
   gpu_fb = open("/dev/fb",0,0);
   return 0;
 }

@@ -1,11 +1,14 @@
 #include "gpu.h"
+#include <stdint.h>
 #include <SDL2/SDL.h>
 
-static void *vmem = NULL;
+void *vmem = NULL;
 static SDL_Renderer *renderer = NULL;
 static SDL_Texture *texture = NULL;
 
-static inline uint32_t screen_size() {
+uint8_t vgasync = 0;
+
+inline uint32_t screen_size() {
   return 400 *300 * sizeof(uint32_t);
 }
 
@@ -16,8 +19,8 @@ void init_gpu()
   sprintf(title, "%s-NPC", "riscv64");
   SDL_Init(SDL_INIT_VIDEO);
   SDL_CreateWindowAndRenderer(
-      SCREEN_W ,
-      SCREEN_H ,
+      SCREEN_W * 2,
+      SCREEN_H * 2,
       0, &window, &renderer);
   SDL_SetWindowTitle(window, title);
   texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
@@ -32,4 +35,12 @@ inline void update_screen() {
   SDL_RenderClear(renderer);
   SDL_RenderCopy(renderer, texture, NULL, NULL);
   SDL_RenderPresent(renderer);
+}
+
+void vga_update_screen() {
+  if (vgasync)
+  {
+    update_screen();
+    vgasync = 0;
+  }
 }
