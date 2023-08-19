@@ -415,6 +415,11 @@ class id(alu_control_width:Int) extends Module{
                     //lw 
                     io.control_signal.mem_read_size := "b0100".U 
                 }
+                is ("b110".U){
+                    //lwu
+                    io.control_signal.mem_read_size := "b0100".U 
+                    io.control_signal.zero_extends := 1.U
+                }
                 is ("b001".U){
                     //lh 
                     io.control_signal.mem_read_size := "b0010".U
