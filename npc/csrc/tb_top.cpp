@@ -27,6 +27,8 @@
 #include <readline/history.h>
 
 //#define waveform 1
+//#define mtrace_ 1
+//#define itrace_ 1
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -71,6 +73,7 @@ static uint8_t* pmem = NULL;
 //itrace
 static int iringbuf_head;
 static char iringbuf[16][30];
+FILE* itrace;
 
 //ftrace
 int ftrace_func_nums = 0;
@@ -118,14 +121,17 @@ void print_itrace_buf()
 
 void call_ftrace_handle()
 {
-  if (BITS(INST,6,0) == 0b1101111) //jal 
+  if (ftrace_enable)
   {
-    update_ftrace(INST_ADDR,NEXT_INST_ADDR);
-  }
-  else if (BITS(INST,14,12) == 0 && BITS(INST,6,0) == 0b1100111) //jalr
-  {
-    BITS(INST, 19, 15) == 1 ? ret(INST_ADDR) : 
-    update_ftrace(INST_ADDR,NEXT_INST_ADDR);
+    if (BITS(INST,6,0) == 0b1101111) //jal 
+    {
+      update_ftrace(INST_ADDR,NEXT_INST_ADDR);
+    }
+    else if (BITS(INST,14,12) == 0 && BITS(INST,6,0) == 0b1100111) //jalr
+    {
+      BITS(INST, 19, 15) == 1 ? ret(INST_ADDR) : 
+      update_ftrace(INST_ADDR,NEXT_INST_ADDR);
+    }
   }
 }
 
@@ -148,13 +154,14 @@ extern "C" void pmem_read(long long raddr, long long *rdata) {
   }
   else if (raddr == VGACTL_ADDR)
   {
-    printf("screen %x\n",SCREEN_W << 16 | SCREEN_H);
     *rdata = SCREEN_W << 16 | SCREEN_H;
   }
-  else if (raddr >= 0x80000000 && raddr < 0x90000000)
+  else if (raddr >= 0x80000000 && raddr < 0x80000000 + PMEM_SIZE)
   {
     long long addr = raddr & 0x7fffffff;
+    #ifdef mtrace_
     update_mtrace("read",raddr);
+    #endif
     for (i = 0; i < 8; i++)
     {
       temp = (pmem[addr + i] & 0xff);
@@ -166,6 +173,7 @@ extern "C" void pmem_read(long long raddr, long long *rdata) {
   {
     printf("invalid read address %llx\n",raddr);
     printf("total steps:%d\n",total_steps);
+    fclose(itrace);
     assert(0);
   }
 }
@@ -177,7 +185,9 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
   char size;
   int i;
   size = (wmask + 1)/2;
+  #ifdef mtrace_ 
   update_mtrace("write",waddr);
+  #endif
   if (waddr == SERIAL_PORT)
   {
     putchar((uint8_t)wdata);
@@ -194,7 +204,7 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
       *((uint8_t*)vmem + addr + i) = (uint8_t)(wdata >> 8 * i);
     }
   }
-  else if (waddr >= 0x80000000 && waddr < 0x90000000)
+  else if (waddr >= 0x80000000 && waddr < 0x80000000 + PMEM_SIZE)
   {
     uint64_t addr = (uint64_t)waddr & (uint64_t)0x7fffffff;
     for (i = 0; i < size; i ++)
@@ -206,6 +216,7 @@ extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
   {
     printf("invalid write address %llx\n",waddr);
     printf("total steps:%d\n",total_steps);
+    fclose(itrace);
     assert(0);
   }
 }
@@ -286,8 +297,11 @@ void cpu_exec(int steps)
       j++;
       total_steps++;
       single_cycle(top);
+      #ifdef itrace_
       disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
       strcpy(iringbuf[iringbuf_head],str);
+      fprintf(itrace,str);
+      #endif
       update_device();
       if (iringbuf_head == 15)
       {
@@ -364,6 +378,7 @@ int main(int argc,char *argv[])
   init_disasm("riscv64-pc-linux-gnu");
   init_regex();
   init_gpu();
+  itrace = fopen("itrace.log","w");
   for (i = 0; i < argc; i++)
   {
     if (memcmp("elf",argv[i],3) == 0)
@@ -371,6 +386,7 @@ int main(int argc,char *argv[])
       ftrace_enable = true;
       ftrace_infos = init_ftrace("inst_rom.elf",&ftrace_func_nums);
       flog_file = fopen("ftrace.log","w");
+      fprintf(flog_file,"ftrace log\n");
     }
     if (memcmp("diff",argv[i],4) == 0)
     {

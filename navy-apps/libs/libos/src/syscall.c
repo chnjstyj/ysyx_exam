@@ -94,6 +94,7 @@ void *_sbrk(intptr_t increment) {
   }
   else 
   {
+    write(0,"test1\n",6);
     return (void *)-1;
   }
 }
