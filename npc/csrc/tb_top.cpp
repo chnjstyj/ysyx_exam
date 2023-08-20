@@ -28,7 +28,7 @@
 
 //#define waveform 1
 //#define mtrace_ 1
-//#define itrace_ 1
+#define itrace_ 1
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
