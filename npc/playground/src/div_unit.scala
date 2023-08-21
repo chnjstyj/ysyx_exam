@@ -7,6 +7,7 @@ class div extends BlackBox with HasBlackBoxPath{
     val io = IO(new Bundle{
         val data_a = Input(UInt(64.W))
         val data_b = Input(UInt(64.W))
+        val alu_result_size = Input(UInt(1.W))
         val result = Output(UInt(64.W))
     })
 

@@ -68,6 +68,7 @@ class alu(alu_control_width:Int) extends Module{
 
     div.io.data_a := real_data_a_w
     div.io.data_b := real_data_b_w
+    div.io.alu_result_size := io.alu_result_size
 
     val add_result = WireDefault(real_data_a_w + real_data_b_w)
     val sub_result = WireDefault(real_data_a_w - real_data_b_w)
