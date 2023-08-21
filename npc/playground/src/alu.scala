@@ -42,20 +42,32 @@ class alu(alu_control_width:Int) extends Module{
 
     val alu_ops = new ALU_OPS
     val mul = Module(new mul)
+    //calculate for signed number
+    val rem = Module(new rem)
+    val div = Module(new div)
 
     val result = Wire(UInt(64.W))
 
     val real_data_a_w = WireDefault(Mux(io.alu_result_size.asBool,
-    //Cat(Fill(32,io.rs1_rdata(31)),io.rs1_rdata(31,0)),io.rs1_rdata))
+        //Cat(Fill(32,io.rs1_rdata(31)),io.rs1_rdata(31,0)),io.rs1_rdata))
     Cat(Fill(32,0.U(1.W)),io.rs1_rdata(31,0)),io.rs1_rdata))
+
     val real_data_b = WireDefault(Mux(io.alu_src.asBool,io.imm,
     Mux(io.csr_sen.asBool,io.csr_rdata,io.rs2_rdata)))
+
     val real_data_b_w = WireDefault(Mux(io.alu_result_size.asBool,
-        Cat(Fill(32,real_data_b(31)),real_data_b(31,0)),real_data_b))
+        //Cat(Fill(32,real_data_b(31)),real_data_b(31,0)),real_data_b))
+    Cat(Fill(32,0.U(1.W)),real_data_b(31,0)),real_data_b))
     
     mul.io.funct3 := io.funct3
     mul.io.data_a := real_data_a_w
     mul.io.data_b := real_data_b_w
+
+    rem.io.data_a := real_data_a_w
+    rem.io.data_b := real_data_b_w
+
+    div.io.data_a := real_data_a_w
+    div.io.data_b := real_data_b_w
 
     val add_result = WireDefault(real_data_a_w + real_data_b_w)
     val sub_result = WireDefault(real_data_a_w - real_data_b_w)
@@ -81,14 +93,25 @@ class alu(alu_control_width:Int) extends Module{
     val and_result = WireDefault(real_data_a_w & real_data_b_w)
     val or_result  = WireDefault(real_data_a_w | real_data_b_w)
     val mul_result = WireDefault(mul.io.result)
+
     val div_result = Wire(UInt(64.W))
+    val divu_result = Wire(UInt(64.W))
+    val divs_result = Wire(UInt(64.W))
+    divu_result := real_data_a_w / real_data_b_w
+    divs_result := div.io.result
     div_result := Mux(io.sign_divrem.asBool,
-    ((real_data_a_w.asSInt(63,0)) / (real_data_b_w.asSInt(63,0))).asUInt,
-    ((real_data_a_w(63,0)) / (real_data_b_w(63,0))))
+    (divs_result),
+    (divu_result))
+
     val rem_result = Wire(UInt(64.W))
+    val remu_result = Wire(UInt(64.W))
+    val rems_result = Wire(UInt(64.W))
+    remu_result := real_data_a_w % real_data_b_w
+    rems_result := rem.io.result
     rem_result := Mux(io.sign_divrem.asBool,
-    ((real_data_a_w.asSInt(63,0)) % (real_data_b_w.asSInt(63,0))).asUInt,
-    ((real_data_a_w(63,0)) % (real_data_b_w(63,0))))
+    (rems_result),
+    (remu_result))
+
     
     io.alu_result := Mux(io.alu_result_size.asBool,Cat(Fill(32,result(31)),result(31,0)),result)
 
