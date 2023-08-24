@@ -5,9 +5,6 @@ top_name ?= top
 
 export PATH := $(PATH):$(abspath ./utils)
 
-VERILATOR_CFLAGS += --trace -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert
-
 run:
 	-./Vtop elf diff
 
@@ -39,6 +36,9 @@ clean:
 
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
+
+VERILATOR_CFLAGS += --trace -MMD --build -cc  \
+				-O3 --x-assign fast --x-initial fast --noassert
 
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))

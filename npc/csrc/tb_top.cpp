@@ -25,6 +25,10 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+//#define waveform 1
+//#define mtrace_ 1
+//#define itrace_ 1
+
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
   "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
@@ -234,11 +238,11 @@ void cpu_exec(int steps)
   {
     while (1)
     {
-      j++;
       total_steps++;
       single_cycle(top);
       disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
       strcpy(iringbuf[iringbuf_head],str);
+      fprintf(itrace,str);
       if (iringbuf_head == 15)
       {
         iringbuf_head = 0;
@@ -246,6 +250,13 @@ void cpu_exec(int steps)
       else 
       {
         iringbuf_head++;
+      }
+      #endif
+      j++;
+      if (j == 25600)
+      {
+        j = 0;
+        update_device();
       }
       if (diff_enable == true)
         difftest_step();
