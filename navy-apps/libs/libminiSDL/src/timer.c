@@ -17,5 +17,5 @@ uint32_t SDL_GetTicks() {
 }
 
 void SDL_Delay(uint32_t ms) {
-  CallbackHelper();
+  //CallbackHelper();
 }
