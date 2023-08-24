@@ -38,8 +38,10 @@ class top extends Module{
     pc.io.ecall_addr := regfile.io.csr_rdata
     pc.io.mret := id.io.control_signal.mret
     pc.io.mret_addr := regfile.io.mret_addr
+    pc.io.stall_global := stall.io.stall_global
 
-    inst_if.io.clock := clock
+    inst_if.io.ACLK := clock
+    inst_if.io.ARESETn := ~(reset.asBool)
     inst_if.io.inst_address := pc.io.inst_address
     inst_if.io.ce := pc.io.ce
 
@@ -90,8 +92,11 @@ class top extends Module{
     alu.io.csr_rdata := regfile.io.csr_rdata
 
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
+    stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
+    stall.io.stall_from_mem := mem.io.stall_from_mem
     
-    mem.io.clock := clock
+    mem.io.ACLK := clock
+    mem.io.ARESETn := ~(reset.asBool)
     mem.io.mem_addr := alu.io.alu_result
     mem.io.mem_write_data := regfile.io.rs2_rdata
     mem.io.mem_write_en := id.io.control_signal.mem_write_en

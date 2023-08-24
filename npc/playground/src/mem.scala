@@ -5,7 +5,8 @@ import java.io.File
 
 class mem extends BlackBox with HasBlackBoxPath {
     val io = IO(new Bundle{
-        val clock = Input(Clock())
+        val ACLK = Input(Clock())
+        val ARESETn = Input(Bool())
         val mem_addr = Input(UInt(64.W))
         //mem write
         val mem_write_data = Input(UInt(64.W))
@@ -16,8 +17,9 @@ class mem extends BlackBox with HasBlackBoxPath {
         val mem_read_size = Input(UInt(4.W))
         val mem_read_data = Output(UInt(64.W))
         val zero_extends = Input(UInt(1.W))
+        //stall 
+        val stall_from_mem = Output(UInt(1.W))
     })
-
     addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem_rw.v").getCanonicalPath)
     addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem.v").getCanonicalPath)
 

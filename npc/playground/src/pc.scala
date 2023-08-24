@@ -19,6 +19,8 @@ class pc extends Module{
 
         val mret = Input(UInt(1.W))
         val mret_addr = Input(UInt(64.W))
+
+        val stall_global = Input(UInt(1.W))
     })
 
     val ce = RegInit(0.U(1.W))
@@ -35,6 +37,8 @@ class pc extends Module{
     ce := 1.U
     when (ce === 0.U){
         inst_address := "h0000_0000_8000_0000".U 
+    }.elsewhen(io.stall_global === 1.U){
+        inst_address := inst_address
     }.elsewhen (io.direct_jump === 1.U){
         inst_address := io.direct_jump_addr
     }.elsewhen (io.branch_jump === 1.U){

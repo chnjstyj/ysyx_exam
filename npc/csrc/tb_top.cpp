@@ -26,9 +26,9 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define waveform 1
+//#define waveform 1
 //#define mtrace_ 1
-#define itrace_ 1
+//#define itrace_ 1
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -136,45 +136,60 @@ void call_ftrace_handle()
 }
 
 static uint64_t boot_time = 0; 
+static bool ready_to_read = 0;
 
 //dpi-c
-extern "C" void pmem_read(long long raddr, long long *rdata) {
+extern "C" void pmem_read(
+  svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, long long* RDATA) {
   // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
   int i;
-  *rdata = 0;
+  *RDATA = 0;
+  *ARREADY = 1;
   unsigned long long temp;
-  if (raddr == RTC_ADDR)
+  if (ARVALID)  //address for reading is valid
   {
-    struct timeval now;
-    gettimeofday(&now, NULL);
-    uint64_t us = now.tv_sec * 1000000 + now.tv_usec;
-    if (boot_time == 0) boot_time = us;
-    //printf("%lld\n",us - boot_time);
-    *rdata = (long long)(us - boot_time);
-  }
-  else if (raddr == VGACTL_ADDR)
-  {
-    *rdata = SCREEN_W << 16 | SCREEN_H;
-  }
-  else if (raddr >= 0x80000000 && raddr < 0x80000000 + PMEM_SIZE)
-  {
-    long long addr = raddr & 0x7fffffff;
-    #ifdef mtrace_
-    update_mtrace("read",raddr);
-    #endif
-    for (i = 0; i < 8; i++)
+    if (!ready_to_read) 
     {
-      temp = (pmem[addr + i] & 0xff);
-      temp = temp << (8 * i);
-      *rdata |= temp;
+      ready_to_read = 1;
+      return;
+      //delay for 1 cycle
     }
-  }
-  else 
-  {
-    printf("invalid read address %llx\n",raddr);
-    printf("total steps:%d\n",total_steps);
-    fclose(itrace);
-    assert(0);
+    *RVALID = 1;
+    *RLAST = 1;
+    if (ARADDR == RTC_ADDR)
+    {
+      struct timeval now;
+      gettimeofday(&now, NULL);
+      uint64_t us = now.tv_sec * 1000000 + now.tv_usec;
+      if (boot_time == 0) boot_time = us;
+      //printf("%lld\n",us - boot_time);
+      *RDATA = (long long)(us - boot_time);
+    }
+    else if (ARADDR == VGACTL_ADDR)
+    {
+      *RDATA = SCREEN_W << 16 | SCREEN_H;
+    }
+    else if (ARADDR >= 0x80000000 && ARADDR < 0x80000000 + PMEM_SIZE)
+    {
+      long long addr = ARADDR & 0x7fffffff;
+      #ifdef mtrace_
+      update_mtrace("read",raddr);
+      #endif
+      for (i = 0; i < 8; i++)
+      {
+        temp = (pmem[addr + i] & 0xff);
+        temp = temp << (8 * i);
+        *RDATA |= temp;
+      }
+    }
+    else 
+    {
+      *RVALID = 0;
+      printf("invalid read address %llx\n",raddr);
+      printf("total steps:%d\n",total_steps);
+      fclose(itrace);
+      assert(0);
+    }
   }
 }
 
@@ -301,8 +316,6 @@ void cpu_exec(int steps)
       disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
       strcpy(iringbuf[iringbuf_head],str);
       fprintf(itrace,str);
-      #endif
-      update_device();
       if (iringbuf_head == 15)
       {
         iringbuf_head = 0;
@@ -311,6 +324,13 @@ void cpu_exec(int steps)
       {
         iringbuf_head++;
       }
+      #endif
+      j++;
+      //if (j == 1000000)
+      //{
+        j = 0;
+        update_device();
+      //}
       if (diff_enable == true)
       {
         uint32_t inst = top->io_inst;
