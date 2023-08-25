@@ -19,6 +19,6 @@ class stall extends Module{
     exit_verilator.io.clk := clock
     exit_verilator.io.exit_debugging := RegNext(io.exit_debugging)
 
-    io.stall_global := io.stall_from_inst_if | io.stall_from_mem
+    io.stall_global := io.stall_from_inst_if //| io.stall_from_mem
 
 }

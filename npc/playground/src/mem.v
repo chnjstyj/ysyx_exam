@@ -16,7 +16,7 @@ wire [63:0] rdata;
 wire sign;
 wire valid;
 
-assign stall_from_mem = valid;
+assign stall_from_mem = !valid && mem_read_en;
 
 always @(*) begin 
     case (mem_read_size) 
