@@ -76,7 +76,7 @@ always @(*) begin
       RREADY = 1'b1;
       valid = 1'b0;
       rdata = 64'b0;
-      if (RVALID && RLAST) begin 
+      if (ARREADY && RVALID && RLAST) begin 
         rdata = RDATA;
         valid = 1'b1;
       end 
@@ -92,13 +92,38 @@ end
 endmodule
 
 module mem_write(
-  input clk,
+  input ACLK,
+  input ARESETn,
   input [63:0] addr,
   input en,
   input [63:0] wdata,
-  input [3:0] wmask
+  input [3:0] wmask,
+  output reg finish
 );
 
+//write request channel
+reg AWVALID;
+wire AWREADY;
+reg [31:0] AWADDR;
+reg [2:0] AWPORT;
+//write data channel
+reg WVALID;
+wire WREADY;
+reg [63:0] WDATA;
+reg WLAST;
+//write response channel
+wire BVALID;
+reg BREADY;
+
+always @(posedge ACLK or negedge ARESETn) begin 
+  if (!ARESETn) begin 
+    AWVALID = 1'b0;
+    AWADDR = 32'b0;
+    AWPORT = 3'b111;
+
+end
+
+/*
 always @(posedge clk) begin 
   if (en) begin 
     case (wmask)
@@ -110,5 +135,6 @@ always @(posedge clk) begin
     endcase 
   end 
 end
+*/
 
 endmodule
