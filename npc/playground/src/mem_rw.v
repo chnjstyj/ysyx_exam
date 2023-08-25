@@ -47,7 +47,7 @@ always @(*) begin
 end
 
 always @(*) begin 
-  if (ARESETn) begin 
+  if (!ARESETn) begin 
     ARVALID = 1'b0;
     ARPROT = 3'b111;
     ARADDR = 32'b0;
@@ -66,7 +66,7 @@ always @(*) begin
 end
 
 always @(*) begin 
-  if (ARESETn) begin 
+  if (!ARESETn) begin 
     RREADY = 1'b0;
     rdata = 64'b0;
     valid = 1'b0;

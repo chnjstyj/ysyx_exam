@@ -79,7 +79,7 @@ static int cmd_info(char *args) {
 static int cmd_x(char *args) 
 {
   uint8_t data = 0;
-  long long temp = 0;
+  //long long temp = 0;
   //paddr_t addr = 0;
   int nums = 0;
   char* input_expr;
@@ -87,6 +87,7 @@ static int cmd_x(char *args)
   uint64_t result;
   int i;
   int j = 0;
+  extern uint8_t* pmem;
   if (args == NULL)
   {
     printf("Error Input!\n");
@@ -103,8 +104,8 @@ static int cmd_x(char *args)
       for (i=3;i >= 0; i--)
       {
         //result + i + (j*4)
-        pmem_read(result + j*4 + i,&temp);
-        data =  (char)temp;
+        //pmem_read(result + j*4 + i,&temp);
+        data =  *((char*)pmem + result + j*4 + i);
         //data = *(pmem + result + j*4 + i);
         printf("0x%02x   ",data);
       }

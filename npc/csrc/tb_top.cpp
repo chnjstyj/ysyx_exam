@@ -26,7 +26,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-//#define waveform 1
+#define waveform 1
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -68,7 +68,7 @@ uint64_t* pc = &(top->io_inst_address);
 
 //memory
 //static uint8_t pmem[PMEM_SIZE] = {0};
-static uint8_t* pmem = NULL;
+uint8_t* pmem = NULL;
 
 //itrace
 static int iringbuf_head;
@@ -150,6 +150,7 @@ extern "C" void pmem_read(
   {
     if (!ready_to_read) 
     {
+      *RVALID = 0;
       ready_to_read = 1;
       return;
       //delay for 1 cycle
@@ -171,6 +172,7 @@ extern "C" void pmem_read(
     }
     else if (ARADDR >= 0x80000000 && ARADDR < 0x80000000 + PMEM_SIZE)
     {
+      ready_to_read = 0;
       long long addr = ARADDR & 0x7fffffff;
       #ifdef mtrace_
       update_mtrace("read",raddr);
@@ -185,7 +187,7 @@ extern "C" void pmem_read(
     else 
     {
       *RVALID = 0;
-      printf("invalid read address %llx\n",raddr);
+      printf("invalid read address %llx\n",ARADDR);
       printf("total steps:%d\n",total_steps);
       fclose(itrace);
       assert(0);
@@ -245,7 +247,9 @@ void exit_ebreak()
   delete top;
   delete pmem;
   delete ftrace_infos;
+  #ifdef itrace_
   fclose(flog_file);
+  #endif
   //nvboard_quit();
   printf("ebreak\nHIT GOOD TRAP!\n");
   printf("total steps:%d\n",total_steps);
@@ -325,11 +329,11 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      //if (j == 1000000)
-      //{
+      if (j == 25600)
+      {
         j = 0;
         update_device();
-      //}
+      }
       if (diff_enable == true)
       {
         uint32_t inst = top->io_inst;

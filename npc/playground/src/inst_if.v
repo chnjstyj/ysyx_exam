@@ -13,7 +13,7 @@ wire [63:0] rdata;
 wire valid;
 //assign addr = inst_address & 64'h00000000_7fffffff;
 
-assign stall_from_inst_if = !valid;
+assign stall_from_inst_if = !valid && ce;
 
 mem_read if_mem_read(
     .ACLK(ACLK),
