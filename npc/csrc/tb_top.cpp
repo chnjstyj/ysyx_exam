@@ -325,19 +325,11 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-<<<<<<< HEAD
       //if (j == 1000000)
       //{
         j = 0;
         update_device();
       //}
-=======
-      if (j == 25600)
-      {
-        j = 0;
-        update_device();
-      }
->>>>>>> save/pa3
       if (diff_enable == true)
       {
         uint32_t inst = top->io_inst;
