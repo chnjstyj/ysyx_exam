@@ -45,7 +45,7 @@ reg  RREADY;
 wire RLAST;
 wire [63:0] RDATA;
 
-always @(*) begin 
+always @(posedge ACLK) begin 
     pmem_read(ARVALID, ARADDR, RREADY, ARREADY, RVALID, RLAST, RDATA);
 end
 
@@ -144,7 +144,7 @@ always @(*) begin
   end
 end
 
-always @(posedge ACLK or negedge ARESETn) begin 
+always @(*) begin 
   if (!ARESETn) begin 
     WVALID = 1'b0;
     WDATA = 64'b0;
@@ -152,13 +152,17 @@ always @(posedge ACLK or negedge ARESETn) begin
     WUSER = wmask;
   end 
   else begin 
-    if (en && AWREADY) begin 
+    if (en) begin 
       WVALID = 1'b1;
       WLAST = 1'b1;
       WDATA = wdata;
+      WUSER = wmask;
     end 
     else begin 
       WVALID = 1'b0;
+      WLAST = 1'b0;
+      WDATA = 64'b0;
+      WUSER = wmask;
     end 
   end 
 end

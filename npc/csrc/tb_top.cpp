@@ -7,6 +7,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <sys/time.h>
+#include <math.h>
 
 #include "Vtop.h"
 #include "sdb.h"
@@ -137,25 +138,24 @@ void call_ftrace_handle()
 
 static uint64_t boot_time = 0; 
 static bool ready_to_read = 0;
+static bool ready_to_write = 0;
 
 //dpi-c
 extern "C" void pmem_read(
   svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, long long* RDATA) {
   // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
   int i;
-  *RDATA = 0;
   *ARREADY = 1;
-  *RVALID = 0;
   unsigned long long temp;
   if (ARVALID)  //address for reading is valid
   {
-    if (!ready_to_read) 
-    {
-      *RVALID = 0;
-      ready_to_read = 1;
-      return;
+    //if (!ready_to_read) 
+    //{
+      //*RVALID = 0;
+      //ready_to_read = 1;
+      //return;
       //delay for 1 cycle
-    }
+   // }
     *RVALID = 1;
     *RLAST = 1;
     if (ARADDR == RTC_ADDR)
@@ -173,7 +173,6 @@ extern "C" void pmem_read(
     }
     else if (ARADDR >= 0x80000000 && ARADDR < 0x80000000 + PMEM_SIZE)
     {
-      ready_to_read = 0;
       long long addr = ARADDR & 0x7fffffff;
       #ifdef mtrace_
       update_mtrace("read",raddr);
@@ -194,6 +193,11 @@ extern "C" void pmem_read(
       assert(0);
     }
   }
+  else 
+  {
+    *RVALID = 0;
+    *RDATA = 0;
+  }
 }
 
 extern "C" void pmem_write(svBit AWVALID, int AWADDR, svBit WVALID, long long WDATA, svBit WLAST, 
@@ -202,20 +206,28 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
   // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
   // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
-  char size;
+  //char size;
   int i;
   char wmask = 0;
   for (i = 0; i < 4; i++)
   {
-    wmask |= WUSER[i].aval << i;
+    wmask |= svGetBitselLogic(WUSER,i) << i;
   }
-  size = (wmask + 1)/2;
+  //size = wmask;//(char)pow((float)2,(float)wmask);
   #ifdef mtrace_ 
   update_mtrace("write",waddr);
   #endif
   if (AWVALID)
   {
     *AWREADY = 1;
+    if (!ready_to_write) 
+    {
+      printf("delay\n");
+      *WREADY = 0;
+      ready_to_write = 1;
+      return;
+      //delay for 1 cycle
+    }
     if (WVALID)
     {
       *WREADY = 1;
@@ -223,34 +235,39 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       if (AWADDR == SERIAL_PORT)
       {
         *BVALID = 1;
+        ready_to_write = 0;
         putchar((uint8_t)WDATA);
       }
       else if (AWADDR == SYNC_ADDR)
       {
         *BVALID = 1;
+        ready_to_write = 0;
         vgasync = (uint8_t)WDATA;
       }
       else if (AWADDR >= FB_ADDR && AWADDR < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
       {
         uint64_t addr = (uint64_t)AWADDR - FB_ADDR;
-        for (i = 0; i < size; i ++)
+        for (i = 0; i < wmask; i ++)
         {
           *((uint8_t*)vmem + addr + i) = (uint8_t)(WDATA >> 8 * i);
         }
+        ready_to_write = 0;
         *BVALID = 1;
       }
       else if (AWADDR >= 0x80000000 && AWADDR < 0x80000000 + PMEM_SIZE)
       {
         uint64_t addr = (uint64_t)AWADDR & (uint64_t)0x7fffffff;
-        for (i = 0; i < size; i ++)
+        for (i = 0; i < wmask; i ++)
         {
           pmem[addr + i] = (uint8_t)(WDATA >> 8 * i);
         }
+        ready_to_write = 0;
         *BVALID = 1;
       }
       else 
       {
         *BVALID = 0;
+        ready_to_write = 0;
         printf("invalid write address %llx\n",AWADDR);
         printf("total steps:%d\n",total_steps);
         fclose(itrace);
