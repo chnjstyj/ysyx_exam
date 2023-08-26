@@ -145,6 +145,7 @@ extern "C" void pmem_read(
   int i;
   *RDATA = 0;
   *ARREADY = 1;
+  *RVALID = 0;
   unsigned long long temp;
   if (ARVALID)  //address for reading is valid
   {
@@ -187,7 +188,7 @@ extern "C" void pmem_read(
     else 
     {
       *RVALID = 0;
-      printf("invalid read address %llx\n",ARADDR);
+      printf("invalid read address %x\n",ARADDR);
       printf("total steps:%d\n",total_steps);
       fclose(itrace);
       assert(0);
@@ -195,46 +196,67 @@ extern "C" void pmem_read(
   }
 }
 
-extern "C" void pmem_write(long long waddr, long long wdata, char wmask) {
+extern "C" void pmem_write(svBit AWVALID, int AWADDR, svBit WVALID, long long WDATA, svBit WLAST, 
+const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* BVALID)
+{
   // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
   // 如`wmask = 0x3`代表只写入最低2个字节, 内存中的其它字节保持不变
   char size;
   int i;
+  char wmask = 0;
+  for (i = 0; i < 4; i++)
+  {
+    wmask |= WUSER[i].aval << i;
+  }
   size = (wmask + 1)/2;
   #ifdef mtrace_ 
   update_mtrace("write",waddr);
   #endif
-  if (waddr == SERIAL_PORT)
+  if (AWVALID)
   {
-    putchar((uint8_t)wdata);
-  }
-  else if (waddr == SYNC_ADDR)
-  {
-    vgasync = (uint8_t)wdata;
-  }
-  else if (waddr >= FB_ADDR && waddr < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
-  {
-    uint64_t addr = (uint64_t)waddr - FB_ADDR;
-    for (i = 0; i < size; i ++)
+    *AWREADY = 1;
+    if (WVALID)
     {
-      *((uint8_t*)vmem + addr + i) = (uint8_t)(wdata >> 8 * i);
+      *WREADY = 1;
+      *BVALID = 0;
+      if (AWADDR == SERIAL_PORT)
+      {
+        *BVALID = 1;
+        putchar((uint8_t)WDATA);
+      }
+      else if (AWADDR == SYNC_ADDR)
+      {
+        *BVALID = 1;
+        vgasync = (uint8_t)WDATA;
+      }
+      else if (AWADDR >= FB_ADDR && AWADDR < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
+      {
+        uint64_t addr = (uint64_t)AWADDR - FB_ADDR;
+        for (i = 0; i < size; i ++)
+        {
+          *((uint8_t*)vmem + addr + i) = (uint8_t)(WDATA >> 8 * i);
+        }
+        *BVALID = 1;
+      }
+      else if (AWADDR >= 0x80000000 && AWADDR < 0x80000000 + PMEM_SIZE)
+      {
+        uint64_t addr = (uint64_t)AWADDR & (uint64_t)0x7fffffff;
+        for (i = 0; i < size; i ++)
+        {
+          pmem[addr + i] = (uint8_t)(WDATA >> 8 * i);
+        }
+        *BVALID = 1;
+      }
+      else 
+      {
+        *BVALID = 0;
+        printf("invalid write address %llx\n",AWADDR);
+        printf("total steps:%d\n",total_steps);
+        fclose(itrace);
+        assert(0);
+      }
     }
-  }
-  else if (waddr >= 0x80000000 && waddr < 0x80000000 + PMEM_SIZE)
-  {
-    uint64_t addr = (uint64_t)waddr & (uint64_t)0x7fffffff;
-    for (i = 0; i < size; i ++)
-    {
-      pmem[addr + i] = (uint8_t)(wdata >> 8 * i);
-    }
-  }
-  else 
-  {
-    printf("invalid write address %llx\n",waddr);
-    printf("total steps:%d\n",total_steps);
-    fclose(itrace);
-    assert(0);
   }
 }
 

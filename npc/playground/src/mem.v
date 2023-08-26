@@ -15,8 +15,9 @@ module mem(
 wire [63:0] rdata;
 wire sign;
 wire valid;
+wire finish;
 
-assign stall_from_mem = !valid && mem_read_en;
+assign stall_from_mem = (!valid && mem_read_en) || (!finish && mem_write_en);
 
 always @(*) begin 
     case (mem_read_size) 
@@ -35,11 +36,13 @@ always @(*) begin
 end
 
 mem_write u_mem_write(
-    .clk(ACLK),
+    .ACLK(ACLK),
+    .ARESETn(ARESETn),
     .addr(mem_addr),
     .en(mem_write_en),
     .wdata(mem_write_data),
-    .wmask(mem_wmask)
+    .wmask(mem_wmask),
+    .finish(finish)
 );
 
 mem_read u_mem_read(

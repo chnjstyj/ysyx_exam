@@ -2,7 +2,7 @@ import "DPI-C" function void pmem_read(
  input bit ARVALID, input int ARADDR, input bit RREADY, output bit ARREADY, output bit RVALID, output bit RLAST, output longint RDATA);
 import "DPI-C" function void pmem_write(
    input bit AWVALID, input int AWADDR, input bit WVALID, 
-   input longint WDATA, input bit WLAST, input logic[2:0] WUSER,
+   input longint WDATA, input bit WLAST, input logic[3:0] WUSER,
    input bit BREADY,
    output bit AWREADY, output bit WREADY, output bit BVALID);
 wire [63:0] rdata;
@@ -120,6 +120,11 @@ wire BVALID;
 reg BREADY;
 
 always @(*) begin 
+  pmem_write(AWVALID,AWADDR,WVALID,WDATA,WLAST,WUSER,BREADY,AWREADY,
+  WREADY,BVALID);
+end
+
+always @(*) begin 
   if (!ARESETn) begin 
     AWVALID = 1'b0;
     AWADDR = 32'b0;
@@ -129,10 +134,12 @@ always @(*) begin
     if (en) begin 
       AWVALID = 1'b1;
       AWADDR = addr[31:0];
+      AWPORT = 3'b111;
     end
     else begin 
       AWVALID = 1'b0;
       AWADDR = 32'b0;
+      AWPORT = 3'b111;
     end 
   end
 end
@@ -162,14 +169,18 @@ always @(*) begin
     finish = 1'b0;
   end 
   else begin
-    if (en && BVALID) begin 
+    if (en) begin 
       BREADY = 1'b1;
-      finish = 1'b1;
+      if (BVALID)
+        finish = 1'b1;
+      else 
+        finish = 1'b0;
     end 
     else begin 
       BREADY = 1'b0;
       finish = 1'b0;
     end
+  end
 end
 
 /*
