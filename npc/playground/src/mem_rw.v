@@ -71,26 +71,24 @@ end
 always @(*) begin 
   if (!ARESETn) begin 
     RREADY = 1'b0;
-    rdata = 64'b0;
     valid = 1'b0;
   end 
   else begin 
     if (en) begin 
       RREADY = 1'b1;
       valid = 1'b0;
-      rdata = 64'b0;
       if (ARREADY && RVALID && RLAST) begin 
-        rdata = RDATA;
         valid = 1'b1;
       end 
     end 
     else begin 
       RREADY = 1'b0;
-      rdata = 64'b0;
       valid = 1'b1;
     end
   end 
 end
+
+assign rdata = RDATA;
 
 endmodule
 
@@ -170,19 +168,36 @@ end
 always @(*) begin 
   if (!ARESETn) begin 
     BREADY = 1'b0;
-    finish = 1'b0;
+    //finish = 1'b0;
   end 
   else begin
     if (en) begin 
       BREADY = 1'b1;
-      if (BVALID)
-        finish = 1'b1;
-      else 
-        finish = 1'b0;
+      //if (BVALID)
+        //finish = 1'b1;
+      //else 
+        //finish = 1'b0;
     end 
     else begin 
       BREADY = 1'b0;
-      finish = 1'b0;
+      //finish = 1'b0;
+    end
+  end
+end
+
+always @(posedge ACLK) begin 
+  if (!ARESETn) begin 
+    finish <= 1'b0;
+  end 
+  else begin
+    if (en) begin 
+      if (BVALID)
+        finish <= 1'b1;
+      else 
+        finish <= 1'b0;
+    end 
+    else begin 
+      finish <= 1'b0;
     end
   end
 end

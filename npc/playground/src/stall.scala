@@ -20,8 +20,8 @@ class stall extends Module{
     exit_verilator.io.exit_debugging := RegNext(io.exit_debugging)
     
     withClock ((!clock.asBool).asClock){
-        val stall_reg = RegNext(io.stall_from_inst_if)
-        io.stall_global := stall_reg //| io.stall_from_mem
+        val stall_reg = RegNext(io.stall_from_inst_if | io.stall_from_mem)
+        io.stall_global := stall_reg 
     }
 
 

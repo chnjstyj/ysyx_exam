@@ -12,6 +12,7 @@ class inst_if(image_file:String = "") extends BlackBox with HasBlackBoxPath{
         val ARESETn = Input(Bool())
         val inst_address = Input(UInt(64.W))
         val ce = Input(UInt(1.W))
+        val stall_global = Input(UInt(1.W))
         val stall_from_inst_if = Output(UInt(1.W))
         val inst = Output(UInt(32.W))
     })

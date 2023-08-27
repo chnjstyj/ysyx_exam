@@ -44,6 +44,7 @@ class top extends Module{
     inst_if.io.ARESETn := ~(reset.asBool)
     inst_if.io.inst_address := pc.io.inst_address
     inst_if.io.ce := pc.io.ce
+    inst_if.io.stall_global := stall.io.stall_global
 
     id.io.inst := inst_if.io.inst
 

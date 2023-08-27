@@ -138,6 +138,7 @@ void call_ftrace_handle()
 
 static uint64_t boot_time = 0; 
 static bool ready_to_read = 0;
+static bool finish_reading = 0;
 static bool ready_to_write = 0;
 
 //dpi-c
@@ -151,14 +152,16 @@ extern "C" void pmem_read(
   {
     if (!ready_to_read) 
     {
-      *RVALID = 0;
+      printf("delay %d %d\n",ready_to_read,top->clock);
+      RVALID = 0;
+      *RLAST = 0;
+      //if (top->clock != 1) return;
       ready_to_read = 1;
       return;
       //delay for 1 cycle
     }
     *RVALID = 1;
     *RLAST = 1;
-    ready_to_read = 0;
     if (ARADDR == RTC_ADDR)
     {
       struct timeval now;
@@ -178,12 +181,14 @@ extern "C" void pmem_read(
       #ifdef mtrace_
       update_mtrace("read",raddr);
       #endif
+      *RDATA = 0;
       for (i = 0; i < 8; i++)
       {
         temp = (pmem[addr + i] & 0xff);
         temp = temp << (8 * i);
         *RDATA |= temp;
       }
+      ready_to_read = 0;
     }
     else 
     {
@@ -193,11 +198,6 @@ extern "C" void pmem_read(
       fclose(itrace);
       assert(0);
     }
-  }
-  else 
-  {
-    *RVALID = 0;
-    *RDATA = 0;
   }
 }
 
@@ -218,20 +218,21 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
   #ifdef mtrace_ 
   update_mtrace("write",waddr);
   #endif
+  *WREADY = 0;
   if (AWVALID)
   {
     *AWREADY = 1;
     if (!ready_to_write) 
     {
-      printf("delay\n");
       *WREADY = 0;
+      *BVALID = 0;
       ready_to_write = 1;
       return;
       //delay for 1 cycle
     }
     if (WVALID)
     {
-      *WREADY = 1;
+      //
       *BVALID = 0;
       if (AWADDR == SERIAL_PORT)
       {
@@ -269,6 +270,9 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       {
         *BVALID = 0;
         ready_to_write = 0;
+        #ifdef waveform
+        m_trace->close();
+        #endif
         printf("invalid write address %llx\n",AWADDR);
         printf("total steps:%d\n",total_steps);
         fclose(itrace);
