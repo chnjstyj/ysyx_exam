@@ -185,19 +185,19 @@ always @(*) begin
   end
 end
 
-always @(posedge ACLK) begin 
+always @(*) begin 
   if (!ARESETn) begin 
-    finish <= 1'b0;
+    finish = 1'b0;
   end 
   else begin
     if (en) begin 
       if (BVALID)
-        finish <= 1'b1;
+        finish = 1'b1;
       else 
-        finish <= 1'b0;
+        finish = 1'b0;
     end 
     else begin 
-      finish <= 1'b0;
+      finish = 1'b0;
     end
   end
 end

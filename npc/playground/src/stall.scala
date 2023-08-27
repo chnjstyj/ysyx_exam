@@ -10,7 +10,6 @@ class stall extends Module{
         val stall_from_inst_if = Input(UInt(1.W))
         val stall_from_mem = Input(UInt(1.W))
 
-        //
         val stall_global = Output(UInt(1.W))
     })
 
@@ -19,8 +18,8 @@ class stall extends Module{
     exit_verilator.io.clk := clock
     exit_verilator.io.exit_debugging := RegNext(io.exit_debugging)
     
-    withClock ((!clock.asBool).asClock){
-        val stall_reg = RegNext(io.stall_from_inst_if | io.stall_from_mem)
+    withClock ((~clock.asBool).asClock){
+        val stall_reg = RegNext(io.stall_from_mem | io.stall_from_inst_if)
         io.stall_global := stall_reg 
     }
 

@@ -152,7 +152,6 @@ extern "C" void pmem_read(
   {
     if (!ready_to_read) 
     {
-      printf("delay %d %d\n",ready_to_read,top->clock);
       RVALID = 0;
       *RLAST = 0;
       //if (top->clock != 1) return;
@@ -224,6 +223,7 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
     *AWREADY = 1;
     if (!ready_to_write) 
     {
+      printf("delay %d %d\n",ready_to_write,top->clock);
       *WREADY = 0;
       *BVALID = 0;
       ready_to_write = 1;
@@ -232,7 +232,7 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
     }
     if (WVALID)
     {
-      //
+      *WREADY = 1;
       *BVALID = 0;
       if (AWADDR == SERIAL_PORT)
       {
@@ -435,7 +435,7 @@ int main(int argc,char *argv[])
   int i;
   #ifdef waveform
   Verilated::traceEverOn(true);
-  top->trace(m_trace, 10);
+  top->trace(m_trace, 12);
   m_trace->open("./waveform.vcd");
   #endif
   reset(2,top);
