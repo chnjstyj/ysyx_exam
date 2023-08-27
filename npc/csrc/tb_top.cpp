@@ -149,15 +149,16 @@ extern "C" void pmem_read(
   unsigned long long temp;
   if (ARVALID)  //address for reading is valid
   {
-    //if (!ready_to_read) 
-    //{
-      //*RVALID = 0;
-      //ready_to_read = 1;
-      //return;
+    if (!ready_to_read) 
+    {
+      *RVALID = 0;
+      ready_to_read = 1;
+      return;
       //delay for 1 cycle
-   // }
+    }
     *RVALID = 1;
     *RLAST = 1;
+    ready_to_read = 0;
     if (ARADDR == RTC_ADDR)
     {
       struct timeval now;
