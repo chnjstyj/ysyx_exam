@@ -18,14 +18,13 @@ wire valid;
 wire finish;
 
 //assign stall_from_mem = (!valid & mem_read_en) | (!finish & mem_write_en);
-always @(negedge ACLK) begin 
+always @(*) begin 
     if (!valid && mem_read_en)
         stall_from_mem = 1'b1;
     else if (!finish && mem_write_en != 1'b0)
         stall_from_mem = 1'b1;
     else
         stall_from_mem = 1'b0;
-    $display("%d %d %d\n",$time,finish,mem_write_en);
 end
 
 always @(*) begin 

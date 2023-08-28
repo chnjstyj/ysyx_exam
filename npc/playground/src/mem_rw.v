@@ -117,7 +117,7 @@ reg [3:0] WUSER;  //equal to wmask
 wire BVALID;
 reg BREADY;
 
-always @(*) begin 
+always @(posedge ACLK) begin 
   pmem_write(AWVALID,AWADDR,WVALID,WDATA,WLAST,WUSER,BREADY,AWREADY,
   WREADY,BVALID);
 end

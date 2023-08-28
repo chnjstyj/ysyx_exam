@@ -221,11 +221,7 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
   if (AWVALID)
   {
     *AWREADY = 1;
-    if (top->clock == 0 && ready_to_write == 1)
-    {
-      printf("skip %d\n",ready_to_write);
-      return;
-    }
+    /*
     if (ready_to_write == 0) 
     {
       printf("delay %d %d\n",ready_to_write,top->clock);
@@ -234,10 +230,9 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       ready_to_write = 1;
       return;
       //delay for 1 cycle
-    }
+    }*/
     if (WVALID)
     {
-      printf("write success\n");
       *WREADY = 1;
       //*BVALID = 0;
       if (AWADDR == SERIAL_PORT)
@@ -271,6 +266,7 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         }
         *BVALID = 1;
         ready_to_write = 0;
+        printf("write success %d\n",*BVALID);
       }
       else 
       {

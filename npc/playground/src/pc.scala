@@ -50,6 +50,6 @@ class pc extends Module{
     }.otherwise{
         inst_address := next_inst_address
     }
-    io.ce := ce
 
+    io.ce := ce
 }

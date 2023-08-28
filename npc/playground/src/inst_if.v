@@ -5,6 +5,7 @@ input ARESETn,
 input [63:0] inst_address,
 input        ce,
 input stall_global,
+input stall_from_mem_reg,
 output reg stall_from_inst_if,
 output reg [31:0]  inst
 );
@@ -15,9 +16,9 @@ wire valid;
 //assign addr = inst_address & 64'h00000000_7fffffff;
 
 //assign stall_from_inst_if = !valid && ce;
-always @(negedge ACLK) begin 
-    if (!valid && ce) stall_from_inst_if <= 1'b1;
-    else stall_from_inst_if <= 1'b0;
+always @(*) begin 
+    if (!valid & ce & !stall_from_mem_reg) stall_from_inst_if = 1'b1;
+    else stall_from_inst_if = 1'b0;
 end
 
 reg [31:0] inst_before;
@@ -31,7 +32,7 @@ mem_read if_mem_read(
     .ACLK(ACLK),
     .ARESETn(ARESETn),
     .addr(inst_address),
-    .en(ce),
+    .en(ce & !stall_from_mem_reg),
     .valid(valid),
     .rdata(rdata)
 );
