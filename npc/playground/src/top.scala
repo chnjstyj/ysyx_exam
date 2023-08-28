@@ -91,10 +91,6 @@ class top extends Module{
     alu.io.funct3 := id.io.funct3 
     alu.io.csr_sen := id.io.control_signal.csr_sen
     alu.io.csr_rdata := regfile.io.csr_rdata
-
-    stall.io.exit_debugging := id.io.control_signal.exit_debugging
-    stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
-    stall.io.stall_from_mem := mem.io.stall_from_mem
     
     mem.io.ACLK := clock
     mem.io.ARESETn := ~(reset.asBool)
@@ -105,5 +101,9 @@ class top extends Module{
     mem.io.mem_read_en := id.io.control_signal.mem_read_en
     mem.io.mem_read_size := id.io.control_signal.mem_read_size
     mem.io.zero_extends := id.io.control_signal.zero_extends
+
+    stall.io.exit_debugging := id.io.control_signal.exit_debugging
+    stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
+    stall.io.stall_from_mem := mem.io.stall_from_mem
 
 }
