@@ -15,9 +15,9 @@ wire valid;
 //assign addr = inst_address & 64'h00000000_7fffffff;
 
 //assign stall_from_inst_if = !valid && ce;
-always @(*) begin 
-    if (!valid && ce) stall_from_inst_if = 1'b1;
-    else stall_from_inst_if = 1'b0;
+always @(negedge ACLK) begin 
+    if (!valid && ce) stall_from_inst_if <= 1'b1;
+    else stall_from_inst_if <= 1'b0;
 end
 
 reg [31:0] inst_before;

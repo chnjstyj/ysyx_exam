@@ -168,39 +168,36 @@ end
 always @(*) begin 
   if (!ARESETn) begin 
     BREADY = 1'b0;
-    //finish = 1'b0;
-  end 
-  else begin
-    if (en) begin 
-      BREADY = 1'b1;
-      //if (BVALID)
-        //finish = 1'b1;
-      //else 
-        //finish = 1'b0;
-    end 
-    else begin 
-      BREADY = 1'b0;
-      //finish = 1'b0;
-    end
-  end
-end
-
-always @(*) begin 
-  if (!ARESETn) begin 
     finish = 1'b0;
   end 
   else begin
     if (en) begin 
+      BREADY = 1'b1;
       if (BVALID)
         finish = 1'b1;
       else 
         finish = 1'b0;
     end 
     else begin 
+      BREADY = 1'b0;
       finish = 1'b0;
     end
   end
 end
+
+/*
+always @(negedge ACLK) begin 
+  if (!ARESETn) begin 
+    finish <= 1'b0;
+  end 
+  else begin
+    if (BVALID)
+      finish <= 1'b1;
+    else 
+      finish <= 1'b0;
+  end
+end
+*/
 
 /*
 always @(posedge clk) begin 

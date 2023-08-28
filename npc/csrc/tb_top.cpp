@@ -138,8 +138,8 @@ void call_ftrace_handle()
 
 static uint64_t boot_time = 0; 
 static bool ready_to_read = 0;
-static bool finish_reading = 0;
 static bool ready_to_write = 0;
+static bool finish_writing = 0;
 
 //dpi-c
 extern "C" void pmem_read(
@@ -221,7 +221,12 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
   if (AWVALID)
   {
     *AWREADY = 1;
-    if (!ready_to_write) 
+    if (top->clock == 0 && ready_to_write == 1)
+    {
+      printf("skip %d\n",ready_to_write);
+      return;
+    }
+    if (ready_to_write == 0) 
     {
       printf("delay %d %d\n",ready_to_write,top->clock);
       *WREADY = 0;
@@ -232,8 +237,9 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
     }
     if (WVALID)
     {
+      printf("write success\n");
       *WREADY = 1;
-      *BVALID = 0;
+      //*BVALID = 0;
       if (AWADDR == SERIAL_PORT)
       {
         *BVALID = 1;
@@ -263,8 +269,8 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         {
           pmem[addr + i] = (uint8_t)(WDATA >> 8 * i);
         }
-        ready_to_write = 0;
         *BVALID = 1;
+        ready_to_write = 0;
       }
       else 
       {
@@ -435,7 +441,7 @@ int main(int argc,char *argv[])
   int i;
   #ifdef waveform
   Verilated::traceEverOn(true);
-  top->trace(m_trace, 12);
+  top->trace(m_trace, 50);
   m_trace->open("./waveform.vcd");
   #endif
   reset(2,top);
