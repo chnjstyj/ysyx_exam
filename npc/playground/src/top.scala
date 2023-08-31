@@ -14,7 +14,8 @@ class top extends Module{
     val alu_control_width = 4
 
     val pc = Module(new pc) 
-    val inst_if = Module(new inst_if("inst.rom")) 
+    val axi_lite_arbiter = Module(new axi_lite_arbiter)
+    val inst_if = Module(new inst_if("inst.rom",axi_lite_arbiter)) 
     val id = Module(new id(alu_control_width))
     val regfile = Module(new regfile)
     val alu = Module(new alu(alu_control_width))

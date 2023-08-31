@@ -6,7 +6,7 @@ import chisel3.util.experimental.loadMemoryFromFileInline
 import chisel3.util.HasBlackBoxInline
 import java.io.File
 
-class inst_if(image_file:String = "") extends BlackBox with HasBlackBoxPath{
+class inst_if(image_file:String = "",axi_lite_arbiter:axi_lite_arbiter) extends Module{
     val io = IO(new Bundle{
         val ACLK = Input(Clock())
         val ARESETn = Input(Bool())
@@ -18,8 +18,29 @@ class inst_if(image_file:String = "") extends BlackBox with HasBlackBoxPath{
         val inst = Output(UInt(32.W))
     })
 
-    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/inst_if.v").getCanonicalPath)
-    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem_rw.v").getCanonicalPath)
+    axi_lite_arbiter.io.ifu_read_addr := io.inst_address(31,0)
+    axi_lite_arbiter.io.ifu_read_en := io.ce & !io.stall_from_mem_reg
+    val valid = WireDefault(axi_lite_arbiter.io.ifu_read_valid)
+
+    when (!valid && !io.stall_from_mem_reg){
+        io.stall_from_inst_if := 1.U 
+    }.otherwise{
+        io.stall_from_mem_reg := 0.U 
+    }
+
+    val inst_before = RegInit(0.U(32.W))
+    when (valid === 1.U){
+        inst_before := io.inst
+    }
+
+    when (!io.stall_global){
+        io.inst := axi_lite_arbiter.io.ifu_read_data(31,0)
+    }.otherwise{
+        io.inst := inst_before
+    }
+
+    //addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/inst_if.v").getCanonicalPath)
+    //addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem_rw.v").getCanonicalPath)
     /*
     setInline("inst_if.v",
     """import "DPI-C" function void set_memory_ptr(input logic [31:0] a []);
