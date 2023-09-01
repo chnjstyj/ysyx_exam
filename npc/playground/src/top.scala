@@ -15,7 +15,7 @@ class top extends Module{
 
     val pc = Module(new pc) 
     val axi_lite_arbiter = Module(new axi_lite_arbiter)
-    val inst_if = Module(new inst_if("inst.rom",axi_lite_arbiter)) 
+    val inst_if = Module(new inst_if("inst.rom")) 
     val id = Module(new id(alu_control_width))
     val regfile = Module(new regfile)
     val alu = Module(new alu(alu_control_width))
@@ -47,6 +47,8 @@ class top extends Module{
     inst_if.io.ce := pc.io.ce
     inst_if.io.stall_global := stall.io.stall_global
     inst_if.io.stall_from_mem_reg := stall.io.stall_from_mem_reg
+    inst_if.io.ifu_read_data := axi_lite_arbiter.io.ifu_read_data
+    inst_if.io.ifu_read_valid := axi_lite_arbiter.io.ifu_read_valid
 
     id.io.inst := inst_if.io.inst
 
@@ -107,5 +109,8 @@ class top extends Module{
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
     stall.io.stall_from_mem := mem.io.stall_from_mem
+
+    axi_lite_arbiter.io.ifu_read_addr := inst_if.io.ifu_read_addr
+    axi_lite_arbiter.io.ifu_read_en := inst_if.io.ifu_read_en
 
 }

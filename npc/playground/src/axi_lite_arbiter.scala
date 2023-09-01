@@ -5,12 +5,12 @@ class axi_lite_arbiter extends Module {
     val io = IO(new Bundle{
         //ifu read
         val ifu_read_addr = Input(UInt(32.W))
-        val ifu_read_en = Input(UInt(1.W)) 
-        val ifu_read_valid = Output(UInt(1.W)) 
+        val ifu_read_en = Input(Bool()) 
+        val ifu_read_valid = Output(Bool()) 
         val ifu_read_data = Output(UInt(64.W))
         //lsu read
         val lsu_read_addr = Input(UInt(32.W))
-        val lsu_read_en = Input(UInt(1.W)) 
+        val lsu_read_en = Input(Bool()) 
         val lsu_read_valid = Output(UInt(1.W)) 
         val lsu_read_data = Output(UInt(64.W))
         //lsu write

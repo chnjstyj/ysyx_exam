@@ -6,26 +6,32 @@ import chisel3.util.experimental.loadMemoryFromFileInline
 import chisel3.util.HasBlackBoxInline
 import java.io.File
 
-class inst_if(image_file:String = "",axi_lite_arbiter:axi_lite_arbiter) extends Module{
+class inst_if(image_file:String = "") extends Module{
     val io = IO(new Bundle{
         val ACLK = Input(Clock())
         val ARESETn = Input(Bool())
         val inst_address = Input(UInt(64.W))
         val ce = Input(UInt(1.W))
         val stall_global = Input(UInt(1.W))
-        val stall_from_mem_reg = Input(UInt(1.W))
+        val stall_from_mem_reg = Input(Bool())
         val stall_from_inst_if = Output(UInt(1.W))
         val inst = Output(UInt(32.W))
+        //arbiter
+        val ifu_read_addr = Output(UInt(32.W))
+        val ifu_read_en = Output(Bool())
+        val ifu_read_data = Input(UInt(64.W))
+        val ifu_read_valid = Input(Bool())
+
     })
 
-    axi_lite_arbiter.io.ifu_read_addr := io.inst_address(31,0)
-    axi_lite_arbiter.io.ifu_read_en := io.ce & !io.stall_from_mem_reg
-    val valid = WireDefault(axi_lite_arbiter.io.ifu_read_valid)
+    io.ifu_read_addr := io.inst_address(31,0)
+    io.ifu_read_en := io.ce & !io.stall_from_mem_reg
+    val valid = WireDefault(io.ifu_read_valid)
 
     when (!valid && !io.stall_from_mem_reg){
         io.stall_from_inst_if := 1.U 
     }.otherwise{
-        io.stall_from_mem_reg := 0.U 
+        io.stall_from_inst_if := 0.U 
     }
 
     val inst_before = RegInit(0.U(32.W))
@@ -34,7 +40,7 @@ class inst_if(image_file:String = "",axi_lite_arbiter:axi_lite_arbiter) extends 
     }
 
     when (!io.stall_global){
-        io.inst := axi_lite_arbiter.io.ifu_read_data(31,0)
+        io.inst := io.ifu_read_data(31,0)
     }.otherwise{
         io.inst := inst_before
     }
