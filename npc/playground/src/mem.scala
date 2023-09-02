@@ -12,14 +12,18 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         val mem_write_data = Input(UInt(64.W))
         val mem_write_en = Input(Bool())
         val mem_wmask = Input(UInt(4.W))
+        //arbiter
         val mem_write_finish = Input(Bool())
         //mem read
         val mem_read_en = Input(Bool())
         val mem_read_size = Input(UInt(4.W))
         val mem_read_data = Output(UInt(64.W))
-        val mem_read_valid = Input(Bool())
         val zero_extends = Input(Bool())
+        //arbiter
+        val mem_read_valid = Input(Bool())
         val mem_rdata = Input(UInt(64.W))
+        val lsu_read_addr = Output(UInt(32.W)) 
+        val lsu_read_en = Output(Bool())
         //stall 
         val stall_from_mem = Output(UInt(1.W))
     })
