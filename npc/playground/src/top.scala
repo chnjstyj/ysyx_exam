@@ -105,12 +105,23 @@ class top extends Module{
     mem.io.mem_read_en := id.io.control_signal.mem_read_en
     mem.io.mem_read_size := id.io.control_signal.mem_read_size
     mem.io.zero_extends := id.io.control_signal.zero_extends
+    mem.io.mem_read_valid := axi_lite_arbiter.io.lsu_read_valid
+    mem.io.mem_rdata := axi_lite_arbiter.io.lsu_read_data
+    mem.io.mem_write_finish := axi_lite_arbiter.io.lsu_write_finish
+
 
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
     stall.io.stall_from_mem := mem.io.stall_from_mem
 
+    axi_lite_arbiter.io.ACLK := clock 
+    axi_lite_arbiter.io.ARESETn := ~(reset.asBool)
     axi_lite_arbiter.io.ifu_read_addr := inst_if.io.ifu_read_addr
     axi_lite_arbiter.io.ifu_read_en := inst_if.io.ifu_read_en
+    axi_lite_arbiter.io.lsu_addr := mem.io.lsu_addr
+    axi_lite_arbiter.io.lsu_read_en := mem.io.lsu_read_en
+    axi_lite_arbiter.io.lsu_write_data := mem.io.lsu_write_data
+    axi_lite_arbiter.io.lsu_write_en := mem.io.lsu_write_en
+    axi_lite_arbiter.io.lsu_write_mask := mem.io.lsu_write_mask
 
 }
