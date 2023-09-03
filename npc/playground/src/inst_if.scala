@@ -34,15 +34,12 @@ class inst_if(image_file:String = "") extends Module{
         io.stall_from_inst_if := 0.U 
     }
 
-    val inst_before = RegInit(0.U(32.W))
-    when (valid === 1.U){
-        inst_before := io.inst
-    }
+    val inst_before = RegNext(io.inst)
 
-    when (!io.stall_global){
-        io.inst := io.ifu_read_data(31,0)
-    }.otherwise{
+    when (io.stall_from_mem_reg){
         io.inst := inst_before
+    }.otherwise{
+        io.inst := io.ifu_read_data(31,0)
     }
 
     //addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/inst_if.v").getCanonicalPath)
