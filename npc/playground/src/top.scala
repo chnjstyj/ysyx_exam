@@ -9,6 +9,7 @@ class top extends Module{
         val inst = Output(UInt(32.W))
         val inst_address = Output(UInt(64.W))
         val next_inst_address = Output(UInt(64.W))
+        val stall_global = Output(Bool())
     })
 
     val alu_control_width = 4
@@ -30,6 +31,7 @@ class top extends Module{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
     }
     io.next_inst_address := pc.io.next_inst_address
+    io.stall_global := stall.io.stall_global
 
     pc.io.direct_jump := id.io.control_signal.direct_jump
     pc.io.direct_jump_addr := alu.io.alu_result
