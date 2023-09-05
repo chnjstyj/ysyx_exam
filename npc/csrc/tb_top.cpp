@@ -380,7 +380,11 @@ void cpu_exec(int steps)
         j = 0;
         update_device();
       }
-      if (diff_enable == true)
+      if (top->io_stall_global) 
+      {
+        printf("skip\n");
+      }
+      if (diff_enable == true && !top->io_stall_global)
       {
         uint32_t inst = top->io_inst;
         uint32_t inst_6_0 = inst & 0x7f;
@@ -405,7 +409,11 @@ void cpu_exec(int steps)
     single_cycle(top);
     disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
     printf("%lx %s\n",top->io_inst_address,str);
-    if (diff_enable == true)
+    if (top->io_stall_global) 
+    {
+      printf("skip\n");
+    }
+    if (diff_enable == true && !top->io_stall_global)
     {
       uint32_t inst = top->io_inst;
       uint32_t inst_6_0 = inst & 0x7f;
@@ -417,7 +425,6 @@ void cpu_exec(int steps)
       uint32_t address = offset + gpr[inst_19_15];
       if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
       {
-        printf("skip\n");
         difftest_skip();
       }
       else
