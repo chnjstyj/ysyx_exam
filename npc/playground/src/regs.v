@@ -71,7 +71,7 @@ assign rs2_rdata = regs[rs2];
 always @(posedge clock) begin 
     if (reg_wen) begin 
         if (rd != 0) begin 
-            regs[rd] = rd_wdata;
+            regs[rd] <= rd_wdata;
         end
     end
 end

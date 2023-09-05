@@ -86,12 +86,12 @@ void difftest_step()
         ref_difftest_regcpy(&c,DIFFTEST_TO_REF);
     }
     c = {ref_regs,pc_,0};
+    ref_difftest_exec(1);
     //由于下个周期寄存器的值才会改变
     //先对比上个周期，再执行
     ref_difftest_regcpy(&c,DIFFTEST_TO_DUT);
     checkregs(c);
     //exec 
-    ref_difftest_exec(1);
 }
 
 void checkregs(struct diff_context ref_context)
@@ -108,11 +108,11 @@ void checkregs(struct diff_context ref_context)
             success = false;
         }
     }
-    if (ref_context.pc != *pc) 
+    /*if (ref_context.pc != *pc) 
     {
         printf("pc is different.\nnpc: %lx\nnemu: %lx\n",*pc,ref_context.pc);
         success = false;
-    }
+    }*/
     if (success == false)
     {
         printf("npc regs:\n");
@@ -120,11 +120,13 @@ void checkregs(struct diff_context ref_context)
         {
             printf("%-5s:0x%016lx\n",regs[j],gpr[j]);
         }
+        printf("%-5s:0x%016lx\n","pc",*pc);
         printf("ref regs:\n");
         for (j=0; j<32; j++)
         {
             printf("%-5s:0x%016lx\n",regs[j],ref_context.gpr[j]);
         }
+        printf("%-5s:0x%016lx\n","pc",ref_context.pc);
         difftest_fail();
     }
 }

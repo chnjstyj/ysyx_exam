@@ -152,7 +152,7 @@ extern "C" void pmem_read(
   {
     if (!ready_to_read) 
     {
-      RVALID = 0;
+      *RVALID = 0;
       *RLAST = 0;
       //if (top->clock != 1) return;
       ready_to_read = 1;
@@ -187,6 +187,7 @@ extern "C" void pmem_read(
         temp = temp << (8 * i);
         *RDATA |= temp;
       }
+      printf("addr %lx read data %lx\n",ARADDR,*RDATA);
       ready_to_read = 0;
     }
     else 
@@ -194,6 +195,9 @@ extern "C" void pmem_read(
       *RVALID = 0;
       printf("invalid read address %x\n",ARADDR);
       printf("total steps:%d\n",total_steps);
+      #ifdef waveform
+      m_trace->close();
+      #endif
       fclose(itrace);
       assert(0);
     }
@@ -380,11 +384,11 @@ void cpu_exec(int steps)
         j = 0;
         update_device();
       }
-      if (top->io_stall_global) 
+      if (top->io_stall) 
       {
-        printf("skip\n");
+        //printf("skip 0x%016lx\n",*pc);
       }
-      if (diff_enable == true && !top->io_stall_global)
+      if (diff_enable == true && !top->io_stall)
       {
         uint32_t inst = top->io_inst;
         uint32_t inst_6_0 = inst & 0x7f;
@@ -409,11 +413,11 @@ void cpu_exec(int steps)
     single_cycle(top);
     disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
     printf("%lx %s\n",top->io_inst_address,str);
-    if (top->io_stall_global) 
+    if (top->io_stall) 
     {
-      printf("skip\n");
+      //printf("skip\n");
     }
-    if (diff_enable == true && !top->io_stall_global)
+    if (diff_enable == true && !top->io_stall)
     {
       uint32_t inst = top->io_inst;
       uint32_t inst_6_0 = inst & 0x7f;

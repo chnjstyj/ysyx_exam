@@ -24,8 +24,8 @@ class stall extends Module{
     withClock ((!clock.asBool).asClock){
         val stall_mem_reg = RegNext(io.stall_from_mem)
         val stall_inst_if_reg = RegNext(io.stall_from_inst_if)
-        io.stall_global := stall_mem_reg | stall_inst_if_reg
-        io.stall_from_mem_reg := stall_mem_reg
+        io.stall_global := io.stall_from_mem | stall_inst_if_reg
+        io.stall_from_mem_reg := io.stall_from_mem
     }
     
 }

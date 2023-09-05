@@ -33,6 +33,7 @@ wire RLAST;
 wire [63:0] RDATA;
 
 always @(posedge ACLK) begin 
+    $display("addr %x %x\n",ARADDR,ARVALID);
     pmem_read(ARVALID, ARADDR, RREADY, ARREADY, RVALID, RLAST, RDATA);
 end
 
@@ -63,14 +64,16 @@ always @(*) begin
   else begin 
     if (en) begin 
       RREADY = 1'b1;
-      valid = 1'b0;
       if (ARREADY && RVALID && RLAST) begin 
         valid = 1'b1;
       end 
+      else begin 
+        valid = 1'b0;
+      end
     end 
     else begin 
       RREADY = 1'b0;
-      valid = 1'b1;
+      valid = 1'b0;
     end
   end 
 end

@@ -25,7 +25,7 @@ class inst_if(image_file:String = "") extends Module{
     })
 
     io.ifu_read_addr := io.inst_address(31,0)
-    io.ifu_read_en := io.ce & !io.stall_from_mem_reg
+    io.ifu_read_en := io.ce //& !io.stall_from_mem_reg
     val valid = WireDefault(io.ifu_read_valid)
 
     when (!valid && !io.stall_from_mem_reg){
@@ -36,7 +36,9 @@ class inst_if(image_file:String = "") extends Module{
 
     val inst_before = RegNext(io.inst)
 
-    when (io.stall_from_mem_reg){
+    when (io.stall_from_inst_if.asBool){
+        io.inst := 0.U(32.W)
+    }.elsewhen (io.stall_from_mem_reg || !valid){
         io.inst := inst_before
     }.otherwise{
         io.inst := io.ifu_read_data(31,0)

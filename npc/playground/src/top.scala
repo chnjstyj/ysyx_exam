@@ -9,7 +9,7 @@ class top extends Module{
         val inst = Output(UInt(32.W))
         val inst_address = Output(UInt(64.W))
         val next_inst_address = Output(UInt(64.W))
-        val stall_global = Output(Bool())
+        val stall = Output(Bool())
     })
 
     val alu_control_width = 4
@@ -31,10 +31,15 @@ class top extends Module{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
     }
     io.next_inst_address := pc.io.next_inst_address
-    io.stall_global := stall.io.stall_global
+    io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
 
-    pc.io.direct_jump := id.io.control_signal.direct_jump
-    pc.io.direct_jump_addr := alu.io.alu_result
+    withClock((!clock.asBool).asClock){
+        val direct_jump_r = RegNext( id.io.control_signal.direct_jump )
+        val direct_jump_addr_r = RegNext( alu.io.alu_result )
+        pc.io.direct_jump := direct_jump_r
+        pc.io.direct_jump_addr := direct_jump_addr_r
+    }
+
     pc.io.branch_jump := judge_branch_m.io.branch_jump
     pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr
     pc.io.ecall := id.io.control_signal.ecall
@@ -48,7 +53,7 @@ class top extends Module{
     inst_if.io.inst_address := pc.io.inst_address
     inst_if.io.ce := pc.io.ce
     inst_if.io.stall_global := stall.io.stall_global
-    inst_if.io.stall_from_mem_reg := stall.io.stall_from_mem_reg
+    inst_if.io.stall_from_mem_reg := RegNext(stall.io.stall_from_mem_reg)
     inst_if.io.ifu_read_data := axi_lite_arbiter.io.ifu_read_data
     inst_if.io.ifu_read_valid := axi_lite_arbiter.io.ifu_read_valid
 

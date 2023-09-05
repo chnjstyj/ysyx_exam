@@ -13,11 +13,11 @@ class axi_lite_arbiter extends Module {
         //lsu read
         val lsu_addr = Input(UInt(32.W))
         val lsu_read_en = Input(Bool()) 
-        val lsu_read_valid = Output(UInt(1.W)) 
+        val lsu_read_valid = Output(Bool()) 
         val lsu_read_data = Output(UInt(64.W))
         //lsu write
         val lsu_write_data = Input(UInt(64.W))
-        val lsu_write_en = Input(UInt(1.W)) 
+        val lsu_write_en = Input(Bool()) 
         val lsu_write_mask = Input(UInt(4.W))
         val lsu_write_finish = Output(UInt(1.W)) 
     })
@@ -38,11 +38,12 @@ class axi_lite_arbiter extends Module {
     val cur_state = RegNext(next_state,s0) 
 
     val addr = WireDefault(0.U(32.W))
-    val mem_read_en = WireDefault(false.B)
-    val mem_write_en = WireDefault(false.B)
+    val mem_read_en = RegInit(false.B)
+    val mem_write_en = RegInit(false.B)
     val mem_rdata = WireDefault(0.U(64.W)) 
-    val mem_read_valid = Reg(Bool()) 
-    val mem_write_finish = Reg(Bool())
+    //val mem_rdata_r = RegNext(RegNext(mem_rdata))
+    val mem_read_valid = RegInit(false.B) 
+    val mem_write_finish = RegInit(false.B)
 
     val arbiter_to_mem_read = Module(new mem_read)
     val arbiter_to_mem_write = Module(new mem_write)
@@ -77,9 +78,9 @@ class axi_lite_arbiter extends Module {
         }
     }
 
-    io.ifu_read_valid := Mux(cur_state === s1,mem_read_valid,false.B)
+    io.ifu_read_valid := Mux(cur_state === s1,mem_read_valid ,false.B)
     io.ifu_read_data := Mux(cur_state === s1,mem_rdata,0.U(64.W))
-    io.lsu_read_valid := Mux(cur_state === s2,mem_read_valid,false.B)
+    io.lsu_read_valid := Mux(cur_state === s2,mem_read_valid ,false.B)
     io.lsu_read_data := Mux(cur_state === s2,mem_rdata,0.U(64.W))
     io.lsu_write_finish := mem_write_finish
 
@@ -96,7 +97,7 @@ class axi_lite_arbiter extends Module {
         when (io.lsu_read_en){
             mem_read_en := 1.U 
             mem_write_en := 0.U 
-        }.otherwise{
+        }.elsewhen (io.lsu_write_en){
             mem_read_en := 0.U 
             mem_write_en := 1.U 
         }
