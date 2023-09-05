@@ -31,7 +31,7 @@ class top extends Module{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
     }
     io.next_inst_address := pc.io.next_inst_address
-    io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
+    io.stall := RegNext( stall.io.stall_global)//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
 
     withClock((!clock.asBool).asClock){
         val direct_jump_r = RegNext( id.io.control_signal.direct_jump )

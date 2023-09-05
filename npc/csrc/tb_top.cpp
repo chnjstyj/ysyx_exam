@@ -386,7 +386,7 @@ void cpu_exec(int steps)
       }
       if (top->io_stall) 
       {
-        //printf("skip 0x%016lx\n",*pc);
+        printf("skip 0x%016lx\n",*pc);
       }
       if (diff_enable == true && !top->io_stall)
       {
