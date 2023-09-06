@@ -27,7 +27,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define waveform 1
+//#define waveform 1
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -251,9 +251,9 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         ready_to_write = 0;
         vgasync = (uint8_t)WDATA;
       }
-      else if (AWADDR >= FB_ADDR && AWADDR < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
+      else if ((unsigned int)AWADDR >= FB_ADDR && (unsigned int)AWADDR < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
       {
-        uint64_t addr = (uint64_t)AWADDR - FB_ADDR;
+        uint32_t addr = (uint32_t)AWADDR - FB_ADDR;
         for (i = 0; i < wmask; i ++)
         {
           *((uint8_t*)vmem + addr + i) = (uint8_t)(WDATA >> 8 * i);
@@ -279,7 +279,7 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         #ifdef waveform
         m_trace->close();
         #endif
-        printf("invalid write address %llx\n",AWADDR);
+        printf("invalid write address %x\n",AWADDR);
         printf("total steps:%d\n",total_steps);
         fclose(itrace);
         assert(0);
@@ -364,6 +364,7 @@ void cpu_exec(int steps)
     while (1)
     {
       total_steps++;
+      single_cycle(top);
       #ifdef itrace_
       disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
       strcpy(iringbuf[iringbuf_head],str);
@@ -399,13 +400,12 @@ void cpu_exec(int steps)
         uint32_t address = offset + gpr[inst_19_15];
         if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
         {
-          printf("skip diff\n");
+          //printf("skip diff\n");
           difftest_skip();
         }
         else
          difftest_step();
       }
-      single_cycle(top);
     }
   }
   for (;i > 0; i --)
@@ -430,6 +430,7 @@ void cpu_exec(int steps)
       uint32_t address = offset + gpr[inst_19_15];
       if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
       {
+        //printf("skip diff\n");
         difftest_skip();
       }
       else
