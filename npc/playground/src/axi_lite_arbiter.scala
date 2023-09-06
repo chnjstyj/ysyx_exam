@@ -85,15 +85,15 @@ class axi_lite_arbiter extends Module {
     io.lsu_write_finish := mem_write_finish
 
     when (next_state === s0){
-        addr := 0.U 
+        //addr := 0.U 
         mem_read_en := 0.U
         mem_write_en := 0.U 
     }.elsewhen (next_state === s1){
-        addr := io.ifu_read_addr
+        //addr := io.ifu_read_addr
         mem_read_en := 1.U 
         mem_write_en := 0.U 
     }.elsewhen (next_state === s2){
-        addr := io.lsu_addr 
+        //addr := io.lsu_addr 
         when (io.lsu_read_en){
             mem_read_en := 1.U 
             mem_write_en := 0.U 
@@ -103,17 +103,25 @@ class axi_lite_arbiter extends Module {
         }
     }
 
+    when (cur_state === s0){
+        addr := 0.U 
+    }.elsewhen (cur_state === s1){
+        addr := io.ifu_read_addr
+    }.elsewhen (cur_state === s2){
+        addr := io.lsu_addr 
+    }
+
     arbiter_to_mem_read.io.ACLK := io.ACLK 
     arbiter_to_mem_read.io.ARESETn := io.ARESETn 
     arbiter_to_mem_read.io.addr := addr 
-    arbiter_to_mem_read.io.en := mem_read_en
+    arbiter_to_mem_read.io.en := mem_read_en & !lsu_finish
     mem_read_valid := arbiter_to_mem_read.io.valid 
     mem_rdata := arbiter_to_mem_read.io.rdata
 
     arbiter_to_mem_write.io.ACLK := io.ACLK 
     arbiter_to_mem_write.io.ARESETn := io.ARESETn 
     arbiter_to_mem_write.io.addr := addr 
-    arbiter_to_mem_write.io.en := mem_write_en 
+    arbiter_to_mem_write.io.en := mem_write_en & !lsu_finish
     arbiter_to_mem_write.io.wdata := io.lsu_write_data
     arbiter_to_mem_write.io.wmask := io.lsu_write_mask
     mem_write_finish := arbiter_to_mem_write.io.finish

@@ -36,12 +36,14 @@ class top extends Module{
     withClock((!clock.asBool).asClock){
         val direct_jump_r = RegNext( id.io.control_signal.direct_jump )
         val direct_jump_addr_r = RegNext( alu.io.alu_result )
+        val branch_jump_r = RegNext( judge_branch_m.io.branch_jump )
+        val branch_jump_addr_r = RegNext( judge_branch_m.io.branch_jump_addr )
         pc.io.direct_jump := direct_jump_r
         pc.io.direct_jump_addr := direct_jump_addr_r
+        pc.io.branch_jump := branch_jump_r
+        pc.io.branch_jump_addr := branch_jump_addr_r
     }
 
-    pc.io.branch_jump := judge_branch_m.io.branch_jump
-    pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr
     pc.io.ecall := id.io.control_signal.ecall
     pc.io.ecall_addr := regfile.io.csr_rdata
     pc.io.mret := id.io.control_signal.mret
@@ -82,6 +84,7 @@ class top extends Module{
     regfile.io.csr_addr := id.io.imm
     regfile.io.ecall := id.io.control_signal.ecall
     regfile.io.csr_write_to_reg := id.io.control_signal.csr_write_to_reg
+    regfile.io.stall_global := stall.io.stall_global
     /*
     when (id.io.control_signal.save_next_inst_addr === 1.U){
         regfile.io.rd_wdata := pc.io.next_inst_address

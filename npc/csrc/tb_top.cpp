@@ -187,7 +187,7 @@ extern "C" void pmem_read(
         temp = temp << (8 * i);
         *RDATA |= temp;
       }
-      printf("addr %lx read data %lx\n",ARADDR,*RDATA);
+      //printf("addr %lx read data %lx\n",ARADDR,*RDATA);
       ready_to_read = 0;
     }
     else 
@@ -270,7 +270,7 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         }
         *BVALID = 1;
         ready_to_write = 0;
-        printf("write success %d\n",*BVALID);
+        //printf("write success %d\n",*BVALID);
       }
       else 
       {
@@ -364,7 +364,6 @@ void cpu_exec(int steps)
     while (1)
     {
       total_steps++;
-      single_cycle(top);
       #ifdef itrace_
       disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
       strcpy(iringbuf[iringbuf_head],str);
@@ -386,7 +385,7 @@ void cpu_exec(int steps)
       }
       if (top->io_stall) 
       {
-        printf("skip 0x%016lx\n",*pc);
+        //printf("skip 0x%016lx\n",*pc);
       }
       if (diff_enable == true && !top->io_stall)
       {
@@ -400,11 +399,13 @@ void cpu_exec(int steps)
         uint32_t address = offset + gpr[inst_19_15];
         if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
         {
+          printf("skip diff\n");
           difftest_skip();
         }
         else
          difftest_step();
       }
+      single_cycle(top);
     }
   }
   for (;i > 0; i --)

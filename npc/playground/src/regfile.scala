@@ -26,6 +26,8 @@ class regfile extends Module{
         val csr_rdata = Output(UInt(64.W))
         val mret_addr = Output(UInt(64.W))
 
+        val stall_global = Input(Bool())
+
     })
 
     val csr_write_to_reg = WireDefault(io.rd =/= 0.U && io.csr_write_to_reg === 1.U)
@@ -41,12 +43,12 @@ class regfile extends Module{
     regs.io.rs1 := io.rs1 
     regs.io.rs2 := io.rs2
     regs.io.rd := io.rd 
-    regs.io.reg_wen := (io.reg_wen | io.save_next_inst_addr | io.mem_read_en | csr_write_to_reg)
+    regs.io.reg_wen := !io.stall_global & (io.reg_wen | io.save_next_inst_addr | io.mem_read_en | csr_write_to_reg)
 
     csrs.io.clock := clock
     csrs.io.rs1_rdata := regs.io.rs1_rdata
     csrs.io.rd_wdata := io.rd_wdata
-    csrs.io.csr_wen := io.csr_wen
+    csrs.io.csr_wen := !io.stall_global & io.csr_wen
     csrs.io.csr_sen := io.csr_sen
     csrs.io.csr_addr := io.csr_addr
     csrs.io.ecall := io.ecall
