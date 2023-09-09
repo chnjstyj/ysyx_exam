@@ -9,11 +9,13 @@ class top extends Module{
         val inst = Output(UInt(32.W))
         val inst_address = Output(UInt(64.W))
         val next_inst_address = Output(UInt(64.W))
+        val stall = Output(Bool())
     })
 
     val alu_control_width = 4
 
     val pc = Module(new pc) 
+    val axi_lite_arbiter = Module(new axi_lite_arbiter)
     val inst_if = Module(new inst_if("inst.rom")) 
     val id = Module(new id(alu_control_width))
     val regfile = Module(new regfile)
@@ -29,15 +31,33 @@ class top extends Module{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
     }
     io.next_inst_address := pc.io.next_inst_address
+    io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
 
-    pc.io.direct_jump := id.io.control_signal.direct_jump
-    pc.io.direct_jump_addr := alu.io.alu_result
-    pc.io.branch_jump := judge_branch_m.io.branch_jump
-    pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr
+    withClock((!clock.asBool).asClock){
+        val direct_jump_r = RegNext( id.io.control_signal.direct_jump )
+        val direct_jump_addr_r = RegNext( alu.io.alu_result )
+        val branch_jump_r = RegNext( judge_branch_m.io.branch_jump )
+        val branch_jump_addr_r = RegNext( judge_branch_m.io.branch_jump_addr )
+        pc.io.direct_jump := direct_jump_r
+        pc.io.direct_jump_addr := direct_jump_addr_r
+        pc.io.branch_jump := branch_jump_r
+        pc.io.branch_jump_addr := branch_jump_addr_r
+    }
 
-    inst_if.io.clock := clock
+    pc.io.ecall := id.io.control_signal.ecall
+    pc.io.ecall_addr := regfile.io.csr_rdata
+    pc.io.mret := id.io.control_signal.mret
+    pc.io.mret_addr := regfile.io.mret_addr
+    pc.io.stall_global := stall.io.stall_global
+
+    inst_if.io.ACLK := clock
+    inst_if.io.ARESETn := ~(reset.asBool)
     inst_if.io.inst_address := pc.io.inst_address
     inst_if.io.ce := pc.io.ce
+    inst_if.io.stall_global := stall.io.stall_global
+    inst_if.io.stall_from_mem_reg := RegNext(stall.io.stall_from_mem_reg)
+    inst_if.io.ifu_read_data := axi_lite_arbiter.io.ifu_read_data
+    inst_if.io.ifu_read_valid := axi_lite_arbiter.io.ifu_read_valid
 
     id.io.inst := inst_if.io.inst
 
@@ -59,6 +79,12 @@ class top extends Module{
     regfile.io.rd_wdata := MuxCase(alu.io.alu_result,Seq(
         id.io.control_signal.save_next_inst_addr.asBool -> pc.io.next_inst_address,
         id.io.control_signal.mem_read_en.asBool -> mem.io.mem_read_data))
+    regfile.io.csr_wen := id.io.control_signal.csr_wen
+    regfile.io.csr_sen := id.io.control_signal.csr_sen
+    regfile.io.csr_addr := id.io.imm
+    regfile.io.ecall := id.io.control_signal.ecall
+    regfile.io.csr_write_to_reg := id.io.control_signal.csr_write_to_reg
+    regfile.io.stall_global := stall.io.stall_global
     /*
     when (id.io.control_signal.save_next_inst_addr === 1.U){
         regfile.io.rd_wdata := pc.io.next_inst_address
@@ -77,10 +103,11 @@ class top extends Module{
     alu.io.sign_less_than := id.io.control_signal.sign_less_than
     alu.io.sign_divrem := id.io.control_signal.sign_divrem
     alu.io.funct3 := id.io.funct3 
-
-    stall.io.exit_debugging := id.io.control_signal.exit_debugging
+    alu.io.csr_sen := id.io.control_signal.csr_sen
+    alu.io.csr_rdata := regfile.io.csr_rdata
     
-    mem.io.clock := clock
+    mem.io.ACLK := clock
+    mem.io.ARESETn := ~(reset.asBool)
     mem.io.mem_addr := alu.io.alu_result
     mem.io.mem_write_data := regfile.io.rs2_rdata
     mem.io.mem_write_en := id.io.control_signal.mem_write_en
@@ -88,5 +115,23 @@ class top extends Module{
     mem.io.mem_read_en := id.io.control_signal.mem_read_en
     mem.io.mem_read_size := id.io.control_signal.mem_read_size
     mem.io.zero_extends := id.io.control_signal.zero_extends
+    mem.io.mem_read_valid := axi_lite_arbiter.io.lsu_read_valid
+    mem.io.mem_rdata := axi_lite_arbiter.io.lsu_read_data
+    mem.io.mem_write_finish := axi_lite_arbiter.io.lsu_write_finish
+
+
+    stall.io.exit_debugging := id.io.control_signal.exit_debugging
+    stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
+    stall.io.stall_from_mem := mem.io.stall_from_mem
+
+    axi_lite_arbiter.io.ACLK := clock 
+    axi_lite_arbiter.io.ARESETn := ~(reset.asBool)
+    axi_lite_arbiter.io.ifu_read_addr := inst_if.io.ifu_read_addr
+    axi_lite_arbiter.io.ifu_read_en := inst_if.io.ifu_read_en
+    axi_lite_arbiter.io.lsu_addr := mem.io.lsu_addr
+    axi_lite_arbiter.io.lsu_read_en := mem.io.lsu_read_en
+    axi_lite_arbiter.io.lsu_write_data := mem.io.lsu_write_data
+    axi_lite_arbiter.io.lsu_write_en := mem.io.lsu_write_en
+    axi_lite_arbiter.io.lsu_write_mask := mem.io.lsu_write_mask
 
 }

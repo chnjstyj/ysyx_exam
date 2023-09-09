@@ -88,11 +88,13 @@ int main(int argc, char *argv[]) {
   assert(size);
   fseek(fp, 0, SEEK_SET);
   int ret = fread(buf, size, 1, fp);
+  //int ret = fread(buf, 1, size, fp);
   assert(ret == 1);
   fclose(fp);
 
   int error;
   v = stb_vorbis_open_memory(buf, size, &error, NULL);
+  printf("size:%ld error:%d\n",size,error);
   assert(v);
   info = stb_vorbis_get_info(v);
 

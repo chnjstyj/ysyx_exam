@@ -12,6 +12,7 @@ extern int ftrace_func_nums;
 int ftrace_level = 0;
 int ftrace_ret_level = 0;
 ftrace_ret ftrace_rets[30];
+FILE* flog_file = NULL;
 
 void ret(vaddr_t addr)
 {
@@ -25,10 +26,10 @@ void ret(vaddr_t addr)
       k = ftrace_level;
       while (k != 0)
       {
-        printf(" ");
+        fprintf(flog_file," ");
         k--;
       }
-      printf("ret  %s \n",ftrace_rets[i].name);
+      fprintf(flog_file,"ret  %s \n",ftrace_rets[i].name);
       break;
     }
   }
@@ -68,11 +69,11 @@ void update_ftrace(vaddr_t addr,vaddr_t return_addr)
       //printf("k:%d ret level: %d \n",k,ftrace_ret_level);
       while (k != 0)
       {
-        printf(" ");
+        fprintf(flog_file," ");
         k--;
       }
       ftrace_level ++;
-      printf("call %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
+      fprintf(flog_file,"call %s(0x%lx) \n",ftrace_infos[i].name,ftrace_infos[i].addr);
     }
   }
 }

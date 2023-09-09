@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "ftrace.h"
+#include "svdpi.h"
 
 #define PMEM_SIZE 0x8000000
 
@@ -15,7 +16,8 @@ extern uint64_t* pc;
 extern uint32_t* memory;
 extern uint64_t* gpr;
 
-extern "C" void pmem_read(long long raddr, long long *rdata);
+extern "C" void pmem_read(
+  svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, long long* RDATA);
 
 extern int ftrace_func_nums;
 extern ftrace_info* ftrace_infos;

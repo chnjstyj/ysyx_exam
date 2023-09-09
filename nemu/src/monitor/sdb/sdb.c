@@ -240,6 +240,88 @@ static int cmd_d(char *args)
   return 0;
 }
 
+int diff_enable = 1;
+
+static int cmd_de(char *args) 
+{
+  diff_enable = 0;
+  printf("detach the diff test\n");
+  return 0;
+}
+
+extern void (*ref_difftest_memcpy)(paddr_t addr, void *buf, size_t n, bool direction);
+extern void (*ref_difftest_regcpy)(void *dut, bool direction);
+extern long img_size;
+
+static int cmd_at(char *args) 
+{
+  ref_difftest_memcpy(RESET_VECTOR, guest_to_host(RESET_VECTOR), img_size, 1);
+  ref_difftest_regcpy(&cpu, 1);
+  diff_enable = 1;
+  printf("attach the diff test\n");
+  return 0;
+}
+
+static int cmd_save(char *args) 
+{
+  FILE* f = fopen(args,"w");
+  int i;
+  if (f == NULL)
+  {
+    printf("cannot open the file\n");
+    return 1;
+  }
+  fprintf(f,"img_size:%ld\n",img_size);
+  for (i = 0; i < 32; i++)
+  {
+    fprintf(f,"%lx\n",cpu.gpr[i]);
+  }
+  for (i = 0; i < 4; i++)
+  {
+    fprintf(f,"%lx\n",cpu.csr[i]);
+  }
+  fprintf(f,"%lx\n",cpu.pc);
+  for (i = 0; i < img_size; i++)
+  {
+    fprintf(f,"%x\n",*(guest_to_host(RESET_VECTOR) + i));
+  }
+  fclose(f);
+  printf("save successful\n");
+  return 0;
+}
+
+static int cmd_load(char *args) 
+{
+  FILE* f = fopen(args,"r");
+  long size;
+  int result;
+  int i;
+  if (f == NULL)
+  {
+    printf("cannot open the file\n");
+    return 1;
+  }
+  result = fscanf(f,"img_size:%ld",&size);
+  for (i = 0; i < 32; i++)
+  {
+   result = fscanf(f,"%lx",&cpu.gpr[i]);
+  }
+  for (i = 0; i < 4; i++)
+  {
+   result = fscanf(f,"%lx",&cpu.csr[i]);
+  }
+  result = fscanf(f,"%lx",&cpu.pc);
+  printf("%lx\n",cpu.pc);
+  for (i = 0; i < size; i++)
+  {
+    result = fscanf(f,"%hhx",(guest_to_host(RESET_VECTOR) + i));
+    //if (i == 0) printf("%hhx\n",*(guest_to_host(RESET_VECTOR) + i));
+  }
+  fclose(f);
+  printf("load successful\n");
+  return result;
+}
+
 static int cmd_help(char *args);
 
 static struct {
@@ -256,6 +338,10 @@ static struct {
   { "p", "Give the result of the expression", cmd_p },
   { "w", "Set a watchpoint at the expression", cmd_w },
   { "d", "Delete a watchpoint with NO", cmd_d },
+  { "detach","Detach difftest", cmd_de},
+  { "attach","Attach difftest", cmd_at},
+  { "save","save the snapshot", cmd_save},
+  { "load","load the snapshot", cmd_load},
 
   /* TODO: Add more commands */
 

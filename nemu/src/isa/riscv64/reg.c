@@ -23,10 +23,20 @@ const char *regs[] = {
   "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"
 };
 
+const char *csrs[] = {
+  "mstatus",
+  "mtvec",
+  "mepc",
+  "mcause"
+};
+
 void isa_reg_display() {
   int i;
   for (i = 0; i < 32; i++){
     printf("%-5s:0x%016lx\n",reg_name(i,0),gpr(i));
+  }
+  for (i = 0; i < 4; i++){
+    printf("%-7s:0x%016lx\n",csr_name(i,0),csr(i));
   }
     printf("pc   :0x%016lx\n",cpu.pc);
 }

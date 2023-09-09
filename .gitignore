@@ -14,3 +14,4 @@
 /am-kernels
 /nvboard
 /am-kernels
+/nemu/tools/spike-diff/difftest.cc

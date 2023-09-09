@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <time.h>
 #include "syscall.h"
+#include <stdio.h>
 
 // helper macros
 #define _concat(x, y) x ## y
@@ -57,42 +58,69 @@ void _exit(int status) {
 }
 
 int _open(const char *path, int flags, mode_t mode) {
-  _exit(SYS_open);
-  return 0;
+  //_exit(SYS_open);
+  
+  return _syscall_(SYS_open, (intptr_t)path, flags, mode);
 }
 
 int _write(int fd, void *buf, size_t count) {
-  _exit(SYS_write);
-  return 0;
+  //_syscall_(SYS_write, fd, (intptr_t)buf, count);
+  //_exit(SYS_write);
+  return _syscall_(SYS_write, fd, (intptr_t)buf, count);
 }
 
+extern char etext, edata, end;
+void * pb = NULL;
+char test[50] = {0};
+
 void *_sbrk(intptr_t increment) {
-  return (void *)-1;
+  void * old_pb;
+  void * new_pb;
+  if (pb == NULL)
+  {
+    pb = (void*)&end;
+    /*
+    sprintf(test,"end :%d\n",&end);
+    _write(1,test,50);
+    */
+  }
+  new_pb = pb + increment;
+  if (_syscall_(SYS_brk,(intptr_t)new_pb,0,0) == 0)
+  {
+    write(0,"test2\n",6);
+    old_pb = pb;
+    pb = new_pb;
+    return old_pb;
+  }
+  else 
+  {
+    write(0,"test1\n",6);
+    return (void *)-1;
+  }
 }
 
 int _read(int fd, void *buf, size_t count) {
-  _exit(SYS_read);
-  return 0;
+  //_exit(SYS_read);
+  return _syscall_(SYS_read,fd,(intptr_t)buf,count);
 }
 
 int _close(int fd) {
-  _exit(SYS_close);
-  return 0;
+  //_exit(SYS_close);
+  return _syscall_(SYS_close,fd,0,0);
 }
 
 off_t _lseek(int fd, off_t offset, int whence) {
-  _exit(SYS_lseek);
-  return 0;
+  //_exit(SYS_lseek);
+  return _syscall_(SYS_lseek,fd,offset,whence);
 }
 
 int _gettimeofday(struct timeval *tv, struct timezone *tz) {
-  _exit(SYS_gettimeofday);
-  return 0;
+  //_exit(SYS_gettimeofday);
+  return _syscall_(SYS_gettimeofday,(intptr_t)tv,(intptr_t)tz,0);
 }
 
 int _execve(const char *fname, char * const argv[], char *const envp[]) {
-  _exit(SYS_execve);
-  return 0;
+  return _syscall_(SYS_execve,fname,0,0);
 }
 
 // Syscalls below are not used in Nanos-lite.

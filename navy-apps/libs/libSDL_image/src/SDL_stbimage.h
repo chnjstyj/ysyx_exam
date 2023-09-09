@@ -139,6 +139,7 @@ SDL_STBIMG_DEF SDL_Surface* STBIMG_CreateSurface(unsigned char* pixelData, int w
   #define STBI_NO_STDIO // don't need STDIO, will use SDL_RWops to open files
 #endif
 #include "stb_image.h"
+#include "stdio.h"
 
 typedef struct {
 	unsigned char* data;
@@ -193,19 +194,22 @@ SDL_STBIMG_DEF SDL_Surface* STBIMG_LoadFromMemory(const unsigned char* buffer, i
 
 	if(buffer == NULL)
 	{
-		SDL_SetError("STBIMG_LoadFromMemory(): passed buffer was NULL!");
+		//SDL_SetError("STBIMG_LoadFromMemory(): passed buffer was NULL!");
+		printf("STBIMG_LoadFromMemory(): passed buffer was NULL!");
 		return NULL;
 	}
 	if(length <= 0)
 	{
-		SDL_SetError("STBIMG_LoadFromMemory(): passed invalid length: %d!", length);
+		//SDL_SetError("STBIMG_LoadFromMemory(): passed invalid length: %d!", length);
+		printf("STBIMG_LoadFromMemory(): passed invalid length: %d!", length);
 		return NULL;
 	}
 
 	inforet = stbi_info_from_memory(buffer, length, &img.w, &img.h, &img.format);
 	if(!inforet)
 	{
-		SDL_SetError("STBIMG_LoadFromMemory(): Couldn't get image info: %s!\n", stbi_failure_reason());
+		//SDL_SetError("STBIMG_LoadFromMemory(): Couldn't get image info: %s!\n", stbi_failure_reason());
+		printf("STBIMG_LoadFromMemory(): Couldn't get image info: %s!\n", stbi_failure_reason());
 		return NULL;
 	}
 
@@ -216,7 +220,8 @@ SDL_STBIMG_DEF SDL_Surface* STBIMG_LoadFromMemory(const unsigned char* buffer, i
 	img.data = stbi_load_from_memory(buffer, length, &img.w, &img.h, &img.format, bppToUse);
 	if(img.data == NULL)
 	{
-		SDL_SetError("STBIMG_LoadFromMemory(): Couldn't load image: %s!\n", stbi_failure_reason());
+		//SDL_SetError("STBIMG_LoadFromMemory(): Couldn't load image: %s!\n", stbi_failure_reason());
+		printf("STBIMG_LoadFromMemory(): Couldn't load image: %s!\n", stbi_failure_reason());
 		return NULL;
 	}
 	img.format = bppToUse;

@@ -3,16 +3,193 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
+  int src_base,dst_base;
+  int i,j,k = 0;
+  if (srcrect != NULL && dstrect != NULL) 
+  {
+    //FIXME srcrect < 0
+    src_base = srcrect->y * src->w + srcrect->x;
+    dst_base = 0;
+    for (i = dstrect->y; i < dstrect->y + srcrect->h; i++)
+    {
+      src_base = (srcrect->y + k) * src->w + srcrect->x;
+      for (j = dstrect->x; j < dstrect->x + srcrect->w; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        {
+          if (dst->format->BitsPerPixel == 8)
+            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+          else
+            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+        }
+        src_base++;
+      }
+      k++;
+    }
+    return;
+  }
+  if (srcrect == NULL && dstrect != NULL)//the entire surface is copied
+  {
+    //printf("case2\n");
+    //printf("%d %d\n",dst->h,dst->w);
+    src_base = 0;
+    dst_base = 0;
+    for (i = dstrect->y; i < dstrect->y + src->h; i++)
+    {
+      for (j = dstrect->x; j < dstrect->x + src->w; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        {
+          if (dst->format->BitsPerPixel == 8)
+            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+          else 
+            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+        }
+        src_base++;
+      }
+    }
+    return;
+  }
+  else if (srcrect != NULL && dstrect == NULL) //copied to entire surface
+  {
+    //src_base = srcrect->y * src->w + srcrect->x;
+    dst_base = 0;
+    for (i = 0; i < srcrect->h; i++)
+    {
+      src_base = (srcrect->y + i) * src->w + srcrect->x;
+      for (j = 0; j < srcrect->w; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        {
+          if (dst->format->BitsPerPixel == 8)
+            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+          else 
+            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+        }
+        src_base++;
+      }
+    }
+    return;
+  }
+  else 
+  {
+    dst_base = 0;
+    for (i = 0; i < src->h; i++)
+    {
+      for (j = 0; j < src->w; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        {
+          if (dst->format->BitsPerPixel == 8)
+            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+          else 
+            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+        }
+        src_base++;
+      }
+    }
+    return;
+  }
+  assert(0);
 }
 
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
+  //根据dstrect中的坐标计算dst中pixel的偏移，将color填充进去。
+  uint32_t rcolor = color;
+  int i,j;
+  if (dst->format->BitsPerPixel == 8)
+  {
+    uint8_t r,g,b,a;
+    SDL_Palette* palette = dst->format->palette;
+    for (i = 0; i < dst->format->palette->ncolors; i ++)
+    {
+      r = palette->colors[i].r;  // 获取红色分量值
+      g = palette->colors[i].g;  // 获取绿色分量值
+      b = palette->colors[i].b;  // 获取蓝色分量值
+      a = palette->colors[i].a;
+      uint32_t c = (r << 16) | (g << 8) | (b << 0) | (a << 24);
+      if (c == color) 
+      {
+        if (dstrect != NULL)
+        {
+          for (i = dstrect->y; i < dstrect->y + dstrect->h; i++)
+          {
+            for (j = dstrect->x; j < dstrect->w + dstrect->x; j++)
+            {
+              if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+                *((uint8_t*)dst->pixels + i * dst->w + j) = c;
+            }
+          }
+        }
+        else 
+        {
+          for (i = 0; i < dst->h * dst->w; i++)
+          {
+            *((uint8_t*)dst->pixels + i) = c;
+          }
+        }
+        return;
+      }
+    }
+  }
+  if (dstrect != NULL)
+  {
+    for (i = dstrect->y; i < dstrect->y + dstrect->h; i++)
+    {
+      for (j = dstrect->x; j < dstrect->w + dstrect->x; j++)
+      {
+        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+          *((uint32_t*)dst->pixels + i * dst->w + j) = color;
+      }
+    }
+  }
+  else 
+  {
+    for (i = 0; i < dst->h * dst->w; i++)
+    {
+      *((uint32_t*)dst->pixels + i) = color;
+    }
+  }
 }
 
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
+  int a_w = w,a_h = h;
+  if (w == 0)
+  {
+    a_w = s->w;
+  }
+  if (h == 0) 
+  {
+    a_h = s->h;
+  }
+  if (s->format->BitsPerPixel == 8)
+  {
+    uint32_t* pixels = (uint32_t*)malloc(sizeof(uint32_t) * a_w * a_h);
+    SDL_PixelFormat* fmt = (SDL_PixelFormat*)malloc(sizeof(SDL_PixelFormat));
+    SDL_Palette* palette = s->format->palette;
+    for (int i = 0; i < a_w * a_h; i++)
+    {
+      uint8_t index = *((uint8_t*)s->pixels + i);//x + y * s->pitch + i);
+      uint8_t r = palette->colors[index].r;  // 获取红色分量值
+      uint8_t g = palette->colors[index].g;  // 获取绿色分量值
+      uint8_t b = palette->colors[index].b;  // 获取蓝色分量值
+      uint8_t a = palette->colors[index].a;
+      
+      pixels[i] = (r << 16) | (g << 8) | (b << 0) | (a << 24);
+    }
+    NDL_DrawRect(pixels,x,y,a_w,a_h);
+    free(pixels);
+    free(fmt);
+  }
+  else 
+  {
+    NDL_DrawRect(s->pixels,x,y,a_w,a_h);
+  }
 }
 
 // APIs below are already implemented.

@@ -23,12 +23,27 @@ static void sh_prompt() {
 }
 
 static void sh_handle_cmd(const char *cmd) {
+  //FIXME remove string end '\n'
+  int leng = strlen(cmd);
+  char* ncmd = (char*)malloc(leng);
+  for (int i = 0; i < leng; i++)
+  {
+    if (*(cmd + i) != '\n')
+      *(ncmd + i) = *(cmd + i);
+    else 
+    {
+      *(ncmd + i) = '\0';
+      break;
+    }
+  }
+  printf("%s\n",ncmd);
+  execvp(ncmd,0);//(char**)exec_argv, (char**)envp);
 }
 
 void builtin_sh_run() {
   sh_banner();
   sh_prompt();
-
+  setenv("PATH","/bin",0);
   while (1) {
     SDL_Event ev;
     if (SDL_PollEvent(&ev)) {

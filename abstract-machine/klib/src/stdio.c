@@ -47,11 +47,12 @@ int print_body(int direction,char *out,putch_ptr p, const char *fmt, va_list ap)
   size_t k = 0;
   char str[32] = {0};
   char* s;
+  char * num_str = NULL;
   while (*(fmt + i) != '\0')
   {
     if (*(fmt + i) == '%')
     {
-      while (*(fmt + i) != 'd' && *(fmt + i) != 's' && *(fmt + i) != 'x')
+      while (*(fmt + i) != 'd' && *(fmt + i) != 's' && *(fmt + i) != 'x' && *(fmt + i) != 'p')
       {
         if (*(fmt + i) == '0')
         {
@@ -63,65 +64,79 @@ int print_body(int direction,char *out,putch_ptr p, const char *fmt, va_list ap)
         }
         i++;
       }
-      if (*(fmt + i) == 'd')
+      switch (*(fmt + i)) //(*(fmt + i) == 'd')
       {
-        i++;
-        k = 0;
-        char * num_str = itoa(va_arg(ap,int),str,10);
-        if (zero_extend && length(num_str) < width)
-        {
-          for (width_i = 0; width_i < width - length(num_str); width_i++)
+        case 'd':
+          i++;
+          k = 0;
+          num_str = itoa(va_arg(ap,int),str,10);
+          if (zero_extend && length(num_str) < width)
           {
-            print_direction(direction,'0',out+j,p);
-            j++;
+            for (width_i = 0; width_i < width - length(num_str); width_i++)
+            {
+              print_direction(direction,'0',out+j,p);
+              j++;
+            }
           }
-        }
-        while (num_str[k] != '\0')
-        {
-          //out[j] = num_str[k];
-          print_direction(direction,num_str[k],out+j,p);
-          j++;k++;
-        }
-      }
-      else if (*(fmt + i) == 'x')
-      {
-        i++;
-        k = 0;
-        char * num_str = itoa(va_arg(ap,int),str,16);
-        if (zero_extend && length(num_str) < width)
-        {
-          for (width_i = 0; width_i < width - length(num_str); width_i++)
+          while (num_str[k] != '\0')
           {
-            print_direction(direction,'0',out+j,p);
-            j++;
+            //out[j] = num_str[k];
+            print_direction(direction,num_str[k],out+j,p);
+            j++;k++;
           }
-        }
-        while (num_str[k] != '\0')
-        {
-          //out[j] = num_str[k];
-          print_direction(direction,num_str[k],out+j,p);
-          j++;k++;
-        }
-      }
-      else if (*(fmt + i) == 's')
-      {
-        k = 0;
-        s = va_arg(ap,char *);
-        while (s[k] != '\0')
-        {
-          //out[j] = s[k];
-          print_direction(direction,s[k],out+j,p);
-          j++;k++;
-        }
-        i++;
+          break;
+        case 'x':
+          i++;
+          k = 0;
+          num_str = itoa(va_arg(ap,int),str,16);
+          if (zero_extend && length(num_str) < width)
+          {
+            for (width_i = 0; width_i < width - length(num_str); width_i++)
+            {
+              print_direction(direction,'0',out+j,p);
+              j++;
+            }
+          }
+          while (num_str[k] != '\0')
+          {
+            //out[j] = num_str[k];
+            print_direction(direction,num_str[k],out+j,p);
+            j++;k++;
+          }
+          break;
+        case 's':
+          k = 0;
+          s = va_arg(ap,char *);
+          while (s[k] != '\0')
+          {
+            //out[j] = s[k];
+            print_direction(direction,s[k],out+j,p);
+            j++;k++;
+          }
+          i++;
+          break;
+        case 'p':
+          k = 0;
+          uint64_t addr = va_arg(ap,uint64_t);
+          char * p_addr = (char *)malloc(16);
+          //p_addr =
+          itoa(addr,p_addr,16);
+          while (p_addr[k] != '\0')
+          {
+            //out[j] = s[k];
+            print_direction(direction,p_addr[k],out+j,p);
+            j++;k++;
+          }
+          i++;
+          free(p_addr);
+          break;
+        default:
+          break;
       }
     }
-    else
-    {
-      //*(out + j) = *(fmt + i);
-      print_direction(direction,*(fmt+i),out+j,p);
-      j++;i++;
-    }
+    //*(out + j) = *(fmt + i);
+    print_direction(direction,*(fmt+i),out+j,p);
+    j++;i++;
   }
   //*(out + j) = '\0';''
   print_direction(direction,'\0',out+j,p);
