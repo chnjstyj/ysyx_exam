@@ -13,6 +13,8 @@ class stall extends Module{
 
         val stall_from_mem_reg = Output(UInt(1.W))
         val stall_global = Output(UInt(1.W))
+
+        val icache_miss = Input(Bool())
     })
 
     val exit_verilator = Module(new exit_verilator)

@@ -4,7 +4,12 @@ import chisel3.experimental._
 import chisel3.util.experimental.loadMemoryFromFile
 import chisel3.util.experimental.loadMemoryFromFileInline
 
-class top extends Module{
+class top(
+    tag_width:Int,
+    index_width:Int,
+    offset_width:Int,
+    ways:Int 
+) extends Module{
     val io = IO(new Bundle{
         val inst = Output(UInt(32.W))
         val inst_address = Output(UInt(64.W))
@@ -15,7 +20,7 @@ class top extends Module{
     val alu_control_width = 4
 
     val pc = Module(new pc) 
-    val axi_lite_arbiter = Module(new axi_lite_arbiter)
+    val axi_lite_arbiter = Module(new axi_lite_arbiter(offset_width))
     val inst_if = Module(new inst_if("inst.rom")) 
     val id = Module(new id(alu_control_width))
     val regfile = Module(new regfile)
@@ -23,6 +28,7 @@ class top extends Module{
     val stall = Module(new stall)
     val mem = Module(new mem)
     val judge_branch_m = Module(new judge_branch_m)
+    val icache_controller = Module(new cache_controller(tag_width,index_width,offset_width,ways))
 
     io.inst := inst_if.io.inst
     when (pc.io.direct_jump === 1.U){
@@ -56,8 +62,18 @@ class top extends Module{
     inst_if.io.ce := pc.io.ce
     inst_if.io.stall_global := stall.io.stall_global
     inst_if.io.stall_from_mem_reg := RegNext(stall.io.stall_from_mem_reg)
-    inst_if.io.ifu_read_data := axi_lite_arbiter.io.ifu_read_data
-    inst_if.io.ifu_read_valid := axi_lite_arbiter.io.ifu_read_valid
+    //inst_if.io.ifu_read_data := axi_lite_arbiter.io.ifu_read_data
+    //inst_if.io.ifu_read_valid := axi_lite_arbiter.io.ifu_read_valid
+    inst_if.io.icache_read_data := icache_controller.io.cache_data 
+    inst_if.io.icache_read_valid := axi_lite_arbiter.io.ifu_read_valid
+
+    icache_controller.io.addr := inst_if.io.icache_read_addr 
+    icache_controller.io.read_cache_en := inst_if.io.icache_read_en 
+    icache_controller.io.write_cache_en := false.B 
+    icache_controller.io.mem_write_fin := false.B 
+    icache_controller.io.mem_read_fin := axi_lite_arbiter.io.ifu_read_valid
+    icache_controller.io.mem_read_data := axi_lite_arbiter.io.ifu_read_data
+    icache_controller.io.write_cache_data := 0.U(64.W) 
 
     id.io.inst := inst_if.io.inst
 
@@ -123,11 +139,12 @@ class top extends Module{
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
     stall.io.stall_from_mem := mem.io.stall_from_mem
+    stall.io.icache_miss := icache_controller.io.cache_miss 
 
     axi_lite_arbiter.io.ACLK := clock 
     axi_lite_arbiter.io.ARESETn := ~(reset.asBool)
-    axi_lite_arbiter.io.ifu_read_addr := inst_if.io.ifu_read_addr
-    axi_lite_arbiter.io.ifu_read_en := inst_if.io.ifu_read_en
+    axi_lite_arbiter.io.ifu_read_addr := icache_controller.io.mem_addr
+    axi_lite_arbiter.io.ifu_read_en := icache_controller.io.mem_read_en
     axi_lite_arbiter.io.lsu_addr := mem.io.lsu_addr
     axi_lite_arbiter.io.lsu_read_en := mem.io.lsu_read_en
     axi_lite_arbiter.io.lsu_write_data := mem.io.lsu_write_data

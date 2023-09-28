@@ -1,7 +1,9 @@
 import chisel3._ 
 import chisel3.util._ 
 
-class axi_lite_arbiter extends Module {
+class axi_lite_arbiter(
+    offset_width:Int
+) extends Module {
     val io = IO(new Bundle{
         val ACLK = Input(Clock())
         val ARESETn = Input(Bool())
@@ -9,7 +11,7 @@ class axi_lite_arbiter extends Module {
         val ifu_read_addr = Input(UInt(32.W))
         val ifu_read_en = Input(Bool()) 
         val ifu_read_valid = Output(Bool()) 
-        val ifu_read_data = Output(UInt(64.W))
+        val ifu_read_data = Output(UInt((1 << (offset_width + 3)).W))
         //lsu read
         val lsu_addr = Input(UInt(32.W))
         val lsu_read_en = Input(Bool()) 
@@ -28,10 +30,15 @@ class axi_lite_arbiter extends Module {
     //...
     val s0 :: s1 :: s2 :: Nil = Enum(3)
 
+    val icache_read_addr = RegInit(0.U(32.W))
+    val icache_read_data = RegInit(0.U((1 << (offset_width + 3)).W))
+    val icache_read_counter = RegInit(0.U(4.W))
+    val icache_read_data_fin = RegInit(false.B)
+
     val ifu_en = WireDefault(io.ifu_read_en)
     val lsu_en = WireDefault(io.lsu_read_en | io.lsu_write_en)
 
-    val ifu_finish = WireDefault(io.ifu_read_valid)
+    val ifu_finish = WireDefault(icache_read_data_fin)
     val lsu_finish = WireDefault(io.lsu_read_valid | io.lsu_write_finish)
 
     val next_state = WireDefault(s0)
@@ -78,8 +85,8 @@ class axi_lite_arbiter extends Module {
         }
     }
 
-    io.ifu_read_valid := Mux(cur_state === s1,mem_read_valid ,false.B)
-    io.ifu_read_data := Mux(cur_state === s1,mem_rdata,0.U(64.W))
+    io.ifu_read_valid := Mux(cur_state === s1,icache_read_data_fin ,false.B)
+    io.ifu_read_data := Mux(cur_state === s1,icache_read_data,0.U((1 << (offset_width + 3)).W))
     io.lsu_read_valid := Mux(cur_state === s2,mem_read_valid ,false.B)
     io.lsu_read_data := Mux(cur_state === s2,mem_rdata,0.U(64.W))
     io.lsu_write_finish := mem_write_finish
@@ -106,9 +113,26 @@ class axi_lite_arbiter extends Module {
     when (cur_state === s0){
         addr := 0.U 
     }.elsewhen (cur_state === s1){
-        addr := io.ifu_read_addr
+        addr := icache_read_addr
     }.elsewhen (cur_state === s2){
         addr := io.lsu_addr 
+    }
+
+    when (next_state === s1){
+        icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U)
+        when(mem_read_valid && icache_read_counter < 4.U){
+            icache_read_data_fin := false.B 
+            icache_read_counter := icache_read_counter + 1.U 
+            icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 3.U))
+        }.otherwise{
+            icache_read_data_fin := true.B 
+            icache_read_counter := 0.U
+        }
+    }.otherwise{
+        icache_read_data_fin := false.B 
+        icache_read_addr := 0.U 
+        icache_read_counter := 0.U 
+        icache_read_data := 0.U 
     }
 
     arbiter_to_mem_read.io.ACLK := io.ACLK 

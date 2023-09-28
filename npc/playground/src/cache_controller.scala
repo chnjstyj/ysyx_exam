@@ -25,8 +25,11 @@ class cache_controller(
         val mem_read_en = Output(Bool())
         val mem_write_en = Output(Bool()) 
         val mem_read_data = Input(UInt((1 << (offset_width + 3)).W))
+        val mem_addr = Output(UInt(32.W))
         val write_cache_data = Input(UInt(64.W))
         val cache_writeback_data = Output(UInt((1 << (offset_width + 3)).W))
+        val read_cache_fin = Output(Bool())
+        val write_cache_fin = Output(Bool())
     })
 
     val cache = Module(new cache(tag_width,index_width,offset_width,ways))
@@ -42,8 +45,12 @@ class cache_controller(
     val read_hit = Wire(Bool())
     val dirty_bit = Wire(Bool())
     val substitude = Wire(Bool())
-    val substitude_data = WireDefault(io.mem_read_data )
+    val substitude_data = WireDefault(io.mem_read_data)
     val substitude_fin = Wire(Bool())
+
+    io.read_cache_fin := read_hit 
+    io.write_cache_fin := write_hit 
+    io.mem_addr := io.addr & (~"b111111".U(32.W))
 
     switch(cur_state){
         is (s0){
