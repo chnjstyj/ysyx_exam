@@ -107,12 +107,12 @@ class cache(
     }.otherwise{
         when (io.substitude){
            when (counter_equal){
-                val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
-                newData := io.substitude_data << (addr_offset_3 << 3)
+                //val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
+                //newData := io.substitude_data << (addr_offset_3 << 3)
                 cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).valid := true.B 
                 cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).dirty := false.B 
                 cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).tag := io.addr(31,32 - tag_width)
-                cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).data := cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).data | newData
+                cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).data := io.substitude_data//cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).data | newData
                 substitude_fin := true.B 
            }.otherwise{
                 val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
@@ -120,7 +120,7 @@ class cache(
                 cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).valid := true.B 
                 cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).dirty := false.B 
                 cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).tag := io.addr(31,32 - tag_width)
-                cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).data := cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).data | newData
+                cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).data := io.substitude_data//cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).data | newData
                 substitude_fin := true.B 
            }
         }.otherwise{

@@ -39,16 +39,16 @@ class top(
     io.next_inst_address := pc.io.next_inst_address
     io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
 
-    withClock((!clock.asBool).asClock){
-        val direct_jump_r = RegNext( id.io.control_signal.direct_jump )
-        val direct_jump_addr_r = RegNext( alu.io.alu_result )
-        val branch_jump_r = RegNext( judge_branch_m.io.branch_jump )
-        val branch_jump_addr_r = RegNext( judge_branch_m.io.branch_jump_addr )
-        pc.io.direct_jump := direct_jump_r
-        pc.io.direct_jump_addr := direct_jump_addr_r
-        pc.io.branch_jump := branch_jump_r
-        pc.io.branch_jump_addr := branch_jump_addr_r
-    }
+    //withClock((!clock.asBool).asClock){
+        //val direct_jump_r = RegNext( id.io.control_signal.direct_jump )
+        //val direct_jump_addr_r = RegNext( alu.io.alu_result )
+        //val branch_jump_r = RegNext( judge_branch_m.io.branch_jump )
+        //val branch_jump_addr_r = RegNext( judge_branch_m.io.branch_jump_addr )
+        pc.io.direct_jump := id.io.control_signal.direct_jump
+        pc.io.direct_jump_addr := alu.io.alu_result
+        pc.io.branch_jump := judge_branch_m.io.branch_jump
+        pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr 
+    //}
 
     pc.io.ecall := id.io.control_signal.ecall
     pc.io.ecall_addr := regfile.io.csr_rdata

@@ -30,10 +30,10 @@ class axi_lite_arbiter(
     //...
     val s0 :: s1 :: s2 :: Nil = Enum(3)
 
-    val icache_read_addr = RegInit(0.U(32.W))
     val icache_read_data = RegInit(0.U((1 << (offset_width + 3)).W))
-    val icache_read_counter = RegInit(0.U(4.W))
+    val icache_read_counter = RegInit(0.U(((1 << (offset_width - 3)) - 2).W))
     val icache_read_data_fin = RegInit(false.B)
+    val icache_read_addr = Wire(UInt(32.W))
 
     val ifu_en = WireDefault(io.ifu_read_en)
     val lsu_en = WireDefault(io.lsu_read_en | io.lsu_write_en)
@@ -96,9 +96,15 @@ class axi_lite_arbiter(
         mem_read_en := 0.U
         mem_write_en := 0.U 
     }.elsewhen (next_state === s1){
-        //addr := io.ifu_read_addr
-        mem_read_en := 1.U 
-        mem_write_en := 0.U 
+        //addr := icache_read_addr
+        //when (mem_read_valid)
+        //{
+        //    mem_read_en := 0.U 
+        //    mem_write_en := 0.U 
+        //}.otherwise{
+            mem_read_en := 1.U 
+            mem_write_en := 0.U 
+        //}
     }.elsewhen (next_state === s2){
         //addr := io.lsu_addr 
         when (io.lsu_read_en){
@@ -110,31 +116,37 @@ class axi_lite_arbiter(
         }
     }
 
+    
     when (cur_state === s0){
         addr := 0.U 
     }.elsewhen (cur_state === s1){
         addr := icache_read_addr
     }.elsewhen (cur_state === s2){
         addr := io.lsu_addr 
+    }.otherwise{
+        addr := 0.U
     }
 
+    val counter_end = ((1 << (offset_width - 3)) - 1)
+
+    icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U)
     when (next_state === s1){
-        icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U)
-        when(mem_read_valid && icache_read_counter < 3.U){
+        //icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U) //next 64 bits block
+        when(mem_read_valid && icache_read_counter < counter_end.U){
             icache_read_data_fin := false.B 
             icache_read_counter := icache_read_counter + 1.U 
-            icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 3.U))
-        }.elsewhen (mem_read_valid && icache_read_counter === 3.U){
+            icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 6.U))
+        }.elsewhen (mem_read_valid && icache_read_counter === counter_end.U){
             //last one to read
             icache_read_data_fin := true.B 
-            icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 3.U))
+            icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 6.U))
             icache_read_counter := 0.U
         }.otherwise{
             icache_read_data_fin := false.B 
         }
     }.otherwise{
         icache_read_data_fin := false.B 
-        icache_read_addr := 0.U 
+        //icache_read_addr := 0.U 
         icache_read_counter := 0.U 
         icache_read_data := 0.U 
     }

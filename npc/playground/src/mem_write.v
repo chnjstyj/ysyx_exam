@@ -28,7 +28,7 @@ reg [3:0] WUSER;  //equal to wmask
 wire BVALID;
 reg BREADY;
 
-always @(posedge ACLK) begin 
+always @(AWADDR) begin 
   pmem_write(AWVALID,AWADDR,WVALID,WDATA,WLAST,WUSER,BREADY,AWREADY,
   WREADY,BVALID);
 end
@@ -41,13 +41,13 @@ always @(*) begin
   end 
   else begin 
     if (en) begin 
-      AWVALID = 1'b1;
       AWADDR = addr;
+      AWVALID = 1'b1;
       AWPORT = 3'b111;
     end
     else begin 
-      AWVALID = 1'b0;
       AWADDR = 32'b0;
+      AWVALID = 1'b0;
       AWPORT = 3'b111;
     end 
   end

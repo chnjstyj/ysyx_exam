@@ -50,7 +50,7 @@ always @(*) begin
     end 
     else begin 
       ARVALID = 1'b0;
-      ARADDR = 32'b0;
+      ARADDR = addr;
     end
   end
 end

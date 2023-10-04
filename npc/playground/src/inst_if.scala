@@ -43,14 +43,14 @@ class inst_if(image_file:String = "") extends Module{
 
     val inst_before = RegNext(io.inst)
 
-    when (io.stall_from_inst_if.asBool){
-        io.inst := 0.U(32.W)
-    }.elsewhen (io.stall_from_mem_reg || !valid){
-        io.inst := inst_before
-    }.otherwise{
+    //when (io.stall_from_inst_if.asBool){
+    //    io.inst := 0.U(32.W)
+    //}.elsewhen (io.stall_from_mem_reg || !valid){
+    //    io.inst := inst_before
+    //}.otherwise{
         io.inst := Mux(io.inst_address(2).asBool,io.icache_read_data(63,32),
         io.icache_read_data(31,0))
-    }
+    //}
 
     //addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/inst_if.v").getCanonicalPath)
     //addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem_rw.v").getCanonicalPath)

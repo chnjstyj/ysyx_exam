@@ -50,7 +50,7 @@ class cache_controller(
 
     io.read_cache_fin := read_hit 
     io.write_cache_fin := write_hit 
-    io.mem_addr := io.addr & (~"b111111".U(32.W))
+    io.mem_addr := io.addr & (~((1 << (offset_width)) - 1).U(32.W))
 
     switch(cur_state){
         is (s0){
@@ -88,12 +88,13 @@ class cache_controller(
     }
 
     io.cache_data := cache.io.read_data 
-    when (next_state === s2 || next_state === s3){
-        io.cache_miss := true.B
-    }.elsewhen (next_state === s1 && read_hit === true.B){
-        io.cache_miss := true.B
-    }.otherwise{
+    //when (next_state === s2 || next_state === s3 || next_state === s0){
+    //    io.cache_miss := true.B
+    //}.else
+    when (next_state === s1 && read_hit === true.B){
         io.cache_miss := false.B
+    }.otherwise{
+        io.cache_miss := true.B
     }
 
     val cache_read_en  = RegInit(false.B)
