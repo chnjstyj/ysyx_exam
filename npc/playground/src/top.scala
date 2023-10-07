@@ -29,6 +29,7 @@ class top(
     val mem = Module(new mem)
     val judge_branch_m = Module(new judge_branch_m)
     val icache_controller = Module(new cache_controller(tag_width,index_width,offset_width,ways))
+    val dcache_controller = Module(new cache_controller(tag_width,index_width,offset_width,ways))
 
     io.inst := inst_if.io.inst
     when (pc.io.direct_jump === 1.U){
@@ -74,6 +75,7 @@ class top(
     icache_controller.io.mem_read_fin := axi_lite_arbiter.io.ifu_read_valid
     icache_controller.io.mem_read_data := axi_lite_arbiter.io.ifu_read_data
     icache_controller.io.write_cache_data := 0.U(64.W) 
+    icache_controller.io.write_cache_mask := 0.U(4.W)
 
     id.io.inst := inst_if.io.inst
 
@@ -131,10 +133,18 @@ class top(
     mem.io.mem_read_en := id.io.control_signal.mem_read_en
     mem.io.mem_read_size := id.io.control_signal.mem_read_size
     mem.io.zero_extends := id.io.control_signal.zero_extends
-    mem.io.mem_read_valid := axi_lite_arbiter.io.lsu_read_valid
-    mem.io.mem_rdata := axi_lite_arbiter.io.lsu_read_data
-    mem.io.mem_write_finish := axi_lite_arbiter.io.lsu_write_finish
+    mem.io.dcache_read_valid := axi_lite_arbiter.io.lsu_read_valid
+    mem.io.dcache_read_data := axi_lite_arbiter.io.lsu_read_data
+    mem.io.dcache_write_fin := axi_lite_arbiter.io.lsu_write_finish
 
+    dcache_controller.io.addr := mem.io.dcache_read_addr 
+    dcache_controller.io.read_cache_en := mem.io.dcache_read_en 
+    dcache_controller.io.write_cache_en := mem.io.dcache_write_en 
+    dcache_controller.io.mem_write_fin := axi_lite_arbiter.io.lsu_write_finish 
+    dcache_controller.io.mem_read_fin := axi_lite_arbiter.io.lsu_read_valid
+    dcache_controller.io.mem_read_data := axi_lite_arbiter.io.lsu_read_data
+    dcache_controller.io.write_cache_data := mem.io.dcache_write_data
+    dcache_controller.io.write_cache_mask := mem.io.dcache_write_mask 
 
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
@@ -145,10 +155,9 @@ class top(
     axi_lite_arbiter.io.ARESETn := ~(reset.asBool)
     axi_lite_arbiter.io.ifu_read_addr := icache_controller.io.mem_addr
     axi_lite_arbiter.io.ifu_read_en := icache_controller.io.mem_read_en
-    axi_lite_arbiter.io.lsu_addr := mem.io.lsu_addr
-    axi_lite_arbiter.io.lsu_read_en := mem.io.lsu_read_en
-    axi_lite_arbiter.io.lsu_write_data := mem.io.lsu_write_data
-    axi_lite_arbiter.io.lsu_write_en := mem.io.lsu_write_en
-    axi_lite_arbiter.io.lsu_write_mask := mem.io.lsu_write_mask
+    axi_lite_arbiter.io.lsu_addr := dcache_controller.io.mem_addr
+    axi_lite_arbiter.io.lsu_read_en := dcache_controller.io.mem_read_en
+    axi_lite_arbiter.io.lsu_write_data := dcache_controller.io.cache_writeback_data
+    axi_lite_arbiter.io.lsu_write_en := dcache_controller.io.mem_write_en
 
 }

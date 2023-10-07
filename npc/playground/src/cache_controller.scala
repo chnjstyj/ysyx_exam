@@ -23,11 +23,12 @@ class cache_controller(
         val cache_miss = Output(Bool())
         val cache_data = Output(UInt(64.W))
         val mem_read_en = Output(Bool())
-        val mem_write_en = Output(Bool()) 
+        val mem_write_en = Output(Bool()) //used for substitute write signal 
         val mem_read_data = Input(UInt((1 << (offset_width + 3)).W))
         val mem_addr = Output(UInt(32.W))
         val write_cache_data = Input(UInt(64.W))
-        val cache_writeback_data = Output(UInt((1 << (offset_width + 3)).W))
+        val write_cache_mask = Input(UInt(4.W))
+        val cache_writeback_data = Output(UInt((1 << (offset_width + 3)).W)) //used for substitute write data 
         val read_cache_fin = Output(Bool())
         val write_cache_fin = Output(Bool())
     })
@@ -153,5 +154,6 @@ class cache_controller(
     write_hit := cache.io.write_hit
     write_miss := cache.io.write_miss
     io.cache_writeback_data := cache.io.writeback_data
+    cache.io.write_mask := io.write_cache_mask  
 
 }

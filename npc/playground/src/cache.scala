@@ -34,6 +34,7 @@ class cache(
         val write_miss = Output(Bool()) 
         val writeback_data = Output(UInt((1 << (offset_width + 3)).W)) 
         val read_data = Output(UInt(64.W)) 
+        val write_mask = Input(UInt(4.W))
     })
 
     //define the cache

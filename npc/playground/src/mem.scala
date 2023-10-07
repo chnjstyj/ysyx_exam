@@ -8,59 +8,76 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         val ACLK = Input(Clock())
         val ARESETn = Input(Bool())
         val mem_addr = Input(UInt(64.W))
-        val lsu_addr = Output(UInt(32.W)) 
+        //val lsu_addr = Output(UInt(32.W)) 
         //mem write
         val mem_write_data = Input(UInt(64.W))
         val mem_write_en = Input(Bool())
         val mem_wmask = Input(UInt(4.W))
         //arbiter
-        val mem_write_finish = Input(Bool())
-        val lsu_write_en = Output(Bool())
-        val lsu_write_data = Output(UInt(64.W))
-        val lsu_write_mask = Output(UInt(4.W))
+        //val mem_write_finish = Input(Bool())
+        //val lsu_write_en = Output(Bool())
+        //val lsu_write_data = Output(UInt(64.W))
+        //val lsu_write_mask = Output(UInt(4.W))
+        //dcache 
+        val dcache_write_en = Output(Bool()) 
+        val dcache_write_data = Output(UInt(64.W)) 
+        val dcache_write_mask = Output(UInt(4.W)) 
+        val dcache_write_fin = Input(Bool())
         //mem read
         val mem_read_en = Input(Bool())
         val mem_read_size = Input(UInt(4.W))
         val mem_read_data = Output(UInt(64.W))
         val zero_extends = Input(Bool())
         //arbiter
-        val mem_read_valid = Input(Bool())
-        val mem_rdata = Input(UInt(64.W))
-        val lsu_read_en = Output(Bool())
+        //val mem_read_valid = Input(Bool())
+        //val mem_rdata = Input(UInt(64.W))
+        //val lsu_read_en = Output(Bool())
+        //dcache
+        val dcache_read_addr = Output(UInt(32.W))
+        val dcache_read_en = Output(Bool())
+        val dcache_read_data = Input(UInt(64.W))
+        val dcache_read_valid = Input(Bool())
         //stall 
         val stall_from_mem = Output(UInt(1.W))
     })
 
     //val valid = Wire(Bool())
 
-    io.lsu_addr := io.mem_addr(31,0) 
-    io.lsu_read_en := io.mem_read_en
+    //io.lsu_addr := io.mem_addr(31,0) 
+    //io.lsu_read_en := io.mem_read_en
 
-    io.lsu_write_en := io.mem_write_en
-    io.lsu_write_data := io.mem_write_data
-    io.lsu_write_mask := io.mem_wmask
+    //io.lsu_write_en := io.mem_write_en
+    //io.lsu_write_data := io.mem_write_data
+    //io.lsu_write_mask := io.mem_wmask
 
-    when (!io.mem_read_valid && io.mem_read_en){
+    io.dcache_read_addr := io.mem_addr(31,0) 
+    io.dcache_read_en := io.mem_read_en 
+
+    io.dcache_write_en := io.mem_write_en 
+    io.dcache_write_data := io.mem_write_data 
+    io.dcache_write_mask := io.mem_wmask   
+
+    when (!io.dcache_read_valid && io.mem_read_en){
         io.stall_from_mem := 1.U 
-    }.elsewhen (!io.mem_write_finish && io.mem_write_en){
+    }.elsewhen (!io.dcache_write_fin && io.mem_write_en){
         io.stall_from_mem := 1.U 
     }.otherwise{
         io.stall_from_mem := 0.U
     }
 
-    io.mem_read_data := io.mem_rdata
+    io.mem_read_data := io.dcache_read_data 
     switch (io.mem_read_size){
         is ("b1000".U){
-            io.mem_read_data := io.mem_rdata
+            io.mem_read_data := io.dcache_read_data
         }
         is ("b0100".U){
-            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(32,0.U),io.mem_rdata(31,0)),Cat(Fill(32,io.mem_rdata(31)),io.mem_rdata(31,0)))
+            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(32,0.U),io.dcache_read_data(31,0)),Cat(Fill(32,io.dcache_read_data(31)),io.dcache_read_data(31,0)))
         }
         is ("b0010".U){
-            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(48,0.U),io.mem_rdata(15,0)),Cat(Fill(48,io.mem_rdata(15)),io.mem_rdata(15,0)))
+            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(48,0.U),io.dcache_read_data(15,0)),Cat(Fill(48,io.dcache_read_data(15)),io.dcache_read_data(15,0)))
         }
         is ("b0001".U){
-            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(56,0.U),io.mem_rdata(7,0)),Cat(Fill(56,io.mem_rdata(7)),io.mem_rdata(7,0)))
+            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(56,0.U),io.dcache_read_data(7,0)),Cat(Fill(56,io.dcache_read_data(7)),io.dcache_read_data(7,0)))
         }
     }
 

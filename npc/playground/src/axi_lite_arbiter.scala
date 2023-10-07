@@ -16,11 +16,10 @@ class axi_lite_arbiter(
         val lsu_addr = Input(UInt(32.W))
         val lsu_read_en = Input(Bool()) 
         val lsu_read_valid = Output(Bool()) 
-        val lsu_read_data = Output(UInt(64.W))
+        val lsu_read_data = Output(UInt((1 << (offset_width + 3)).W))
         //lsu write
-        val lsu_write_data = Input(UInt(64.W))
+        val lsu_write_data = Input(UInt((1 << (offset_width + 3)).W))
         val lsu_write_en = Input(Bool()) 
-        val lsu_write_mask = Input(UInt(4.W))
         val lsu_write_finish = Output(UInt(1.W)) 
     })
     
@@ -34,6 +33,11 @@ class axi_lite_arbiter(
     val icache_read_counter = RegInit(0.U(((1 << (offset_width - 3)) - 2).W))
     val icache_read_data_fin = RegInit(false.B)
     val icache_read_addr = Wire(UInt(32.W))
+
+    val dcache_read_data = RegInit(0.U((1 << (offset_width + 3)).W)) 
+    val dcache_read_counter = RegInit(0.U(((1 << (offset_width - 3)) - 2).W)) 
+    val dcache_read_data_fin = RegInit(false.B) 
+    val dcache_read_addr = Wire(UInt(32.W))
 
     val ifu_en = WireDefault(io.ifu_read_en)
     val lsu_en = WireDefault(io.lsu_read_en | io.lsu_write_en)
@@ -122,7 +126,7 @@ class axi_lite_arbiter(
     }.elsewhen (cur_state === s1){
         addr := icache_read_addr
     }.elsewhen (cur_state === s2){
-        addr := io.lsu_addr 
+        addr := dcache_read_addr 
     }.otherwise{
         addr := 0.U
     }
@@ -150,6 +154,8 @@ class axi_lite_arbiter(
         icache_read_counter := 0.U 
         icache_read_data := 0.U 
     }
+
+    dcache_read_addr := io.lsu_addr + (dcache_read_counter << 3.U)
 
     arbiter_to_mem_read.io.ACLK := io.ACLK 
     arbiter_to_mem_read.io.ARESETn := io.ARESETn 
