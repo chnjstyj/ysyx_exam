@@ -169,7 +169,7 @@ class axi_lite_arbiter(
     arbiter_to_mem_write.io.addr := addr 
     arbiter_to_mem_write.io.en := mem_write_en & !lsu_finish
     arbiter_to_mem_write.io.wdata := io.lsu_write_data
-    arbiter_to_mem_write.io.wmask := io.lsu_write_mask
+    arbiter_to_mem_write.io.wmask := "b1000".U 
     mem_write_finish := arbiter_to_mem_write.io.finish
 
 }
