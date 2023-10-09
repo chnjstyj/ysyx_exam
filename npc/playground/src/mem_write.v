@@ -83,6 +83,7 @@ always @(*) begin
     4'b0100:WSTRB = 8'b00001111;
     4'b0010:WSTRB = 8'b00000011;
     4'b0001:WSTRB = 8'b00000001;
+    default:WSTRB = 8'b11111111;
   endcase 
 end
 
