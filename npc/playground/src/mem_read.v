@@ -1,5 +1,7 @@
 import "DPI-C" function void pmem_read(
- input bit ARVALID, input int ARADDR, input bit RREADY, output bit ARREADY, output bit RVALID, output bit RLAST, output longint RDATA);
+ input bit ARVALID, input int ARADDR, input bit RREADY, 
+ output bit ARREADY, output bit RVALID, output bit RLAST, output longint RDATA, 
+ output logic[1:0] RRESP);
 module mem_read(
   input ACLK,
   input ARESETn,
@@ -31,9 +33,10 @@ wire  RVALID;
 reg  RREADY;
 wire RLAST;
 wire [63:0] RDATA;
+wire [1:0] RRESP;
 
 always @(posedge ACLK) begin 
-    pmem_read(ARVALID, ARADDR, RREADY, ARREADY, RVALID, RLAST, RDATA);
+    pmem_read(ARVALID, ARADDR, RREADY, ARREADY, RVALID, RLAST, RDATA ,RRESP);
 end
 
 always @(*) begin 

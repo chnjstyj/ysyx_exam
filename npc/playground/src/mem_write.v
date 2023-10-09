@@ -1,8 +1,8 @@
 import "DPI-C" function void pmem_write(
    input bit AWVALID, input int AWADDR, input bit WVALID, 
-   input longint WDATA, input bit WLAST, input logic[3:0] WUSER,
+   input longint WDATA, input bit WLAST, input logic[7:0] WSTRB,
    input bit BREADY,
-   output bit AWREADY, output bit WREADY, output bit BVALID);
+   output bit AWREADY, output bit WREADY, output bit BVALID, output logic[1:0] BRESP);
 module mem_write(
   input ACLK,
   input ARESETn,
@@ -23,14 +23,15 @@ reg WVALID;
 wire WREADY;
 reg [63:0] WDATA;
 reg WLAST;
-reg [3:0] WUSER;  //equal to wmask
+reg [7:0] WSTRB;  //equal to wmask
 //write response channel
 wire BVALID;
+wire [1:0] BRESP;
 reg BREADY;
 
 always @(posedge ACLK) begin 
-  pmem_write(AWVALID,AWADDR,WVALID,WDATA,WLAST,WUSER,BREADY,AWREADY,
-  WREADY,BVALID);
+  pmem_write(AWVALID,AWADDR,WVALID,WDATA,WLAST,WSTRB,BREADY,AWREADY,
+  WREADY,BVALID,BRESP);
 end
 
 always @(*) begin 
@@ -58,22 +59,31 @@ always @(*) begin
     WVALID = 1'b0;
     WDATA = 64'b0;
     WLAST = 1'b0;
-    WUSER = wmask;
+    //WUSER = 8'hff;
   end 
   else begin 
     if (en) begin 
       WVALID = 1'b1;
       WLAST = 1'b1;
       WDATA = wdata;
-      WUSER = wmask;
+      //WUSER = wmask;
     end 
     else begin 
       WVALID = 1'b0;
       WLAST = 1'b0;
       WDATA = 64'b0;
-      WUSER = wmask;
+      //WUSER = wmask;
     end 
   end 
+end
+
+always @(*) begin 
+  case (wmask) 
+    4'b1000:WSTRB = 8'b11111111; 
+    4'b0100:WSTRB = 8'b00001111;
+    4'b0010:WSTRB = 8'b00000011;
+    4'b0001:WSTRB = 8'b00000001;
+  endcase 
 end
 
 always @(*) begin 
