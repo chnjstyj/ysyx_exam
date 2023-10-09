@@ -143,11 +143,14 @@ static bool finish_writing = 0;
 
 //dpi-c
 extern "C" void pmem_read(
-  svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, long long* RDATA) {
+  svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, long long* RDATA,
+  svLogicVecVal* RRESP) {
   // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
   int i;
   *ARREADY = 1;
   unsigned long long temp;
+  svLogicVecVal RRESP_status = {{0}};
+  svPutPartselLogic(RRESP,RRESP_status,0,4);
   if (ARVALID)  //address for reading is valid
   {
     if (!ready_to_read) 
@@ -205,7 +208,7 @@ extern "C" void pmem_read(
 }
 
 extern "C" void pmem_write(svBit AWVALID, int AWADDR, svBit WVALID, long long WDATA, svBit WLAST, 
-const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* BVALID)
+const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* BVALID, svLogicVecVal* BRESP)
 {
   // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
@@ -213,10 +216,17 @@ const svLogicVecVal* WUSER, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
   //char size;
   int i;
   char wmask = 0;
-  for (i = 0; i < 4; i++)
+  for (i = 0; i < 8; i++)
   {
-    wmask |= svGetBitselLogic(WUSER,i) << i;
+    //wmask |= svGetBitselLogic(WSTRB,i) << i;
+    if (svGetBitselLogic(WSTRB,i) == 1)
+    {
+      wmask = i + 1;
+      break;
+    }
   }
+  svLogicVecVal BRESP_status = {{0}};
+  svPutPartselLogic(BRESP,BRESP_status,0,4);
   //size = wmask;//(char)pow((float)2,(float)wmask);
   #ifdef mtrace_ 
   update_mtrace("write",waddr);
