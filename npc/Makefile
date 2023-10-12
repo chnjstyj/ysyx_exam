@@ -2,6 +2,12 @@ BUILD_DIR = ./build ./obj_dir
 VSRCS = $(shell find $(abspath ./build) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
 top_name ?= top
+DOCKER_RUN = sudo docker run --rm --log-driver=json-file\
+-v $(shell pwd):/mnt/data \
+--hostname lizhen --mac-address 02:42:ac:11:00:02 \
+vcs_docker /usr/synopsys/vc_static-O-2018.09-SP2-2/verdi/bin/vcd2fsdb /mnt/data/waveform.vcd -o /mnt/data/waveform.fsdb
+DOCKER_EXEC = sudo docker exec -it vcs 
+DOCKER_CLEAN = sudo docker stop vcs && sudo docker rm vcs
 
 export PATH := $(PATH):$(abspath ./utils)
 
@@ -62,5 +68,9 @@ sim:verilog
 	$(MAKE) verilator
 wave:
 	gtkwave waveform.vcd -a waveform.gtkw
+
+fsdb:
+	$(DOCKER_RUN)
+
 
 include ../Makefile

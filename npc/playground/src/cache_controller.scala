@@ -64,7 +64,7 @@ class cache_controller(
         is (s1){
             when ((write_miss || read_miss) && dirty_bit){
                 next_state := s2
-            }.elsewhen (write_miss || read_miss){
+            }.elsewhen ((write_miss || read_miss) && (io.read_cache_en || io.write_cache_en)){
                 next_state := s3
             }.elsewhen (io.read_cache_en || io.write_cache_en){
                 next_state := s1
@@ -128,8 +128,8 @@ class cache_controller(
         is (s3){
             cache_read_en := false.B
             cache_write_en := false.B
-            mem_read_en := true.B
-            mem_write_en := false.B 
+            mem_read_en := Mux(io.mem_read_fin,false.B,true.B)
+            mem_write_en := false.B
         }
     }
 

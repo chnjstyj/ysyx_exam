@@ -27,7 +27,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-//#define waveform 1
+#define waveform 1
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -325,7 +325,8 @@ void exit_npc()
   delete top;
   delete pmem;
   delete ftrace_infos;
-  fclose(flog_file);
+  if (ftrace_enable)
+    fclose(flog_file);
   //nvboard_quit();
   printf("exit\nHIT BAD TRAP!\n");
   print_itrace_buf();

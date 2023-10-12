@@ -133,9 +133,11 @@ class top(
     mem.io.mem_read_en := id.io.control_signal.mem_read_en
     mem.io.mem_read_size := id.io.control_signal.mem_read_size
     mem.io.zero_extends := id.io.control_signal.zero_extends
-    mem.io.dcache_read_valid := axi_lite_arbiter.io.lsu_read_valid
-    mem.io.dcache_read_data := axi_lite_arbiter.io.lsu_read_data
-    mem.io.dcache_write_fin := axi_lite_arbiter.io.lsu_write_finish
+    mem.io.dcache_read_valid := dcache_controller.io.read_cache_fin
+    mem.io.dcache_read_data := dcache_controller.io.cache_data
+    mem.io.dcache_write_fin := dcache_controller.io.write_cache_fin
+    mem.io.direct_read_data := axi_lite_arbiter.io.lsu_direct_read_data
+    mem.io.direct_fin := axi_lite_arbiter.io.lsu_direct_fin
 
     dcache_controller.io.addr := mem.io.dcache_read_addr 
     dcache_controller.io.read_cache_en := mem.io.dcache_read_en 
@@ -159,5 +161,8 @@ class top(
     axi_lite_arbiter.io.lsu_read_en := dcache_controller.io.mem_read_en
     axi_lite_arbiter.io.lsu_write_data := dcache_controller.io.cache_writeback_data
     axi_lite_arbiter.io.lsu_write_en := dcache_controller.io.mem_write_en
-
+    axi_lite_arbiter.io.lsu_direct_read_en := mem.io.direct_read_en 
+    axi_lite_arbiter.io.lsu_direct_write_en := mem.io.direct_write_en
+    axi_lite_arbiter.io.lsu_direct_write_data := mem.io.direct_write_data 
+    axi_lite_arbiter.io.lsu_direct_addr := mem.io.mem_addr
 }
