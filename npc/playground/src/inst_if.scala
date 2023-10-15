@@ -48,8 +48,8 @@ class inst_if(image_file:String = "") extends Module{
     //}.elsewhen (io.stall_from_mem_reg || !valid){
     //    io.inst := inst_before
     //}.otherwise{
-        io.inst := Mux(io.inst_address(2).asBool,io.icache_read_data(63,32),
-        io.icache_read_data(31,0))
+        io.inst := io.icache_read_data(31,0)//Mux(io.inst_address(2).asBool,io.icache_read_data(63,32),
+        //io.icache_read_data(31,0))
     //}
 
     //addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/inst_if.v").getCanonicalPath)

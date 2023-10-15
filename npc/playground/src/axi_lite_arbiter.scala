@@ -48,7 +48,9 @@ class axi_lite_arbiter(
 
     val dcache_write_counter = RegInit(0.U(((1 << (offset_width - 3)) - 2).W)) 
     val dcache_write_data_fin = RegInit(false.B) 
-    val dcache_write_data = RegInit(0.U(64.W))
+    val dcache_write_data = WireDefault(0.U(64.W))
+
+    val lsu_direct_fin = RegInit(false.B)
 
     val ifu_en = WireDefault(io.ifu_read_en)
     val lsu_en = WireDefault(io.lsu_read_en | io.lsu_write_en)
@@ -118,7 +120,7 @@ class axi_lite_arbiter(
     io.lsu_read_valid := Mux(cur_state === s2,dcache_read_data_fin ,false.B)
     io.lsu_read_data := Mux(cur_state === s2,dcache_read_data,0.U((1 << (offset_width + 3)).W))
     io.lsu_write_finish := dcache_write_data_fin
-    io.lsu_direct_fin := Mux(cur_state === s3,mem_read_valid | mem_write_finish,false.B)
+    //io.lsu_direct_fin := Mux(cur_state === s3,mem_read_valid | mem_write_finish,false.B)
     io.lsu_direct_read_data := Mux(cur_state === s3,mem_rdata,0.U(64.W))
 
     when (next_state === s0){
@@ -214,10 +216,33 @@ class axi_lite_arbiter(
         }.otherwise{
             dcache_write_data_fin := false.B 
         }
+    }.elsewhen (next_state === s3 && io.lsu_direct_write_en){
+        dcache_write_data := io.lsu_direct_write_data
+        dcache_write_counter := 0.U 
+        dcache_write_data_fin := false.B 
     }.otherwise{
         dcache_write_counter := 0.U 
         dcache_write_data_fin := false.B 
+        dcache_write_data := 0.U
     }
+
+    io.lsu_direct_fin := mem_write_finish | mem_read_valid 
+    /*
+    when (next_state === s3 && io.lsu_direct_write_en){
+        when (mem_write_finish){
+            lsu_direct_fin := true.B 
+        }.otherwise{
+            lsu_direct_fin := false.B 
+        }
+    }.elsewhen (next_state === s3 && io.lsu_direct_read_en){
+        when (mem_read_valid){
+            lsu_direct_fin := true.B 
+        }.otherwise{
+            lsu_direct_fin := false.B 
+        }
+    }.otherwise{
+        lsu_direct_fin := false.B
+    }*/
 
     arbiter_to_mem_read.io.ACLK := io.ACLK 
     arbiter_to_mem_read.io.ARESETn := io.ARESETn 
@@ -229,8 +254,8 @@ class axi_lite_arbiter(
     arbiter_to_mem_write.io.ACLK := io.ACLK 
     arbiter_to_mem_write.io.ARESETn := io.ARESETn 
     arbiter_to_mem_write.io.addr := addr 
-    arbiter_to_mem_write.io.en := mem_write_en & !lsu_finish
-    arbiter_to_mem_write.io.wdata := io.lsu_write_data
+    arbiter_to_mem_write.io.en := mem_write_en & !lsu_finish & !mem_write_finish
+    arbiter_to_mem_write.io.wdata := dcache_write_data
     arbiter_to_mem_write.io.wmask := "b1000".U 
     mem_write_finish := arbiter_to_mem_write.io.finish
 

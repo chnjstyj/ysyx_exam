@@ -27,7 +27,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define waveform 1
+//#define waveform 1
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -172,10 +172,12 @@ extern "C" void pmem_read(
       if (boot_time == 0) boot_time = us;
       //printf("%lld\n",us - boot_time);
       *RDATA = (long long)(us - boot_time);
+      ready_to_read = 0;
     }
     else if (ARADDR == VGACTL_ADDR)
     {
       *RDATA = SCREEN_W << 16 | SCREEN_H;
+      ready_to_read = 0;
     }
     else if (ARADDR >= 0x80000000 && ARADDR < 0x80000000 + PMEM_SIZE)
     {
@@ -222,7 +224,6 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
     if (svGetBitselLogic(WSTRB,i) == 1)
     {
       wmask = i + 1;
-      break;
     }
   }
   svLogicVecVal BRESP_status = {{0}};
@@ -253,6 +254,7 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       {
         *BVALID = 1;
         ready_to_write = 0;
+        //printf("putchar: %x\n",WDATA);
         putchar((uint8_t)WDATA);
       }
       else if (AWADDR == SYNC_ADDR)
@@ -274,6 +276,7 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       else if (AWADDR >= 0x80000000 && AWADDR < 0x80000000 + PMEM_SIZE)
       {
         uint64_t addr = (uint64_t)AWADDR & (uint64_t)0x7fffffff;
+        //printf("\nwrite addr: %x wmask: %d %lx pc: %x\n",addr,wmask,WDATA,top->io_inst_address);
         for (i = 0; i < wmask; i ++)
         {
           pmem[addr + i] = (uint8_t)(WDATA >> 8 * i);
@@ -390,7 +393,7 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      if (j == 25600)
+      if (j == 100)
       {
         j = 0;
         update_device();

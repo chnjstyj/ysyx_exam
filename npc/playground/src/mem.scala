@@ -59,9 +59,9 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
     val device_read = WireDefault(io.mem_addr(29).asBool())
 
     io.dcache_read_addr := io.mem_addr(31,0) 
-    io.dcache_read_en := io.mem_read_en & !device_read
+    io.dcache_read_en := io.mem_read_en & !device_read & !io.dcache_read_valid
 
-    io.dcache_write_en := io.mem_write_en & !device_read
+    io.dcache_write_en := io.mem_write_en & !device_read & !io.dcache_write_fin
     io.dcache_write_data := io.mem_write_data 
     io.dcache_write_mask := io.mem_wmask   
 
@@ -79,19 +79,21 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         io.stall_from_mem := 0.U
     }
 
-    io.mem_read_data := io.dcache_read_data 
+    val read_data = WireDefault(0.U(64.W))
+    read_data := Mux(io.direct_read_en,io.direct_read_data,io.dcache_read_data)
+    io.mem_read_data := Mux(io.direct_read_en,io.direct_read_data,io.dcache_read_data)
     switch (io.mem_read_size){
         is ("b1000".U){
-            io.mem_read_data := io.dcache_read_data
+            io.mem_read_data := read_data
         }
         is ("b0100".U){
-            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(32,0.U),io.dcache_read_data(31,0)),Cat(Fill(32,io.dcache_read_data(31)),io.dcache_read_data(31,0)))
+            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(32,0.U),read_data(31,0)),Cat(Fill(32,read_data(31)),read_data(31,0)))
         }
         is ("b0010".U){
-            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(48,0.U),io.dcache_read_data(15,0)),Cat(Fill(48,io.dcache_read_data(15)),io.dcache_read_data(15,0)))
+            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(48,0.U),read_data(15,0)),Cat(Fill(48,read_data(15)),read_data(15,0)))
         }
         is ("b0001".U){
-            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(56,0.U),io.dcache_read_data(7,0)),Cat(Fill(56,io.dcache_read_data(7)),io.dcache_read_data(7,0)))
+            io.mem_read_data := Mux(io.zero_extends,Cat(Fill(56,0.U),read_data(7,0)),Cat(Fill(56,read_data(7)),read_data(7,0)))
         }
     }
 

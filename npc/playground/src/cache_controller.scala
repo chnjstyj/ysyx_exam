@@ -51,7 +51,7 @@ class cache_controller(
 
     io.read_cache_fin := read_hit 
     io.write_cache_fin := write_hit 
-    io.mem_addr := io.addr & (~((1 << (offset_width)) - 1).U(32.W))
+    io.mem_addr := Mux(cur_state === s2,cache.io.writeback_addr,io.addr & (~((1 << (offset_width)) - 1).U(32.W)))
 
     switch(cur_state){
         is (s0){

@@ -33,6 +33,7 @@ class cache(
         val write_hit = Output(Bool())
         val write_miss = Output(Bool()) 
         val writeback_data = Output(UInt((1 << (offset_width + 3)).W)) 
+        val writeback_addr = Output(UInt(32.W))
         val read_data = Output(UInt(64.W)) 
         val write_mask = Input(UInt(4.W))
     })
@@ -52,25 +53,39 @@ class cache(
     cache_line_hitted := VecInit((0 until ways).map(i => cache_blocks(i)(io.addr(index_width + offset_width - 1,offset_width))))
     //val cache_line_hitted = WireDefault(VecInit(Seq.fill(ways)((i: Int) => cache_blocks(i)(io.addr(index_width + offset_width - 1,offset_width)))))
 
+    //write mask
+    val mask_ = Wire(UInt(64.W))
+    mask_ := "hffffffffffffffff".U
+    switch (io.write_mask){
+        is ("b1000".U){
+            mask_ := 0.U
+        }
+        is ("b0100".U){
+            mask_ := "hffffffff00000000".U 
+        }
+        is ("b0010".U){
+            mask_ := "hffffffffffff0000".U 
+        }
+        is ("b0001".U){
+            mask_ := "hffffffffffffff00".U 
+        }
+    }
+
     //0counters 
     val counters = RegInit(VecInit(Seq.fill(ways)(0.U(2.W))))
     val counter_min = RegInit(0.U(2.W))
     //counter_min := counters.reduce((x, y) => Mux(x < y, x, y))
     //(0 until ways).map(i => counter_min := Mux(counters(counter_min) <= counters(i),counter_min,i.asUInt))
     counters.zipWithIndex.foreach{case (counter,i) => {
-        when (counter_min === 0.U){
-            counter_min := i.asUInt
+        when (counters(counter_min) <= counter){
+            
         }.otherwise{
-            when (counters(counter_min) <= counter){
-                
-            }.otherwise{
-                counter_min := i.asUInt
-            }
+            counter_min := i.asUInt
         }
     }}
     val counter_equal = WireDefault(counters.forall(i => i === counters(0)))
 
-    val addr_offset_3 = io.addr(offset_width-1,3)
+    val addr_offset = io.addr(offset_width-1,0)
 
     //write & substitude 
     val substitude_fin = RegInit(false.B)
@@ -95,11 +110,11 @@ class cache(
         }))*/
         cache_line_hitted.zipWithIndex.foreach{case (line,index) => {
             when (line.valid && line.tag === io.addr(31,32 - tag_width)){
-                val data_high = WireDefault(line.data >> ((addr_offset_3 << 6) + 64.U))
-                val new_writedata = WireDefault(Cat(data_high,io.write_data))
+                val data_high = WireDefault(line.data >> (addr_offset << 3))
+                val new_writedata = (data_high & (~"hffffffffffffffff".U(256.W))) | ((data_high(63,0) & mask_) | (io.write_data & (~mask_)))   //WireDefault(Cat(data_high,io.write_data))
                 val mask = Wire(UInt(256.W))
-                mask := (1.U(1.W) << (addr_offset_3 << 6)) - 1.U
-                cache_blocks(index)(io.addr(index_width + offset_width - 1,offset_width)).data := (line.data & (mask)) | (new_writedata << (addr_offset_3 << 6))
+                mask := (1.U(1.W) << (addr_offset << 3)) - 1.U
+                cache_blocks(index)(io.addr(index_width + offset_width - 1,offset_width)).data := (line.data & (mask)) | (new_writedata << (addr_offset << 3))
                 cache_blocks(index)(io.addr(index_width + offset_width - 1,offset_width)).dirty := true.B 
                 io.write_hit := true.B 
                 io.write_miss := false.B
@@ -116,8 +131,8 @@ class cache(
                 cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).data := io.substitude_data//cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).data | newData
                 substitude_fin := true.B 
            }.otherwise{
-                val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
-                newData := io.substitude_data << (addr_offset_3 << 3)
+                //val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
+                //newData := io.substitude_data << (addr_offset << 3)
                 cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).valid := true.B 
                 cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).dirty := false.B 
                 cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).tag := io.addr(31,32 - tag_width)
@@ -137,7 +152,7 @@ class cache(
         cache_line_hitted.map(
             line => 
             when (line.valid && line.tag === io.addr(31,32 - tag_width)){
-                io.read_data := (line.data >> (addr_offset_3 << (3+3)))(63,0)
+                io.read_data := (line.data >> (addr_offset << 3))(63,0)
                 io.read_hit := true.B 
                 io.read_miss := false.B
             }
@@ -187,11 +202,13 @@ class cache(
         //io.writeback_data := Cat(Seq(cache_line_hitted(counters(0)).data).reverse)
         //val dataSeq: Seq[chisel3.UInt] = cache_line_hitted(counters(0)).data.toSeq
         io.writeback_data := cache_line_hitted(counters(0)).data
+        io.writeback_addr := Cat(cache_line_hitted(counters(0)).tag,io.addr(index_width + offset_width - 1,offset_width),0.U(offset_width.W))
     }.otherwise{
         io.dirty_bit := cache_line_hitted(counter_min).dirty 
         //io.writeback_data := Cat(Seq(cache_line_hitted(counter_min).data).reverse)
         //val dataSeq: Seq[chisel3.UInt] = cache_line_hitted(counters(0)).data.toSeq
         io.writeback_data := cache_line_hitted(counter_min).data
+        io.writeback_addr := Cat(cache_line_hitted(counter_min).tag,io.addr(index_width + offset_width - 1,offset_width),0.U(offset_width.W))
     }
 
 }
