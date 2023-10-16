@@ -111,8 +111,8 @@ class cache(
         cache_line_hitted.zipWithIndex.foreach{case (line,index) => {
             when (line.valid && line.tag === io.addr(31,32 - tag_width)){
                 val data_high = WireDefault(line.data >> (addr_offset << 3))
-                val new_writedata = (data_high & (~"hffffffffffffffff".U(256.W))) | ((data_high(63,0) & mask_) | (io.write_data & (~mask_)))   //WireDefault(Cat(data_high,io.write_data))
-                val mask = Wire(UInt(256.W))
+                val new_writedata = (data_high & (~"hffffffffffffffff".U((1 << (offset_width << 3)).W))) | ((data_high(63,0) & mask_) | (io.write_data & (~mask_)))   //WireDefault(Cat(data_high,io.write_data))
+                val mask = Wire(UInt((1 << (offset_width << 3)).W))
                 mask := (1.U(1.W) << (addr_offset << 3)) - 1.U
                 cache_blocks(index)(io.addr(index_width + offset_width - 1,offset_width)).data := (line.data & (mask)) | (new_writedata << (addr_offset << 3))
                 cache_blocks(index)(io.addr(index_width + offset_width - 1,offset_width)).dirty := true.B 
@@ -125,10 +125,10 @@ class cache(
            when (counter_equal){
                 //val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
                 //newData := io.substitude_data << (addr_offset_3 << 3)
-                cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).valid := true.B 
-                cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).dirty := false.B 
-                cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).tag := io.addr(31,32 - tag_width)
-                cache_blocks(0)(io.addr(index_width + offset_width - 1,offset_width)).data := io.substitude_data//cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).data | newData
+                cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).valid := true.B 
+                cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).dirty := false.B 
+                cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).tag := io.addr(31,32 - tag_width)
+                cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).data := io.substitude_data//cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).data | newData
                 substitude_fin := true.B 
            }.otherwise{
                 //val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
@@ -163,9 +163,10 @@ class cache(
         io.read_data := 0.U(64.W)
     }
 
+    val cleaned = RegInit(false.B)
     //substitude
     //full
-    when (counter_equal){
+    when (counter_equal && counters(0) === 0.U){
         counters.foreach(counter => counter := 0.U)
     }
     //hit and add counter
@@ -188,11 +189,14 @@ class cache(
                 counters(counters(0)) := 0.U
             }.otherwise{
                 counters.zipWithIndex.foreach{case (counter,index) => {
-                    when (counter === counter_min){
+                    when (counter === counter_min && !cleaned){
+                        cleaned := true.B 
                         counters(index) := 0.U
                     }
                 }}
             }
+        }.otherwise{
+            cleaned := false.B 
         }
     }
 

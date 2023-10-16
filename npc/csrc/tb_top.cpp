@@ -27,7 +27,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-//#define waveform 1
+#define waveform 1
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -393,7 +393,7 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      if (j == 100)
+      if (j == 25600)
       {
         j = 0;
         update_device();
