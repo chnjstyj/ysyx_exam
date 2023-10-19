@@ -25,6 +25,7 @@ class axi_lite_arbiter(
         val lsu_direct_read_en = Input(Bool())  
         val lsu_direct_write_en = Input(Bool())
         val lsu_direct_write_data = Input(UInt(64.W))
+        val lsu_direct_write_mask = Input(UInt(4.W))
         val lsu_direct_read_data = Output(UInt(64.W)) 
         val lsu_direct_fin = Output(Bool())
         val lsu_direct_addr = Input(UInt(32.W))
@@ -256,7 +257,7 @@ class axi_lite_arbiter(
     arbiter_to_mem_write.io.addr := addr 
     arbiter_to_mem_write.io.en := mem_write_en & !lsu_finish & !mem_write_finish
     arbiter_to_mem_write.io.wdata := dcache_write_data
-    arbiter_to_mem_write.io.wmask := "b1000".U 
+    arbiter_to_mem_write.io.wmask := Mux(cur_state === s3,io.lsu_direct_write_mask,"b1000".U)
     mem_write_finish := arbiter_to_mem_write.io.finish
 
 }

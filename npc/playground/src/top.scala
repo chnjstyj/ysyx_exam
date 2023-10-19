@@ -15,6 +15,7 @@ class top(
         val inst_address = Output(UInt(64.W))
         val next_inst_address = Output(UInt(64.W))
         val stall = Output(Bool())
+        val offset1 = Output(UInt(6.W))
     })
 
     val alu_control_width = 4
@@ -76,6 +77,7 @@ class top(
     icache_controller.io.mem_read_data := axi_lite_arbiter.io.ifu_read_data
     icache_controller.io.write_cache_data := 0.U(64.W) 
     icache_controller.io.write_cache_mask := 0.U(4.W)
+    icache_controller.io.read_cache_size := "b0100".U
 
     id.io.inst := inst_if.io.inst
 
@@ -138,6 +140,7 @@ class top(
     mem.io.dcache_write_fin := dcache_controller.io.write_cache_fin
     mem.io.direct_read_data := axi_lite_arbiter.io.lsu_direct_read_data
     mem.io.direct_fin := axi_lite_arbiter.io.lsu_direct_fin
+    mem.io.crossline_access_stall := dcache_controller.io.crossline_access_stall
 
     dcache_controller.io.addr := mem.io.dcache_read_addr 
     dcache_controller.io.read_cache_en := mem.io.dcache_read_en 
@@ -146,7 +149,9 @@ class top(
     dcache_controller.io.mem_read_fin := axi_lite_arbiter.io.lsu_read_valid
     dcache_controller.io.mem_read_data := axi_lite_arbiter.io.lsu_read_data
     dcache_controller.io.write_cache_data := mem.io.dcache_write_data
-    dcache_controller.io.write_cache_mask := mem.io.dcache_write_mask 
+    dcache_controller.io.write_cache_mask := mem.io.dcache_write_mask
+    dcache_controller.io.read_cache_size := mem.io.dcache_read_size 
+    io.offset1 := dcache_controller.io.offset1
 
     stall.io.exit_debugging := id.io.control_signal.exit_debugging
     stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
@@ -164,5 +169,6 @@ class top(
     axi_lite_arbiter.io.lsu_direct_read_en := mem.io.direct_read_en 
     axi_lite_arbiter.io.lsu_direct_write_en := mem.io.direct_write_en
     axi_lite_arbiter.io.lsu_direct_write_data := mem.io.direct_write_data 
+    axi_lite_arbiter.io.lsu_direct_write_mask := mem.io.dcache_write_mask
     axi_lite_arbiter.io.lsu_direct_addr := mem.io.mem_addr
 }

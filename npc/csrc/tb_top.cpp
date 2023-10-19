@@ -204,11 +204,15 @@ extern "C" void pmem_read(
       m_trace->close();
       #endif
       fclose(itrace);
+      exit(2);
       assert(0);
     }
   }
 }
 
+long long indexbit = 0;
+inline void update_screen();
+void exit_npc();
 extern "C" void pmem_write(svBit AWVALID, int AWADDR, svBit WVALID, long long WDATA, svBit WLAST, 
 const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* BVALID, svLogicVecVal* BRESP)
 {
@@ -393,14 +397,10 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      if (j == 25600)
+      if (j == 2560)
       {
         j = 0;
         update_device();
-      }
-      if (top->io_stall) 
-      {
-        //printf("skip 0x%016lx\n",*pc);
       }
       if (diff_enable == true && !top->io_stall)
       {
@@ -422,33 +422,36 @@ void cpu_exec(int steps)
       }
     }
   }
-  for (;i > 0; i --)
+  else 
   {
-    total_steps++;
-    single_cycle(top);
-    disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
-    printf("%lx %s\n",top->io_inst_address,str);
-    if (top->io_stall) 
+    for (;i > 0; i --)
     {
-      //printf("skip\n");
-    }
-    if (diff_enable == true && !top->io_stall)
-    {
-      uint32_t inst = top->io_inst;
-      uint32_t inst_6_0 = inst & 0x7f;
-      uint32_t inst_31_20 = (inst & 0xfff00000) >> 20;
-      uint32_t inst_31_25 = (inst & 0xfe000000) >> 20;
-      uint32_t inst_11_7  = (inst & 0xf80     ) >> 7 ;
-      uint32_t inst_19_15 = (inst & 0xf8000   ) >> 15;
-      uint32_t offset = inst_6_0 == 3 ? inst_31_20: inst_31_25 | inst_11_7;
-      uint32_t address = offset + gpr[inst_19_15];
-      if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+      total_steps++;
+      single_cycle(top);
+      disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
+      printf("%lx %s\n",top->io_inst_address,str);
+      if (top->io_stall) 
       {
-        //printf("skip diff\n");
-        difftest_skip();
+        //printf("skip\n");
       }
-      else
-        difftest_step();
+      if (diff_enable == true && !top->io_stall)
+      {
+        uint32_t inst = top->io_inst;
+        uint32_t inst_6_0 = inst & 0x7f;
+        uint32_t inst_31_20 = (inst & 0xfff00000) >> 20;
+        uint32_t inst_31_25 = (inst & 0xfe000000) >> 20;
+        uint32_t inst_11_7  = (inst & 0xf80     ) >> 7 ;
+        uint32_t inst_19_15 = (inst & 0xf8000   ) >> 15;
+        uint32_t offset = inst_6_0 == 3 ? inst_31_20: inst_31_25 | inst_11_7;
+        uint32_t address = offset + gpr[inst_19_15];
+        if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+        {
+          //printf("skip diff\n");
+          difftest_skip();
+        }
+        else
+          difftest_step();
+      }
     }
   }
 }

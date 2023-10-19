@@ -35,6 +35,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         //dcache
         val dcache_read_addr = Output(UInt(32.W))
         val dcache_read_en = Output(Bool())
+        val dcache_read_size = Output(UInt(4.W))
         val dcache_read_data = Input(UInt(64.W))
         val dcache_read_valid = Input(Bool())
         //direct access
@@ -45,6 +46,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         val direct_fin = Input(Bool())
         //stall 
         val stall_from_mem = Output(UInt(1.W))
+        val crossline_access_stall = Input(Bool())
     })
 
     //val valid = Wire(Bool())
@@ -60,6 +62,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
 
     io.dcache_read_addr := io.mem_addr(31,0) 
     io.dcache_read_en := io.mem_read_en & !device_read & !io.dcache_read_valid
+    io.dcache_read_size := io.mem_read_size
 
     io.dcache_write_en := io.mem_write_en & !device_read & !io.dcache_write_fin
     io.dcache_write_data := io.mem_write_data 
@@ -75,6 +78,8 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         io.stall_from_mem := 1.U 
     }.elsewhen (!io.dcache_write_fin && io.dcache_write_en){
         io.stall_from_mem := 1.U 
+    }.elsewhen (io.crossline_access_stall){
+        io.stall_from_mem := 1.U
     }.otherwise{
         io.stall_from_mem := 0.U
     }
