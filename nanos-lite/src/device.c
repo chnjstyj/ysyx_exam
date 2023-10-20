@@ -88,6 +88,7 @@ size_t sb_write(const void *buf, size_t offset, size_t len)
 
 extern uint32_t* fb;
 size_t fb_write(const void *buf, size_t offset, size_t len) {
+  /*
   AM_GPU_CONFIG_T t = io_read(AM_GPU_CONFIG);
   //offset = canvas_w
   int canvas_w = offset;
@@ -107,6 +108,18 @@ size_t fb_write(const void *buf, size_t offset, size_t len) {
   }
   io_write(AM_GPU_FBDRAW,0,0,fb,t.width,t.height,true);
   return i;
+  */
+  AM_GPU_CONFIG_T t = io_read(AM_GPU_CONFIG);
+  //int i;
+  int y = offset / t.width;
+  int x = offset % t.width;
+  //for (i = 0; i < len; i++)
+  //{
+  //  *(fb + offset + i) = *((uint32_t *)buf + i);
+    //printf("%x\n",*(fb + offset + i));
+  //}
+  io_write(AM_GPU_FBDRAW,x,y,(uint32_t *)buf,len,1,true);
+  return len;
 }
 
 void init_device() {

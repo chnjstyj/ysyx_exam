@@ -38,7 +38,8 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
       {
         if (i < h && j < w) 
         {
-          fb[i * w + j] = p[k * ctl->w + l];
+          //fb[i * w + j] = p[k * ctl->w + l];
+          fb[i * w + j] = p[l];
           l++;
         }
       }

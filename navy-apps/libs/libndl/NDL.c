@@ -82,6 +82,7 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
     lseek(gpu_fb,(i * screen_w) + x,SEEK_SET);
     k += write(gpu_fb,pixels + k,w);
   }*/
+  /*
   int i,j,k = 0;
   for (i = y;i < y + h; i++)
   {
@@ -95,7 +96,24 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
     }
   }
   lseek(gpu_fb,canvas_w,SEEK_SET);
-  write(gpu_fb,canvas,canvas_w * canvas_h); 
+  write(gpu_fb,canvas,canvas_w * canvas_h); */
+  
+  int i,j,k = 0;
+  for (i = y;i < y + h; i++)
+  {
+    for (j = x; j < x + w; j++)
+    {
+      if (i >= 0 && j >= 0 && i < canvas_h && j < canvas_w)
+      {
+        *(canvas + i * canvas_w + j) = *(pixels + i * canvas_w + j);
+        //printf("%x\n",*(canvas + i * canvas_w + j));
+        k++;
+      }
+    }
+    lseek(gpu_fb,screen_w * i,SEEK_SET);  
+    write(gpu_fb,canvas + i * canvas_w,canvas_w); 
+    k = 0;
+  }
 }
 
 void NDL_OpenAudio(int freq, int channels, int samples) {
