@@ -54,6 +54,17 @@ class cache_controller(
     val substitude = Wire(Bool())
     val substitude_data = WireDefault(io.mem_read_data)
     val substitude_fin = Wire(Bool())
+    
+    val offset1 = Wire(UInt(6.W))
+    val access_cache_size_6 = Wire(UInt(6.W))
+    val addr_offset_6 = Wire(UInt(6.W))
+    addr_offset_6 := addr_offset
+
+    val cache_curline_data_ready = RegInit(false.B)
+    val cache_curline_data = RegInit(0.U(64.W))
+    val cache_curline_write_mask = WireDefault((1 << offset_width).U - addr_offset_6)
+    val write_mask = Wire(UInt(4.W))
+    val write_data = Wire(UInt(64.W))
 
     val cache_nextline_addr = WireDefault((io.addr + (1 << (offset_width)).U) & (~((1 << (offset_width)) - 1).U(32.W)))
     val cache_nextline_data = Wire(UInt(64.W))
@@ -65,29 +76,19 @@ class cache_controller(
     //io.mem_addr := Mux(cur_state === s2,cache.io.writeback_addr,io.addr & (~((1 << (offset_width)) - 1).U(32.W)))
     when (cur_state === s2){
         io.mem_addr := cache.io.writeback_addr
-    }.elsewhen (cur_state === s3 && crossline_access){
+    }.elsewhen (cur_state === s3 && crossline_access && cache_curline_data_ready){
         io.mem_addr := cache_nextline_addr
     }.otherwise{
         io.mem_addr := io.addr & (~((1 << (offset_width)) - 1).U(32.W))
     }
 
-    val offset1 = Wire(UInt(6.W))
-    val access_cache_size_6 = Wire(UInt(6.W))
-    val addr_offset_6 = Wire(UInt(6.W))
     when (io.write_cache_en){
         access_cache_size_6 := io.write_cache_mask
     }.otherwise{
         access_cache_size_6 := io.read_cache_size
     }
-    addr_offset_6 := addr_offset
     offset1 := (access_cache_size_6 + addr_offset_6)
     io.offset1 := offset1
-
-    val cache_curline_data_ready = RegInit(false.B)
-    val cache_curline_data = RegInit(0.U(64.W))
-    val cache_curline_write_mask = WireDefault((1 << offset_width).U - addr_offset_6)
-    val write_mask = Wire(UInt(4.W))
-    val write_data = Wire(UInt(64.W))
 
     when (next_state === s4){
         write_mask := cache_curline_write_mask

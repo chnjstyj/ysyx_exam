@@ -40,8 +40,8 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
         {
           //fb[i * w + j] = p[k * ctl->w + l];
           fb[i * w + j] = p[l];
-          l++;
         }
+        l++;
       }
       k++;
       l = 0;
