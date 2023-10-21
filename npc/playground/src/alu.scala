@@ -65,6 +65,9 @@ class alu(alu_control_width:Int) extends Module{
 
     rem.io.data_a := real_data_a_w
     rem.io.data_b := real_data_b_w
+    rem.io.data_a_32 := real_data_a_w(31,0)
+    rem.io.data_b_32 := real_data_b_w(31,0)
+    rem.io.alu_result_size := io.alu_result_size
 
     div.io.data_a := real_data_a_w
     div.io.data_b := real_data_b_w

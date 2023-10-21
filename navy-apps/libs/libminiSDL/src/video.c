@@ -101,36 +101,38 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
 void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   //根据dstrect中的坐标计算dst中pixel的偏移，将color填充进去。
   uint32_t rcolor = color;
-  int i,j;
+  int i,j,k;
   if (dst->format->BitsPerPixel == 8)
   {
     uint8_t r,g,b,a;
     SDL_Palette* palette = dst->format->palette;
     for (i = 0; i < dst->format->palette->ncolors; i ++)
     {
+      //FIXME 
       r = palette->colors[i].r;  // 获取红色分量值
       g = palette->colors[i].g;  // 获取绿色分量值
       b = palette->colors[i].b;  // 获取蓝色分量值
       a = palette->colors[i].a;
-      uint32_t c = (r << 16) | (g << 8) | (b << 0) | (a << 24);
+      uint32_t c = (r << 16) | (g << 8) | (b << 0);
+      //palette->colors[i].val;
       if (c == color) 
       {
         if (dstrect != NULL)
         {
-          for (i = dstrect->y; i < dstrect->y + dstrect->h; i++)
+          for (j = dstrect->y; j < dstrect->y + dstrect->h; j++)
           {
-            for (j = dstrect->x; j < dstrect->w + dstrect->x; j++)
+            for (k = dstrect->x; k < dstrect->w + dstrect->x; k++)
             {
-              if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
-                *((uint8_t*)dst->pixels + i * dst->w + j) = c;
+              if (j >= 0 && k >= 0 && j < dst->h && k < dst->w)
+                *((uint8_t*)dst->pixels + j * dst->w + k) = i;
             }
           }
         }
         else 
         {
-          for (i = 0; i < dst->h * dst->w; i++)
+          for (j = 0; j < dst->h * dst->w; j++)
           {
-            *((uint8_t*)dst->pixels + i) = c;
+            *((uint8_t*)dst->pixels + j) = i;
           }
         }
         return;
@@ -157,6 +159,8 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   }
 }
 
+static uint32_t* pixels = NULL;
+
 void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
   int a_w = w,a_h = h;
   if (w == 0)
@@ -169,8 +173,9 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
   }
   if (s->format->BitsPerPixel == 8)
   {
-    uint32_t* pixels = (uint32_t*)malloc(sizeof(uint32_t) * a_w * a_h);
-    SDL_PixelFormat* fmt = (SDL_PixelFormat*)malloc(sizeof(SDL_PixelFormat));
+    if (pixels == NULL)
+      pixels = (uint32_t*)malloc(sizeof(uint32_t) * a_w * a_h);
+    //SDL_PixelFormat* fmt = (SDL_PixelFormat*)malloc(sizeof(SDL_PixelFormat));
     SDL_Palette* palette = s->format->palette;
     for (int i = 0; i < a_w * a_h; i++)
     {
@@ -180,11 +185,12 @@ void SDL_UpdateRect(SDL_Surface *s, int x, int y, int w, int h) {
       uint8_t b = palette->colors[index].b;  // 获取蓝色分量值
       uint8_t a = palette->colors[index].a;
       
-      pixels[i] = (r << 16) | (g << 8) | (b << 0) | (a << 24);
+      pixels[i] = //palette->colors[index].val;
+      (r << 16) | (g << 8) | (b << 0); //| (a << 24);
     }
     NDL_DrawRect(pixels,x,y,a_w,a_h);
-    free(pixels);
-    free(fmt);
+    //free(pixels);
+    //free(fmt);
   }
   else 
   {
@@ -311,10 +317,14 @@ void SDL_SetPalette(SDL_Surface *s, int flags, SDL_Color *colors, int firstcolor
 
   if(s->flags & SDL_HWSURFACE) {
     assert(ncolors == 256);
+    
     for (int i = 0; i < ncolors; i ++) {
       uint8_t r = colors[i].r;
       uint8_t g = colors[i].g;
       uint8_t b = colors[i].b;
+      uint8_t a = colors[i].a;
+      //FIXME modified
+      //s->format->palette->colors[i].val = (r << 16) | (g << 8) | (b << 0) | (a << 24);
     }
     SDL_UpdateRect(s, 0, 0, 0, 0);
   }

@@ -86,7 +86,7 @@ bool ftrace_enable = false;
 
 //diff
 bool diff_enable = false;
-static int total_steps;
+static uint64_t total_steps;
 
 void init_pmem(const char* file_name)
 {
@@ -358,13 +358,13 @@ void single_cycle(Vtop* top)
   top->clock = 1;top->eval();
   sim_time++;
   #ifdef waveform
-  //if (total_steps > 1100900)
+  if (total_steps > 112840000)
     m_trace->dump(sim_time);
   #endif
   top->clock = 0;top->eval();
   sim_time++;
   #ifdef waveform
-  //if (total_steps > 1100900)
+  if (total_steps > 112840000)
     m_trace->dump(sim_time);
   #endif
 }
@@ -399,7 +399,7 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      if (j == 10)
+      if (j == 25600)
       {
         j = 0;
         update_device();
