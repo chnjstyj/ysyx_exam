@@ -1,4 +1,4 @@
-module div(
+module div_(
     input [63:0] data_a,
     input [63:0] data_b,
     input alu_result_size,

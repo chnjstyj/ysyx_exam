@@ -358,13 +358,13 @@ void single_cycle(Vtop* top)
   top->clock = 1;top->eval();
   sim_time++;
   #ifdef waveform
-  if (total_steps > 112840000)
+  //if (total_steps > 141965000)
     m_trace->dump(sim_time);
   #endif
   top->clock = 0;top->eval();
   sim_time++;
   #ifdef waveform
-  if (total_steps > 112840000)
+  //if (total_steps > 141965000)
     m_trace->dump(sim_time);
   #endif
 }

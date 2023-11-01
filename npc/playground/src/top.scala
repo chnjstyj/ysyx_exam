@@ -157,6 +157,7 @@ class top(
     stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
     stall.io.stall_from_mem := mem.io.stall_from_mem
     stall.io.icache_miss := icache_controller.io.cache_miss 
+    stall.io.stall_from_alu := alu.io.alu_stall
 
     axi_lite_arbiter.io.ACLK := clock 
     axi_lite_arbiter.io.ARESETn := ~(reset.asBool)

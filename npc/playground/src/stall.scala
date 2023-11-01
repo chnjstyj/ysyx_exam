@@ -10,6 +10,7 @@ class stall extends Module{
         val exit_debugging = Input(UInt(1.W))
         val stall_from_inst_if = Input(UInt(1.W))
         val stall_from_mem = Input(UInt(1.W))
+        val stall_from_alu = Input(Bool())
 
         val stall_from_mem_reg = Output(UInt(1.W))
         val stall_global = Output(UInt(1.W))
@@ -26,7 +27,8 @@ class stall extends Module{
     withClock ((!clock.asBool).asClock){
         val stall_mem_reg = RegNext(io.stall_from_mem)
         val stall_inst_if_reg = RegNext(io.icache_miss)
-        io.stall_global := io.stall_from_mem | stall_inst_if_reg
+        val stall_alu_reg = RegNext(io.stall_from_alu)
+        io.stall_global := io.stall_from_mem | stall_inst_if_reg | stall_alu_reg
         io.stall_from_mem_reg := io.stall_from_mem
     }
     

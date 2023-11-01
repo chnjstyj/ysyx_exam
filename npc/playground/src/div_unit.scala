@@ -3,7 +3,7 @@ import chisel3.util._
 import chisel3.experimental._
 import java.io.File
 
-class div extends BlackBox with HasBlackBoxPath{
+class div_unit extends BlackBox with HasBlackBoxPath{
     val io = IO(new Bundle{
         val data_a = Input(UInt(64.W))
         val data_b = Input(UInt(64.W))
