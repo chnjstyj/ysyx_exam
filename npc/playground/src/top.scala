@@ -32,13 +32,18 @@ class top(
     val icache_controller = Module(new cache_controller(tag_width,index_width,offset_width,ways))
     val dcache_controller = Module(new cache_controller(tag_width,index_width,offset_width,ways))
 
+    val pc_inst_if = Module(new pc_inst_if)
+    val inst_if_id = Module(new inst_if_id)
+    val id_ex = Module(new id_ex(alu_control_width))
+    val ex_mem = Module(new ex_mem)
+
     io.inst := inst_if.io.inst
     when (pc.io.direct_jump === 1.U){
         io.inst_address := pc.io.inst_address | "h8000_0000".U 
     }.otherwise{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
     }
-    io.next_inst_address := pc.io.next_inst_address
+    io.next_inst_address := pc_inst_if.io.inst_if_next_inst_address
     io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
 
     //withClock((!clock.asBool).asClock){
@@ -46,6 +51,7 @@ class top(
         //val direct_jump_addr_r = RegNext( alu.io.alu_result )
         //val branch_jump_r = RegNext( judge_branch_m.io.branch_jump )
         //val branch_jump_addr_r = RegNext( judge_branch_m.io.branch_jump_addr )
+        //FIXME direct jump addr  judge branch
         pc.io.direct_jump := id.io.control_signal.direct_jump
         pc.io.direct_jump_addr := alu.io.alu_result
         pc.io.branch_jump := judge_branch_m.io.branch_jump
@@ -58,10 +64,14 @@ class top(
     pc.io.mret_addr := regfile.io.mret_addr
     pc.io.stall_global := stall.io.stall_global
 
+    pc_inst_if.io.pc_inst_address := pc.io.inst_address
+    pc_inst_if.io.pc_next_inst_address := pc.io.next_inst_address   
+    pc_inst_if.io.pc_ce := pc.io.ce
+
     inst_if.io.ACLK := clock
     inst_if.io.ARESETn := ~(reset.asBool)
-    inst_if.io.inst_address := pc.io.inst_address
-    inst_if.io.ce := pc.io.ce
+    inst_if.io.inst_address := pc_inst_if.io.inst_if_inst_address
+    inst_if.io.ce := pc_inst_if.io.inst_if_ce
     inst_if.io.stall_global := stall.io.stall_global
     inst_if.io.stall_from_mem_reg := RegNext(stall.io.stall_from_mem_reg)
     //inst_if.io.ifu_read_data := axi_lite_arbiter.io.ifu_read_data
@@ -79,7 +89,9 @@ class top(
     icache_controller.io.write_cache_mask := 0.U(4.W)
     icache_controller.io.read_cache_size := "b0100".U
 
-    id.io.inst := inst_if.io.inst
+    inst_if_id.io.inst_if_inst := inst_if.io.inst
+
+    id.io.inst := inst_if_id.io.id_inst 
 
     judge_branch_m.io.judge_branch := id.io.control_signal.judge_branch
     judge_branch_m.io.imm := id.io.imm 
@@ -94,10 +106,11 @@ class top(
     regfile.io.reg_wen := id.io.control_signal.reg_wen
     regfile.io.regfile_output_1 := id.io.control_signal.regfile_output_1
     regfile.io.inst_address := pc.io.inst_address
+    //FIXME save_next_inst_addr & next_instaddress
     regfile.io.save_next_inst_addr := id.io.control_signal.save_next_inst_addr
     regfile.io.mem_read_en := id.io.control_signal.mem_read_en
     regfile.io.rd_wdata := MuxCase(alu.io.alu_result,Seq(
-        id.io.control_signal.save_next_inst_addr.asBool -> pc.io.next_inst_address,
+        id.io.control_signal.save_next_inst_addr.asBool -> inst_if_id.io.id_next_inst_address,
         id.io.control_signal.mem_read_en.asBool -> mem.io.mem_read_data))
     regfile.io.csr_wen := id.io.control_signal.csr_wen
     regfile.io.csr_sen := id.io.control_signal.csr_sen
@@ -114,27 +127,52 @@ class top(
         regfile.io.rd_wdata := alu.io.alu_result
     }*/
 
-    alu.io.alu_control := id.io.control_signal.alu_control
-    alu.io.alu_src := id.io.control_signal.alu_src
-    alu.io.rs1_rdata := regfile.io.rs1_rdata
-    alu.io.rs2_rdata := regfile.io.rs2_rdata
-    alu.io.imm := id.io.imm
-    alu.io.alu_result_size := id.io.control_signal.alu_result_size
-    alu.io.sign_less_than := id.io.control_signal.sign_less_than
-    alu.io.sign_divrem := id.io.control_signal.sign_divrem
-    alu.io.funct3 := id.io.funct3 
-    alu.io.csr_sen := id.io.control_signal.csr_sen
-    alu.io.csr_rdata := regfile.io.csr_rdata
+    id_ex.io.id_alu_src := id.io.control_signal.alu_src
+    id_ex.io.id_alu_control := id.io.control_signal.alu_control
+    id_ex.io.id_reg_wen := id.io.control_signal.reg_wen
+    id_ex.io.id_mem_write_en := id.io.control_signal.mem_write_en
+    id_ex.io.id_mem_write_wmask := id.io.control_signal.mem_wmask
+    id_ex.io.id_mem_read_en := id.io.control_signal.mem_read_en
+    id_ex.io.id_mem_read_size := id.io.control_signal.mem_read_size
+    id_ex.io.id_alu_result_size := id.io.control_signal.alu_result_size
+    id_ex.io.id_zero_extends := id.io.control_signal.zero_extends
+    id_ex.io.id_funct3 := id.io.funct3
+    id_ex.io.id_rs1_rdata := regfile.io.rs1_rdata
+    id_ex.io.id_rs2_rdata := regfile.io.rs2_rdata
+    id_ex.io.id_csr_rdata := regfile.io.csr_rdata
+    id_ex.io.id_imm := id.io.imm
+    id_ex.io.id_sign_less_than := id.io.control_signal.sign_less_than
+
+    alu.io.alu_control := id_ex.io.ex_alu_control
+    alu.io.alu_src := id_ex.io.ex_alu_src
+    alu.io.rs1_rdata := id_ex.io.ex_rs1_rdata
+    alu.io.rs2_rdata := id_ex.io.ex_rs2_rdata
+    alu.io.imm := id_ex.io.ex_imm
+    alu.io.alu_result_size := id_ex.io.ex_alu_result_size
+    alu.io.sign_less_than := id_ex.io.ex_sign_less_than
+    alu.io.sign_divrem := id_ex.io.ex_sign_divrem
+    alu.io.funct3 := id_ex.io.ex_funct3
+    alu.io.csr_sen := id_ex.io.ex_csr_sen
+    alu.io.csr_rdata := id_ex.io.ex_csr_rdata
+
+    ex_mem.io.ex_alu_result := alu.io.alu_result
+    ex_mem.io.ex_reg_wen := id_ex.io.ex_reg_wen
+    ex_mem.io.ex_mem_write_en := id_ex.io.ex_mem_write_en
+    ex_mem.io.ex_mem_write_mask := id_ex.io.ex_mem_write_mask 
+    ex_mem.io.ex_mem_read_en := id_ex.io.ex_mem_read_en 
+    ex_mem.io.ex_mem_read_size := id_ex.io.ex_mem_read_size 
+    ex_mem.io.ex_zero_extends := id_ex.io.ex_zero_extends
+    ex_mem.io.ex_rs2_rdata := id_ex.io.ex_rs2_rdata
     
     mem.io.ACLK := clock
     mem.io.ARESETn := ~(reset.asBool)
-    mem.io.mem_addr := alu.io.alu_result
-    mem.io.mem_write_data := regfile.io.rs2_rdata
-    mem.io.mem_write_en := id.io.control_signal.mem_write_en
-    mem.io.mem_wmask := id.io.control_signal.mem_wmask
-    mem.io.mem_read_en := id.io.control_signal.mem_read_en
-    mem.io.mem_read_size := id.io.control_signal.mem_read_size
-    mem.io.zero_extends := id.io.control_signal.zero_extends
+    mem.io.mem_addr := ex_mem.io.mem_alu_result
+    mem.io.mem_write_data := ex_mem.io.mem_rs2_rdata
+    mem.io.mem_write_en := ex_mem.io.mem_mem_write_en
+    mem.io.mem_wmask := ex_mem.io.mem_mem_wmask
+    mem.io.mem_read_en := ex_mem.io.mem_mem_read_en
+    mem.io.mem_read_size := ex_mem.io.mem_mem_read_size
+    mem.io.zero_extends := ex_mem.io.mem_zero_extends
     mem.io.dcache_read_valid := dcache_controller.io.read_cache_fin
     mem.io.dcache_read_data := dcache_controller.io.cache_data
     mem.io.dcache_write_fin := dcache_controller.io.write_cache_fin
