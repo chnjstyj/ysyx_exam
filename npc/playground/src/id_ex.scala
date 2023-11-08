@@ -8,6 +8,7 @@ class id_ex(
         val id_alu_src = Input(UInt(1.W))
         val id_alu_control = Input(UInt(alu_control_width.W))
         val id_reg_wen = Input(UInt(1.W))
+        val id_rd = Input(UInt(5.W))
         //val id_direct_jump
         //val save_next_inst_addr
         val id_mem_write_en = Input(UInt(1.W))
@@ -23,10 +24,13 @@ class id_ex(
         val id_imm = Input(UInt(64.W))
         val id_sign_less_than = Input(UInt(1.W))
         val id_csr_sen = Input(UInt(1.W))
+        val id_csr_addr = Input(UInt(12.W))
+        val id_sign_divrem = Input(UInt(1.W))
 
         val ex_alu_src = Output(UInt(1.W))
         val ex_alu_control = Output(UInt(alu_control_width.W))
         val ex_reg_wen = Output(UInt(1.W))
+        val ex_rd = Output(UInt(5.W))
         val ex_mem_write_en = Output(UInt(1.W))
         val ex_mem_write_mask = Output(UInt(4.W))
         val ex_mem_read_en = Output(UInt(1.W))
@@ -40,11 +44,14 @@ class id_ex(
         val ex_imm = Output(UInt(64.W))
         val ex_sign_less_than = Output(UInt(1.W))
         val ex_csr_sen = Output(UInt(1.W))
+        val ex_csr_addr = Output(UInt(12.W))
+        val ex_sign_divrem = Output(UInt(1.W))
     })
 
     io.ex_alu_src := RegNext(io.id_alu_src,0.U)
     io.ex_alu_control := RegNext(io.id_alu_control,0.U)
     io.ex_reg_wen := RegNext(io.id_reg_wen,0.U)
+    io.ex_rd := RegNext(io.id_rd,0.U)
     io.ex_mem_write_en := RegNext(io.id_mem_write_en,0.U)
     io.ex_mem_write_mask := RegNext(io.id_mem_write_wmask,0.U)
     io.ex_mem_read_en := RegNext(io.id_mem_read_en,0.U)
@@ -58,5 +65,7 @@ class id_ex(
     io.ex_imm := RegNext(io.id_imm,0.U)
     io.ex_sign_less_than := RegNext(io.id_sign_less_than,0.U)
     io.ex_csr_sen := RegNext(io.id_csr_sen,0.U)
+    io.ex_csr_addr := RegNext(io.id_csr_addr,0.U)
+    io.ex_sign_divrem := RegNext(io.id_sign_divrem,0.U)
 
 }
