@@ -27,7 +27,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-//#define waveform 1
+#define waveform 1
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -153,11 +153,13 @@ extern "C" void pmem_read(
   svPutPartselLogic(RRESP,RRESP_status,0,4);
   if (ARVALID)  //address for reading is valid
   {
+    
     if (!ready_to_read) 
     {
       *RVALID = 0;
       *RLAST = 0;
       //if (top->clock != 1) return;
+      printf("delay %lx %d\n",ARADDR,ready_to_read);
       ready_to_read = 1;
       return;
       //delay for 1 cycle
@@ -192,6 +194,7 @@ extern "C" void pmem_read(
         temp = temp << (8 * i);
         *RDATA |= temp;
       }
+      printf("running %lx %lx\n",ARADDR,*RDATA);
       //printf("addr %lx read data %lx\n",ARADDR,*RDATA);
       ready_to_read = 0;
     }

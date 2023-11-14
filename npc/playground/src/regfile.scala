@@ -26,8 +26,8 @@ class regfile extends Module{
         val csr_rdata = Output(UInt(64.W))
         val mret_addr = Output(UInt(64.W))
 
-        val stall_global = Input(Bool())
-
+        val stall_ca_wb = Input(Bool())
+        val stall_id_ex = Input(Bool())
     })
 
     val csr_write_to_reg = WireDefault(io.rd =/= 0.U && io.csr_write_to_reg === 1.U)
@@ -43,12 +43,12 @@ class regfile extends Module{
     regs.io.rs1 := io.rs1 
     regs.io.rs2 := io.rs2
     regs.io.rd := io.rd 
-    regs.io.reg_wen := !io.stall_global & (io.reg_wen | io.save_next_inst_addr | io.mem_read_en | csr_write_to_reg)
+    regs.io.reg_wen := (!io.stall_ca_wb & (io.reg_wen | io.mem_read_en)) | (!io.stall_id_ex & (io.save_next_inst_addr | io.csr_write_to_reg))
 
     csrs.io.clock := clock
     csrs.io.rs1_rdata := regs.io.rs1_rdata
     csrs.io.rd_wdata := io.rd_wdata
-    csrs.io.csr_wen := !io.stall_global & io.csr_wen
+    csrs.io.csr_wen := !io.stall_id_ex & io.csr_wen
     csrs.io.csr_sen := io.csr_sen
     csrs.io.csr_addr := io.csr_addr
     csrs.io.ecall := io.ecall
@@ -64,12 +64,20 @@ class regfile extends Module{
         io.rs1_rdata := io.inst_address
     }.otherwise{
         //io.rs1_rdata := regfile(io.rs1)
-        io.rs1_rdata := regs.io.rs1_rdata
+        when (io.rs1 === io.rd && io.reg_wen.asBool){
+            io.rs1_rdata := io.rd_wdata
+        }.otherwise{
+            io.rs1_rdata := regs.io.rs1_rdata
+        }
     }
 
 
     //io.rs2_rdata := regfile(io.rs2)
-    io.rs2_rdata := regs.io.rs2_rdata
+    when (io.rs2 === io.rd && io.reg_wen.asBool){
+        io.rs2_rdata := io.rd_wdata
+    }.otherwise{
+        io.rs2_rdata := regs.io.rs2_rdata
+    }
 
     //write
     when (io.rd =/= 0.U && csr_write_to_reg =/= 1.U){

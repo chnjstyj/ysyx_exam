@@ -166,22 +166,28 @@ class axi_lite_arbiter(
     when (next_state === s1){
         //icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U) //next 64 bits block
         when(mem_read_valid && icache_read_counter < counter_end.U){
-            icache_read_data_fin := false.B 
+            //icache_read_data_fin := false.B 
             icache_read_counter := icache_read_counter + 1.U 
             icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 6.U))
         }.elsewhen (mem_read_valid && icache_read_counter === counter_end.U){
             //last one to read
-            icache_read_data_fin := true.B 
+            //icache_read_data_fin := true.B 
             icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 6.U))
             icache_read_counter := 0.U
         }.otherwise{
-            icache_read_data_fin := false.B 
+            //icache_read_data_fin := false.B 
         }
     }.otherwise{
-        icache_read_data_fin := false.B 
+        //icache_read_data_fin := false.B 
         //icache_read_addr := 0.U 
         icache_read_counter := 0.U 
         icache_read_data := 0.U 
+    }
+
+    when (mem_read_valid && icache_read_counter === counter_end.U){
+        icache_read_data_fin := true.B 
+    }.otherwise{
+        icache_read_data_fin := false.B
     }
 
     dcache_read_addr := io.lsu_addr + Mux(io.lsu_write_en,(dcache_write_counter << 3.U),(dcache_read_counter << 3.U))

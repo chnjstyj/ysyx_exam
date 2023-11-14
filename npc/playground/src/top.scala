@@ -25,8 +25,10 @@ class top(
     val inst_if = Module(new inst_if("inst.rom")) 
     val id = Module(new id(alu_control_width))
     val regfile = Module(new regfile)
+    val alu_bypass = Module(new alu_bypass)
     val alu = Module(new alu(alu_control_width))
     val stall = Module(new stall)
+    val mem_bypass = Module(new mem_bypass)
     val mem = Module(new mem)
     val judge_branch_m = Module(new judge_branch_m)
     val icache_controller = Module(new cache_controller(tag_width,index_width,offset_width,ways))
@@ -64,22 +66,24 @@ class top(
     pc.io.ecall_addr := regfile.io.csr_rdata
     pc.io.mret := id.io.control_signal.mret
     pc.io.mret_addr := regfile.io.mret_addr
-    pc.io.stall_global := stall.io.stall_global
+    pc.io.stall_pc := stall.io.stall_pc_inst_if
 
     pc_inst_if.io.pc_inst_address := pc.io.inst_address
     pc_inst_if.io.pc_next_inst_address := pc.io.next_inst_address   
     pc_inst_if.io.pc_ce := pc.io.ce
+    pc_inst_if.io.stall_pc_inst_if := stall.io.stall_pc_inst_if
 
     inst_if.io.ACLK := clock
     inst_if.io.ARESETn := ~(reset.asBool)
     inst_if.io.inst_address := pc_inst_if.io.inst_if_inst_address
     inst_if.io.ce := pc_inst_if.io.inst_if_ce
-    inst_if.io.stall_global := stall.io.stall_global
+    inst_if.io.stall_inst_if := stall.io.stall_inst_if_id
     inst_if.io.stall_from_mem_reg := RegNext(stall.io.stall_from_mem_reg)
     //inst_if.io.ifu_read_data := axi_lite_arbiter.io.ifu_read_data
     //inst_if.io.ifu_read_valid := axi_lite_arbiter.io.ifu_read_valid
     inst_if.io.icache_read_data := icache_controller.io.cache_data 
-    inst_if.io.icache_read_valid := axi_lite_arbiter.io.ifu_read_valid
+    inst_if.io.icache_read_valid := icache_controller.io.read_cache_fin
+    inst_if.io.icache_miss := icache_controller.io.cache_miss
 
     icache_controller.io.addr := inst_if.io.icache_read_addr 
     icache_controller.io.read_cache_en := inst_if.io.icache_read_en 
@@ -94,6 +98,7 @@ class top(
     inst_if_id.io.inst_if_inst := inst_if.io.inst
     inst_if_id.io.inst_if_inst_address := pc_inst_if.io.inst_if_inst_address
     inst_if_id.io.inst_if_next_inst_address := pc_inst_if.io.inst_if_next_inst_address
+    inst_if_id.io.stall_inst_if_id := stall.io.stall_inst_if_id
 
     id.io.inst := inst_if_id.io.id_inst 
 
@@ -122,7 +127,8 @@ class top(
     regfile.io.csr_addr := ca_wb.io.wb_csr_addr
     regfile.io.ecall := id.io.control_signal.ecall
     regfile.io.csr_write_to_reg := id.io.control_signal.csr_write_to_reg
-    regfile.io.stall_global := stall.io.stall_global
+    regfile.io.stall_ca_wb := stall.io.stall_ca_wb
+    regfile.io.stall_id_ex := stall.io.stall_id_ex
     /*
     when (id.io.control_signal.save_next_inst_addr === 1.U){
         regfile.io.rd_wdata := pc.io.next_inst_address
@@ -151,11 +157,26 @@ class top(
     id_ex.io.id_csr_sen := id.io.control_signal.csr_sen
     id_ex.io.id_csr_addr := id.io.imm
     id_ex.io.id_sign_divrem := id.io.control_signal.sign_divrem
+    id_ex.io.id_rs1 := id.io.rs1 
+    id_ex.io.id_rs2 := id.io.rs2 
+    id_ex.io.id_exit_debugging := id.io.control_signal.exit_debugging
+    id_ex.io.stall_id_ex := stall.io.stall_id_ex
+
+    alu_bypass.io.ex_rs1 := id_ex.io.ex_rs1
+    alu_bypass.io.ex_rs2 := id_ex.io.ex_rs2
+    alu_bypass.io.ex_rs1_rdata := id_ex.io.ex_rs1_rdata
+    alu_bypass.io.ex_rs2_rdata := id_ex.io.ex_rs2_rdata
+    alu_bypass.io.mem_alu_result := ex_mem.io.mem_alu_result
+    alu_bypass.io.mem_rd := ex_mem.io.mem_rd
+    alu_bypass.io.ca_alu_result := mem_ca.io.ca_alu_result
+    alu_bypass.io.ca_rd := mem_ca.io.ca_rd
+    alu_bypass.io.wb_alu_result := ca_wb.io.wb_alu_result
+    alu_bypass.io.wb_rd := ca_wb.io.wb_rd
 
     alu.io.alu_control := id_ex.io.ex_alu_control
     alu.io.alu_src := id_ex.io.ex_alu_src
-    alu.io.rs1_rdata := id_ex.io.ex_rs1_rdata
-    alu.io.rs2_rdata := id_ex.io.ex_rs2_rdata
+    alu.io.rs1_rdata := alu_bypass.io.alu_rs1_rdata//id_ex.io.ex_rs1_rdata
+    alu.io.rs2_rdata := alu_bypass.io.alu_rs2_rdata
     alu.io.imm := id_ex.io.ex_imm
     alu.io.alu_result_size := id_ex.io.ex_alu_result_size
     alu.io.sign_less_than := id_ex.io.ex_sign_less_than
@@ -172,14 +193,24 @@ class top(
     ex_mem.io.ex_mem_read_en := id_ex.io.ex_mem_read_en 
     ex_mem.io.ex_mem_read_size := id_ex.io.ex_mem_read_size 
     ex_mem.io.ex_zero_extends := id_ex.io.ex_zero_extends
+    ex_mem.io.ex_rs2 := id_ex.io.ex_rs2 
     ex_mem.io.ex_rs2_rdata := id_ex.io.ex_rs2_rdata
     ex_mem.io.ex_csr_sen := id_ex.io.ex_csr_sen
     ex_mem.io.ex_csr_addr := id_ex.io.ex_csr_addr
+    ex_mem.io.ex_exit_debugging := id_ex.io.ex_exit_debugging 
+    ex_mem.io.stall_ex_mem := stall.io.stall_ex_mem
+
+    mem_bypass.io.mem_rs2 := ex_mem.io.mem_rs2 
+    mem_bypass.io.mem_rs2_rdata := ex_mem.io.mem_rs2_rdata 
+    mem_bypass.io.wb_rd := ca_wb.io.wb_rd
+    mem_bypass.io.wb_alu_result := ca_wb.io.wb_alu_result
+    mem_bypass.io.ca_rd := mem_ca.io.ca_rd
+    mem_bypass.io.mem_en := ex_mem.io.mem_mem_write_en | ex_mem.io.mem_mem_read_en
     
     mem.io.ACLK := clock
     mem.io.ARESETn := ~(reset.asBool)
     mem.io.mem_addr := ex_mem.io.mem_alu_result
-    mem.io.mem_write_data := ex_mem.io.mem_rs2_rdata
+    mem.io.mem_write_data := mem_bypass.io.rs2_rdata
     mem.io.mem_write_en := ex_mem.io.mem_mem_write_en
     mem.io.mem_wmask := ex_mem.io.mem_mem_write_mask
     mem.io.mem_read_en := ex_mem.io.mem_mem_read_en
@@ -191,6 +222,7 @@ class top(
     mem.io.direct_read_data := axi_lite_arbiter.io.lsu_direct_read_data
     mem.io.direct_fin := axi_lite_arbiter.io.lsu_direct_fin
     mem.io.crossline_access_stall := dcache_controller.io.crossline_access_stall
+    mem.io.dcache_miss := dcache_controller.io.cache_miss
 
     mem_ca.io.mem_alu_result := ex_mem.io.mem_alu_result
     mem_ca.io.mem_reg_wen := ex_mem.io.mem_reg_wen
@@ -198,6 +230,8 @@ class top(
     mem_ca.io.mem_csr_sen := ex_mem.io.mem_csr_sen
     mem_ca.io.mem_csr_addr := ex_mem.io.mem_csr_addr
     mem_ca.io.mem_mem_read_en := ex_mem.io.mem_mem_read_en
+    mem_ca.io.mem_exit_debugging := ex_mem.io.mem_exit_debugging
+    mem_ca.io.stall_mem_ca := stall.io.stall_mem_ca
 
     dcache_controller.io.addr := mem.io.dcache_read_addr 
     dcache_controller.io.read_cache_en := mem.io.dcache_read_en 
@@ -210,11 +244,12 @@ class top(
     dcache_controller.io.read_cache_size := mem.io.dcache_read_size 
     io.offset1 := dcache_controller.io.offset1
 
-    stall.io.exit_debugging := id.io.control_signal.exit_debugging
+    stall.io.exit_debugging := ca_wb.io.wb_exit_debugging//id.io.control_signal.exit_debugging
     stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
     stall.io.stall_from_mem := mem.io.stall_from_mem
     stall.io.icache_miss := icache_controller.io.cache_miss 
     stall.io.stall_from_alu := alu.io.alu_stall
+    stall.io.stall_from_mem_bypass := mem_bypass.io.stall_from_mem_bypass
 
     axi_lite_arbiter.io.ACLK := clock 
     axi_lite_arbiter.io.ARESETn := ~(reset.asBool)
@@ -237,4 +272,6 @@ class top(
     ca_wb.io.ca_csr_addr := mem_ca.io.ca_csr_addr
     ca_wb.io.ca_mem_read_data := mem.io.mem_read_data
     ca_wb.io.ca_mem_read_en := mem_ca.io.ca_mem_read_en
+    ca_wb.io.stall_ca_wb := stall.io.stall_ca_wb
+    ca_wb.io.ca_exit_debugging := mem_ca.io.ca_exit_debugging
 }

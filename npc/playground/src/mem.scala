@@ -45,6 +45,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         val direct_write_data = Output(UInt(64.W))
         val direct_fin = Input(Bool())
         //stall 
+        val dcache_miss = Input(Bool())
         val stall_from_mem = Output(UInt(1.W))
         val crossline_access_stall = Input(Bool())
     })
@@ -72,6 +73,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
     io.direct_write_en := io.mem_write_en & device_read
     io.direct_write_data := io.mem_write_data
 
+    /*
     when (!io.direct_fin && (io.direct_read_en | io.direct_write_en)){
         io.stall_from_mem := 1.U
     }.elsewhen (!io.dcache_read_valid && io.dcache_read_en){
@@ -80,6 +82,14 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         io.stall_from_mem := 1.U 
     }.elsewhen (io.crossline_access_stall){
         io.stall_from_mem := 1.U
+    }.otherwise{
+        io.stall_from_mem := 0.U
+    }*/
+
+    when ((io.dcache_read_en || io.dcache_write_en) && io.dcache_miss){
+        io.stall_from_mem := 1.U
+    }.elsewhen (io.crossline_access_stall){
+        io.stall_from_mem := 1.U 
     }.otherwise{
         io.stall_from_mem := 0.U
     }

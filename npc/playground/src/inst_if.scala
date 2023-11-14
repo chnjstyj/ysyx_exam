@@ -12,7 +12,7 @@ class inst_if(image_file:String = "") extends Module{
         val ARESETn = Input(Bool())
         val inst_address = Input(UInt(64.W))
         val ce = Input(UInt(1.W))
-        val stall_global = Input(UInt(1.W))
+        val stall_inst_if = Input(UInt(1.W))
         val stall_from_mem_reg = Input(Bool())
         val stall_from_inst_if = Output(UInt(1.W))
         val inst = Output(UInt(32.W))
@@ -29,13 +29,15 @@ class inst_if(image_file:String = "") extends Module{
         val icache_read_data = Input(UInt(64.W))
         val icache_read_valid = Input(Bool())
 
+        val icache_miss = Input(Bool())
+
     })
 
     io.icache_read_addr := io.inst_address(31,0)
     io.icache_read_en := io.ce //& !io.stall_from_mem_reg
     val valid = WireDefault(io.icache_read_valid)
 
-    when (!valid && !io.stall_from_mem_reg){
+    when (!valid && !io.stall_from_mem_reg && io.ce.asBool){
         io.stall_from_inst_if := 1.U 
     }.otherwise{
         io.stall_from_inst_if := 0.U 

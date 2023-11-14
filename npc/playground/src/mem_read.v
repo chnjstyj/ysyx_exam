@@ -7,8 +7,8 @@ module mem_read(
   input ARESETn,
   input [31:0] addr,
   input en,
-  output reg valid,
-  output reg [63:0] rdata
+  output wire valid,
+  output wire [63:0] rdata
   /*
   //read request channel
   output ARVALID,
@@ -61,24 +61,27 @@ end
 always @(*) begin 
   if (!ARESETn) begin 
     RREADY = 1'b0;
-    valid = 1'b0;
+    //valid = 1'b0;
   end 
   else begin 
     if (en) begin 
       RREADY = 1'b1;
+      /*
       if (ARREADY && RVALID && RLAST) begin 
         valid = 1'b1;
       end 
       else begin 
         valid = 1'b0;
-      end
+      end*/
     end 
     else begin 
       RREADY = 1'b0;
-      valid = 1'b0;
+      //valid = 1'b0;
     end
   end 
 end
+
+assign valid = (en && ARREADY && RVALID && RLAST) ? 1'b1 : 1'b0;
 
 assign rdata = RDATA;
 

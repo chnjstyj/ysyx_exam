@@ -10,9 +10,13 @@ class pc_inst_if extends Module{
         val inst_if_inst_address = Output(UInt(64.W))
         val inst_if_next_inst_address = Output(UInt(64.W))
         val inst_if_ce = Output(UInt(1.W)) 
+
+        val stall_pc_inst_if = Input(Bool())
     })
 
-    io.inst_if_inst_address := RegNext(io.pc_inst_address,0.U)
-    io.inst_if_next_inst_address := RegNext(io.pc_next_inst_address,0.U)    
-    io.inst_if_ce := RegNext(io.pc_ce,0.U)
+    val enable = WireDefault(!io.stall_pc_inst_if)
+
+    io.inst_if_inst_address := RegEnable(io.pc_inst_address,0.U,enable)
+    io.inst_if_next_inst_address := RegEnable(io.pc_next_inst_address,0.U,enable)    
+    io.inst_if_ce := RegEnable(io.pc_ce,0.U,enable)
 }
