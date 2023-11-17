@@ -180,7 +180,7 @@ class cache_controller(
     cache_combined_data := cache_curline_data | (cache_nextline_data << (((1 << offset_width).U - addr_offset_6) << 3))
     io.cache_data := Mux(cache_curline_data_ready,cache_combined_data,cache.io.read_data)
 
-    when (next_state === s1 && read_hit === true.B){
+    when (next_state === s1){
         io.cache_miss := false.B
     }.otherwise{
         io.cache_miss := true.B

@@ -29,6 +29,10 @@ class id_ex(
         val id_rs1 = Input(UInt(5.W))
         val id_rs2 = Input(UInt(5.W))
         val id_exit_debugging = Input(UInt(1.W))
+        val id_ce = Input(Bool())
+        val id_save_next_inst_addr = Input(UInt(1.W))
+        val id_next_inst_address = Input(UInt(64.W))
+        val id_regfile_output_1 = Input(UInt(1.W))
 
         val ex_alu_src = Output(UInt(1.W))
         val ex_alu_control = Output(UInt(alu_control_width.W))
@@ -52,6 +56,10 @@ class id_ex(
         val ex_rs1 = Output(UInt(5.W))
         val ex_rs2 = Output(UInt(5.W))
         val ex_exit_debugging = Output(UInt(1.W))
+        val ex_ce = Output(Bool())
+        val ex_save_next_inst_addr = Output(Bool())
+        val ex_next_inst_address = Output(UInt(64.W))
+        val ex_regfile_output_1 = Output(UInt(1.W))
 
         val stall_id_ex = Input(Bool())
     })
@@ -80,5 +88,9 @@ class id_ex(
     io.ex_rs1 := RegEnable(io.id_rs1,0.U,enable)
     io.ex_rs2 := RegEnable(io.id_rs2,0.U,enable)
     io.ex_exit_debugging := RegEnable(io.id_exit_debugging,0.U,enable)
+    io.ex_ce := RegEnable(io.id_ce,false.B,enable)
+    io.ex_save_next_inst_addr := RegEnable(io.id_save_next_inst_addr,false.B,enable)
+    io.ex_next_inst_address := RegEnable(io.id_next_inst_address,0.U,enable)
+    io.ex_regfile_output_1 := RegEnable(io.id_regfile_output_1,0.U,enable)
 
 }

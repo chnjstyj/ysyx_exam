@@ -37,7 +37,7 @@ class inst_if(image_file:String = "") extends Module{
     io.icache_read_en := io.ce //& !io.stall_from_mem_reg
     val valid = WireDefault(io.icache_read_valid)
 
-    when (!valid && !io.stall_from_mem_reg && io.ce.asBool){
+    when (!valid && io.ce.asBool){
         io.stall_from_inst_if := 1.U 
     }.otherwise{
         io.stall_from_inst_if := 0.U 

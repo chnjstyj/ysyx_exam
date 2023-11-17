@@ -4,7 +4,7 @@ import chisel3.experimental._
 import ALU.ALU_OPS
 
 class control_signal_bundle(alu_control_width:Int) extends Bundle{
-    // 1 : imm; 0 : rs2
+    //rs2 1 : imm; 0 : rs2
     val alu_src = Output(UInt(1.W))
     //ops
     val alu_control = Output(UInt(alu_control_width.W))

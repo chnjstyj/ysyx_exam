@@ -73,6 +73,8 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
     io.direct_write_en := io.mem_write_en & device_read
     io.direct_write_data := io.mem_write_data
 
+    val ca_stage = RegNext(io.mem_read_en | io.mem_write_en)
+
     /*
     when (!io.direct_fin && (io.direct_read_en | io.direct_write_en)){
         io.stall_from_mem := 1.U
@@ -86,7 +88,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         io.stall_from_mem := 0.U
     }*/
 
-    when ((io.dcache_read_en || io.dcache_write_en) && io.dcache_miss){
+    when (io.dcache_miss && ca_stage){
         io.stall_from_mem := 1.U
     }.elsewhen (io.crossline_access_stall){
         io.stall_from_mem := 1.U 

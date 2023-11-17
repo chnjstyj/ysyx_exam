@@ -13,6 +13,9 @@ class judge_branch_m extends Module{
         // 1 : branch jump; 0 : not
         val branch_jump = Output(UInt(1.W))
         val branch_jump_addr = Output(UInt(64.W))
+        //jal jalr
+        val regfile_output_1 = Input(Bool()) //jalr 0 jal 1
+        val direct_jump_addr = Output(UInt(64.W)) 
     })
 
     val branch_jump_en = WireDefault(0.U(1.W))
@@ -26,6 +29,7 @@ class judge_branch_m extends Module{
 
     io.branch_jump := branch_jump_en & io.judge_branch
     io.branch_jump_addr := io.imm + io.inst_address
+    io.direct_jump_addr := Mux(io.regfile_output_1,io.inst_address + io.imm,io.rs1_rdata + io.imm)
 
     switch (io.funct3){
         is ("b000".U){

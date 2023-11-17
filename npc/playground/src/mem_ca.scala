@@ -10,6 +10,9 @@ class mem_ca extends Module{
         val mem_csr_addr = Input(UInt(12.W))
         val mem_mem_read_en = Input(UInt(1.W))
         val mem_exit_debugging = Input(UInt(1.W))
+        val mem_ce = Input(Bool())
+        val mem_save_next_inst_addr = Input(UInt(1.W))
+        val mem_next_inst_address = Input(UInt(64.W))
 
         val ca_alu_result = Output(UInt(64.W))
         val ca_reg_wen = Output(UInt(1.W))
@@ -18,6 +21,9 @@ class mem_ca extends Module{
         val ca_csr_addr = Output(UInt(12.W))
         val ca_mem_read_en = Output(UInt(1.W))
         val ca_exit_debugging = Output(UInt(1.W))
+        val ca_ce = Output(Bool())
+        val ca_save_next_inst_addr = Output(UInt(1.W))
+        val ca_next_inst_address = Output(UInt(64.W))
 
         val stall_mem_ca = Input(Bool())
     })
@@ -31,5 +37,14 @@ class mem_ca extends Module{
     io.ca_csr_addr := RegEnable(io.mem_csr_addr,0.U,enable)
     io.ca_mem_read_en := RegEnable(io.mem_mem_read_en,0.U,enable)
     io.ca_exit_debugging := RegEnable(io.mem_exit_debugging,0.U,enable)
+    //io.ca_ce := RegEnable(io.mem_ce,false.B,enable)
+    io.ca_save_next_inst_addr := RegEnable(io.mem_save_next_inst_addr,0.U,enable)
+    io.ca_next_inst_address := RegEnable(io.mem_next_inst_address,0.U,enable)
+
+    when (io.stall_mem_ca){
+        io.ca_ce := false.B
+    }.otherwise{
+        io.ca_ce := RegNext(io.mem_ce)
+    }
 
 }

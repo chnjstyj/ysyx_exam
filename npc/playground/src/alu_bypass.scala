@@ -7,6 +7,7 @@ class alu_bypass extends Module {
         val ex_rs2 = Input(UInt(5.W))
         val ex_rs1_rdata = Input(UInt(64.W))
         val ex_rs2_rdata = Input(UInt(64.W))
+        val ex_regfile_output_1 = Input(UInt(1.W))
 
         val mem_alu_result = Input(UInt(64.W))
         val mem_rd = Input(UInt(64.W))
@@ -21,7 +22,9 @@ class alu_bypass extends Module {
         val alu_rs2_rdata = Output(UInt(64.W))
     })
 
-    when (io.ex_rs1 === io.mem_rd){
+    when (io.ex_regfile_output_1.asBool){
+        io.alu_rs1_rdata := io.ex_rs1_rdata
+    }.elsewhen (io.ex_rs1 === io.mem_rd){
         //data from last time alu result 
         io.alu_rs1_rdata := io.mem_alu_result
     }.elsewhen (io.ex_rs1 === io.ca_rd){

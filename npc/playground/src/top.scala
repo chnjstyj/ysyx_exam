@@ -16,6 +16,8 @@ class top(
         val next_inst_address = Output(UInt(64.W))
         val stall = Output(Bool())
         val offset1 = Output(UInt(6.W))
+        val diff_run = Output(Bool())
+        val diff_jump = Output(Bool())
     })
 
     val alu_control_width = 4
@@ -34,20 +36,20 @@ class top(
     val icache_controller = Module(new cache_controller(tag_width,index_width,offset_width,ways))
     val dcache_controller = Module(new cache_controller(tag_width,index_width,offset_width,ways))
 
-    val pc_inst_if = Module(new pc_inst_if)
+    //val pc_inst_if = Module(new pc_inst_if)
     val inst_if_id = Module(new inst_if_id)
     val id_ex = Module(new id_ex(alu_control_width))
     val ex_mem = Module(new ex_mem)
     val mem_ca = Module(new mem_ca) 
     val ca_wb = Module(new ca_wb)
 
-    io.inst := inst_if.io.inst
+    io.inst := RegNext(RegNext(RegNext(RegNext(RegNext(inst_if.io.inst)))))
     when (pc.io.direct_jump === 1.U){
         io.inst_address := pc.io.inst_address | "h8000_0000".U 
     }.otherwise{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
     }
-    io.next_inst_address := pc_inst_if.io.inst_if_next_inst_address
+    io.next_inst_address := pc.io.next_inst_address
     io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
 
     //withClock((!clock.asBool).asClock){
@@ -57,7 +59,7 @@ class top(
         //val branch_jump_addr_r = RegNext( judge_branch_m.io.branch_jump_addr )
         //FIXME direct jump addr  judge branch
         pc.io.direct_jump := id.io.control_signal.direct_jump
-        pc.io.direct_jump_addr := alu.io.alu_result
+        pc.io.direct_jump_addr := judge_branch_m.io.direct_jump_addr
         pc.io.branch_jump := judge_branch_m.io.branch_jump
         pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr 
     //}
@@ -66,17 +68,20 @@ class top(
     pc.io.ecall_addr := regfile.io.csr_rdata
     pc.io.mret := id.io.control_signal.mret
     pc.io.mret_addr := regfile.io.mret_addr
-    pc.io.stall_pc := stall.io.stall_pc_inst_if
+    pc.io.stall_pc := stall.io.stall_pc
 
+    /*
+    pc_inst_if.io.clk := clock
+    pc_inst_if.io.rst := (reset.asBool | stall.io.flush_pc_inst_if)
     pc_inst_if.io.pc_inst_address := pc.io.inst_address
     pc_inst_if.io.pc_next_inst_address := pc.io.next_inst_address   
     pc_inst_if.io.pc_ce := pc.io.ce
-    pc_inst_if.io.stall_pc_inst_if := stall.io.stall_pc_inst_if
+    pc_inst_if.io.stall_pc_inst_if := stall.io.stall_pc_inst_if*/
 
     inst_if.io.ACLK := clock
     inst_if.io.ARESETn := ~(reset.asBool)
-    inst_if.io.inst_address := pc_inst_if.io.inst_if_inst_address
-    inst_if.io.ce := pc_inst_if.io.inst_if_ce
+    inst_if.io.inst_address := pc.io.inst_address
+    inst_if.io.ce := pc.io.ce
     inst_if.io.stall_inst_if := stall.io.stall_inst_if_id
     inst_if.io.stall_from_mem_reg := RegNext(stall.io.stall_from_mem_reg)
     //inst_if.io.ifu_read_data := axi_lite_arbiter.io.ifu_read_data
@@ -95,10 +100,13 @@ class top(
     icache_controller.io.write_cache_mask := 0.U(4.W)
     icache_controller.io.read_cache_size := "b0100".U
 
+    inst_if_id.io.clk := clock
+    inst_if_id.io.rst := (reset.asBool | stall.io.flush_inst_if_id)
     inst_if_id.io.inst_if_inst := inst_if.io.inst
-    inst_if_id.io.inst_if_inst_address := pc_inst_if.io.inst_if_inst_address
-    inst_if_id.io.inst_if_next_inst_address := pc_inst_if.io.inst_if_next_inst_address
+    inst_if_id.io.inst_if_inst_address := pc.io.inst_address
+    inst_if_id.io.inst_if_next_inst_address := pc.io.next_inst_address
     inst_if_id.io.stall_inst_if_id := stall.io.stall_inst_if_id
+    inst_if_id.io.inst_if_ce := pc.io.ce
 
     id.io.inst := inst_if_id.io.id_inst 
 
@@ -106,8 +114,9 @@ class top(
     judge_branch_m.io.imm := id.io.imm 
     judge_branch_m.io.rs1_rdata := regfile.io.rs1_rdata
     judge_branch_m.io.rs2_rdata := regfile.io.rs2_rdata
-    judge_branch_m.io.inst_address := pc.io.inst_address
+    judge_branch_m.io.inst_address := inst_if_id.io.id_inst_address
     judge_branch_m.io.funct3 := id.io.funct3
+    judge_branch_m.io.regfile_output_1 := id.io.control_signal.regfile_output_1
 
     regfile.io.rs1 := id.io.rs1 
     regfile.io.rs2 := id.io.rs2 
@@ -116,10 +125,10 @@ class top(
     regfile.io.regfile_output_1 := id.io.control_signal.regfile_output_1
     regfile.io.inst_address := inst_if_id.io.id_inst_address
     //FIXME save_next_inst_addr & next_instaddress
-    regfile.io.save_next_inst_addr := id.io.control_signal.save_next_inst_addr
+    regfile.io.save_next_inst_addr := ca_wb.io.wb_save_next_inst_addr
     regfile.io.mem_read_en := ca_wb.io.ca_mem_read_en
     regfile.io.rd_wdata := MuxCase(ca_wb.io.wb_alu_result,Seq(
-        id.io.control_signal.save_next_inst_addr.asBool -> inst_if_id.io.id_next_inst_address,
+        ca_wb.io.wb_save_next_inst_addr.asBool -> ca_wb.io.wb_next_inst_address,
         ca_wb.io.ca_mem_read_en.asBool -> ca_wb.io.wb_mem_read_data))
     regfile.io.csr_wen := id.io.control_signal.csr_wen
     //FIXME from wb 
@@ -161,11 +170,16 @@ class top(
     id_ex.io.id_rs2 := id.io.rs2 
     id_ex.io.id_exit_debugging := id.io.control_signal.exit_debugging
     id_ex.io.stall_id_ex := stall.io.stall_id_ex
+    id_ex.io.id_ce := inst_if_id.io.id_ce
+    id_ex.io.id_save_next_inst_addr := id.io.control_signal.save_next_inst_addr
+    id_ex.io.id_next_inst_address := inst_if_id.io.id_next_inst_address
+    id_ex.io.id_regfile_output_1 := id.io.control_signal.regfile_output_1
 
     alu_bypass.io.ex_rs1 := id_ex.io.ex_rs1
     alu_bypass.io.ex_rs2 := id_ex.io.ex_rs2
     alu_bypass.io.ex_rs1_rdata := id_ex.io.ex_rs1_rdata
     alu_bypass.io.ex_rs2_rdata := id_ex.io.ex_rs2_rdata
+    alu_bypass.io.ex_regfile_output_1 := id_ex.io.ex_regfile_output_1
     alu_bypass.io.mem_alu_result := ex_mem.io.mem_alu_result
     alu_bypass.io.mem_rd := ex_mem.io.mem_rd
     alu_bypass.io.ca_alu_result := mem_ca.io.ca_alu_result
@@ -199,13 +213,16 @@ class top(
     ex_mem.io.ex_csr_addr := id_ex.io.ex_csr_addr
     ex_mem.io.ex_exit_debugging := id_ex.io.ex_exit_debugging 
     ex_mem.io.stall_ex_mem := stall.io.stall_ex_mem
+    ex_mem.io.ex_ce := id_ex.io.ex_ce
+    ex_mem.io.ex_save_next_inst_addr := id_ex.io.ex_save_next_inst_addr
+    ex_mem.io.ex_next_inst_address := id_ex.io.ex_next_inst_address
 
     mem_bypass.io.mem_rs2 := ex_mem.io.mem_rs2 
     mem_bypass.io.mem_rs2_rdata := ex_mem.io.mem_rs2_rdata 
     mem_bypass.io.wb_rd := ca_wb.io.wb_rd
     mem_bypass.io.wb_alu_result := ca_wb.io.wb_alu_result
     mem_bypass.io.ca_rd := mem_ca.io.ca_rd
-    mem_bypass.io.mem_en := ex_mem.io.mem_mem_write_en | ex_mem.io.mem_mem_read_en
+    mem_bypass.io.mem_read_en := ex_mem.io.mem_mem_read_en
     
     mem.io.ACLK := clock
     mem.io.ARESETn := ~(reset.asBool)
@@ -224,6 +241,8 @@ class top(
     mem.io.crossline_access_stall := dcache_controller.io.crossline_access_stall
     mem.io.dcache_miss := dcache_controller.io.cache_miss
 
+    //mem_ca.io.clk := clock
+    //mem_ca.io.rst := (reset.asBool | stall.io.flush_mem_ca)
     mem_ca.io.mem_alu_result := ex_mem.io.mem_alu_result
     mem_ca.io.mem_reg_wen := ex_mem.io.mem_reg_wen
     mem_ca.io.mem_rd := ex_mem.io.mem_rd
@@ -232,6 +251,9 @@ class top(
     mem_ca.io.mem_mem_read_en := ex_mem.io.mem_mem_read_en
     mem_ca.io.mem_exit_debugging := ex_mem.io.mem_exit_debugging
     mem_ca.io.stall_mem_ca := stall.io.stall_mem_ca
+    mem_ca.io.mem_ce := ex_mem.io.mem_ce
+    mem_ca.io.mem_save_next_inst_addr := ex_mem.io.mem_save_next_inst_addr
+    mem_ca.io.mem_next_inst_address := ex_mem.io.mem_next_inst_address
 
     dcache_controller.io.addr := mem.io.dcache_read_addr 
     dcache_controller.io.read_cache_en := mem.io.dcache_read_en 
@@ -250,6 +272,8 @@ class top(
     stall.io.icache_miss := icache_controller.io.cache_miss 
     stall.io.stall_from_alu := alu.io.alu_stall
     stall.io.stall_from_mem_bypass := mem_bypass.io.stall_from_mem_bypass
+    stall.io.branch_jump := judge_branch_m.io.branch_jump
+    stall.io.direct_jump := id.io.control_signal.direct_jump
 
     axi_lite_arbiter.io.ACLK := clock 
     axi_lite_arbiter.io.ARESETn := ~(reset.asBool)
@@ -274,4 +298,12 @@ class top(
     ca_wb.io.ca_mem_read_en := mem_ca.io.ca_mem_read_en
     ca_wb.io.stall_ca_wb := stall.io.stall_ca_wb
     ca_wb.io.ca_exit_debugging := mem_ca.io.ca_exit_debugging
+    ca_wb.io.ca_ce := mem_ca.io.ca_ce
+    ca_wb.io.ca_save_next_inst_addr := mem_ca.io.ca_save_next_inst_addr
+    ca_wb.io.ca_next_inst_address := mem_ca.io.ca_next_inst_address
+
+    io.diff_run := //id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump | 
+    //RegNext(ca_wb.io.wb_diff_run,false.B)
+    ca_wb.io.wb_diff_run
+    io.diff_jump := id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump
 }

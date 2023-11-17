@@ -16,6 +16,13 @@ output wire [63:0] ecall_idx
 //input csr_sen
 );
 reg [63:0] regs[31:0];
+wire [63:0] regs_wire[31:0];
+
+genvar j;
+for (j = 0; j < 32; j = j + 1) begin 
+    assign regs_wire[j] = rd === j && reg_wen ? rd_wdata : regs[j];
+end
+
 
 assign ecall_idx = regs[17];
 
@@ -62,7 +69,7 @@ initial begin
     for(i = 0; i < 32; i = i + 1) begin
       regs[i] = 64'd0;  
     end
-    set_gpr_ptr(regs);
+    set_gpr_ptr(regs_wire);
 end
 //read
 assign rs1_rdata = regs[rs1];

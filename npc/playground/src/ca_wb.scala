@@ -11,6 +11,9 @@ class ca_wb extends Module{
         val ca_mem_read_data = Input(UInt(64.W))
         val ca_mem_read_en = Input(UInt(1.W))
         val ca_exit_debugging = Input(UInt(1.W))
+        val ca_ce = Input(Bool())
+        val ca_save_next_inst_addr = Input(UInt(1.W))
+        val ca_next_inst_address = Input(UInt(64.W))
 
         val wb_alu_result = Output(UInt(64.W))
         val wb_reg_wen = Output(UInt(1.W))
@@ -20,6 +23,10 @@ class ca_wb extends Module{
         val wb_mem_read_data = Output(UInt(64.W))
         val wb_mem_read_en = Output(UInt(1.W))
         val wb_exit_debugging = Output(UInt(1.W))
+        val wb_save_next_inst_addr = Output(UInt(1.W))
+        val wb_next_inst_address = Output(UInt(64.W))
+
+        val wb_diff_run = Output(UInt(1.W))
 
         val stall_ca_wb = Input(Bool())
     })
@@ -34,5 +41,8 @@ class ca_wb extends Module{
     io.wb_mem_read_data := RegEnable(io.ca_mem_read_data,0.U,enable)
     io.wb_mem_read_en := RegEnable(io.ca_mem_read_en,0.U,enable)
     io.wb_exit_debugging := RegEnable(io.ca_exit_debugging,0.U,enable)
+    io.wb_diff_run := RegEnable(io.ca_ce,false.B,enable)
+    io.wb_save_next_inst_addr := RegEnable(io.ca_save_next_inst_addr,0.U,enable)
+    io.wb_next_inst_address := RegEnable(io.ca_next_inst_address,0.U,enable)
 
 }

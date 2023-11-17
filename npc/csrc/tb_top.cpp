@@ -159,7 +159,7 @@ extern "C" void pmem_read(
       *RVALID = 0;
       *RLAST = 0;
       //if (top->clock != 1) return;
-      printf("delay %lx %d\n",ARADDR,ready_to_read);
+      //printf("delay %lx %d\n",ARADDR,ready_to_read);
       ready_to_read = 1;
       return;
       //delay for 1 cycle
@@ -194,7 +194,7 @@ extern "C" void pmem_read(
         temp = temp << (8 * i);
         *RDATA |= temp;
       }
-      printf("running %lx %lx\n",ARADDR,*RDATA);
+      //printf("running %lx %lx\n",ARADDR,*RDATA);
       //printf("addr %lx read data %lx\n",ARADDR,*RDATA);
       ready_to_read = 0;
     }
@@ -372,6 +372,25 @@ void single_cycle(Vtop* top)
   #endif
 }
 
+void inline diff_run()
+{
+  uint32_t inst = top->io_inst;
+  uint32_t inst_6_0 = inst & 0x7f;
+  uint32_t inst_31_20 = (inst & 0xfff00000) >> 20;
+  uint32_t inst_31_25 = (inst & 0xfe000000) >> 20;
+  uint32_t inst_11_7  = (inst & 0xf80     ) >> 7 ;
+  uint32_t inst_19_15 = (inst & 0xf8000   ) >> 15;
+  uint32_t offset = inst_6_0 == 3 ? inst_31_20: inst_31_25 | inst_11_7;
+  uint32_t address = offset + gpr[inst_19_15];
+  if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+  {
+    //printf("skip diff\n");
+    difftest_skip();
+  }
+  else
+    difftest_step();
+}
+
 void inline update_device()
 {
   vga_update_screen();
@@ -407,23 +426,13 @@ void cpu_exec(int steps)
         j = 0;
         update_device();
       }
-      if (diff_enable == true && !top->io_stall)
+      if (diff_enable == true)
       {
-        uint32_t inst = top->io_inst;
-        uint32_t inst_6_0 = inst & 0x7f;
-        uint32_t inst_31_20 = (inst & 0xfff00000) >> 20;
-        uint32_t inst_31_25 = (inst & 0xfe000000) >> 20;
-        uint32_t inst_11_7  = (inst & 0xf80     ) >> 7 ;
-        uint32_t inst_19_15 = (inst & 0xf8000   ) >> 15;
-        uint32_t offset = inst_6_0 == 3 ? inst_31_20: inst_31_25 | inst_11_7;
-        uint32_t address = offset + gpr[inst_19_15];
-        if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+        if (top->io_diff_run)
         {
-          //printf("skip diff\n");
-          difftest_skip();
+          printf("run diff\n");
+          diff_run();
         }
-        else
-         difftest_step();
       }
     }
   }

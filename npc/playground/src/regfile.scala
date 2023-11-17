@@ -43,7 +43,7 @@ class regfile extends Module{
     regs.io.rs1 := io.rs1 
     regs.io.rs2 := io.rs2
     regs.io.rd := io.rd 
-    regs.io.reg_wen := (!io.stall_ca_wb & (io.reg_wen | io.mem_read_en)) | (!io.stall_id_ex & (io.save_next_inst_addr | io.csr_write_to_reg))
+    regs.io.reg_wen := (!io.stall_ca_wb & (io.reg_wen | io.mem_read_en | io.save_next_inst_addr)) | (!io.stall_id_ex & (io.csr_write_to_reg))
 
     csrs.io.clock := clock
     csrs.io.rs1_rdata := regs.io.rs1_rdata
