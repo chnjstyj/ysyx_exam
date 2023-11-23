@@ -430,7 +430,7 @@ void cpu_exec(int steps)
       {
         if (top->io_diff_run)
         {
-          printf("run diff\n");
+          //printf("run diff\n");
           diff_run();
         }
       }
@@ -444,27 +444,19 @@ void cpu_exec(int steps)
       single_cycle(top);
       disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
       printf("%lx %s\n",top->io_inst_address,str);
-      if (top->io_stall) 
+      j++;
+      if (j == 25600)
       {
-        //printf("skip\n");
+        j = 0;
+        update_device();
       }
-      if (diff_enable == true && !top->io_stall)
+      if (diff_enable == true)
       {
-        uint32_t inst = top->io_inst;
-        uint32_t inst_6_0 = inst & 0x7f;
-        uint32_t inst_31_20 = (inst & 0xfff00000) >> 20;
-        uint32_t inst_31_25 = (inst & 0xfe000000) >> 20;
-        uint32_t inst_11_7  = (inst & 0xf80     ) >> 7 ;
-        uint32_t inst_19_15 = (inst & 0xf8000   ) >> 15;
-        uint32_t offset = inst_6_0 == 3 ? inst_31_20: inst_31_25 | inst_11_7;
-        uint32_t address = offset + gpr[inst_19_15];
-        if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+        if (top->io_diff_run)
         {
-          //printf("skip diff\n");
-          difftest_skip();
+          //printf("run diff\n");
+          diff_run();
         }
-        else
-          difftest_step();
       }
     }
   }

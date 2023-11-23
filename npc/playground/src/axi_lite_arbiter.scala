@@ -151,7 +151,11 @@ class axi_lite_arbiter(
     when (cur_state === s0){
         addr := 0.U 
     }.elsewhen (cur_state === s1){
-        addr := icache_read_addr
+        when (next_state === s2){
+            addr := dcache_read_addr
+        }.otherwise{
+            addr := icache_read_addr
+        }
     }.elsewhen (cur_state === s2){
         addr := dcache_read_addr 
     }.elsewhen (cur_state === s3){

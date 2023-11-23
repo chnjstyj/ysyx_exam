@@ -9,7 +9,7 @@ import chisel3.experimental._
 替换     完成后返回比对
 跨行     完成后转到比对
 */
-class cache_controller(
+class icache_controller(
     tag_width:Int,
     index_width:Int,
     offset_width:Int,
@@ -63,24 +63,13 @@ class cache_controller(
     val cache_curline_data_ready = RegInit(false.B)
     val cache_curline_data = RegInit(0.U(64.W))
     val cache_curline_write_mask = WireDefault((1 << offset_width).U - addr_offset_6)
-    val write_mask = RegInit(0.U(4.W))
-    val write_data = RegInit(0.U(64.W))
+    val write_mask = Wire(UInt(4.W))
+    val write_data = Wire(UInt(64.W))
 
-    val cache_read_en  = RegInit(false.B)
-    val cache_write_en = RegInit(false.B) 
-    val cache_read_en_r  = RegInit(false.B)
-    val cache_write_en_r = RegInit(false.B)
-    val mem_read_en = RegInit(false.B)
-    val mem_write_en = RegInit(false.B)
-    val cache_addr = RegInit(0.U(32.W))
-    val cache_addr_r = RegInit(0.U(32.W))
-
-    val cache_nextline_addr = WireDefault((cache_addr + (1 << (offset_width)).U) & (~((1 << (offset_width)) - 1).U(32.W)))
+    val cache_nextline_addr = WireDefault((io.addr + (1 << (offset_width)).U) & (~((1 << (offset_width)) - 1).U(32.W)))
     val cache_nextline_data = Wire(UInt(64.W))
     cache_nextline_data := cache.io.read_data
     val crossline_access = RegInit(false.B) 
-    val crossline_access_r = RegNext(crossline_access,false.B)
-    val crossline_access_fin = RegNext((!crossline_access) & crossline_access_r)
 
     io.read_cache_fin := Mux(crossline_access & !read_hit,false.B,read_hit) 
     io.write_cache_fin := Mux(crossline_access,false.B,write_hit) 
@@ -90,7 +79,7 @@ class cache_controller(
     }.elsewhen (cur_state === s3 && crossline_access && cache_curline_data_ready){
         io.mem_addr := cache_nextline_addr
     }.otherwise{
-        io.mem_addr := cache_addr & (~((1 << (offset_width)) - 1).U(32.W))
+        io.mem_addr := io.addr & (~((1 << (offset_width)) - 1).U(32.W))
     }
 
     when (io.write_cache_en){
@@ -125,11 +114,11 @@ class cache_controller(
         is (s1){
             when ((write_miss || read_miss) && dirty_bit){
                 next_state := s2
-            }.elsewhen ((write_miss || read_miss) && (cache_read_en || cache_write_en)){
+            }.elsewhen ((write_miss || read_miss) && (io.read_cache_en || io.write_cache_en)){
                 next_state := s3
-            }.elsewhen ((cache_read_en || cache_write_en) && ((offset1) > (1 << offset_width).U && !cache_curline_data_ready)){
+            }.elsewhen ((io.read_cache_en || io.write_cache_en) && ((offset1) > (1 << offset_width).U && !cache_curline_data_ready)){
                 next_state := s4
-            }.elsewhen (cache_read_en || cache_read_en){
+            }.elsewhen (io.read_cache_en || io.write_cache_en){
                 next_state := s1
             }.otherwise{
                 next_state := s1
@@ -156,24 +145,20 @@ class cache_controller(
         is (s4){
             when ((write_miss || read_miss) && dirty_bit){
                 next_state := s2 
-            }.elsewhen ((write_miss || read_miss) && (cache_read_en || cache_write_en)){
+            }.elsewhen ((write_miss || read_miss) && (io.read_cache_en || io.write_cache_en)){
                 next_state := s3
             }.elsewhen ((read_hit || write_hit) && cache_curline_data_ready){
                 //read next line
                 next_state := s1 
-            }.elsewhen ((cache_read_en || cache_write_en) && crossline_access){
-                next_state := s4
             }.otherwise{
-                next_state := s0
+                next_state := s4
             }
         }
     }
 
     when (next_state === s4){
         crossline_access := true.B
-    }.elsewhen ((read_hit || write_hit) && cur_state === s1){
-        crossline_access := false.B
-    }.elsewhen(crossline_access_fin){
+    }.elsewhen ((read_hit || write_hit) && next_state === s1){
         crossline_access := false.B
     }
 
@@ -189,17 +174,23 @@ class cache_controller(
         }
     }
 
-    io.crossline_access_stall := crossline_access && io.cache_miss//cur_state === s4
+    io.crossline_access_stall := cur_state === s4
 
     val cache_combined_data = Wire(UInt(64.W))
     cache_combined_data := cache_curline_data | (cache_nextline_data << (((1 << offset_width).U - addr_offset_6) << 3))
     io.cache_data := Mux(cache_curline_data_ready,cache_combined_data,cache.io.read_data)
 
-    when (next_state === s1 && (read_hit || write_hit)){
+    when (next_state === s1){
         io.cache_miss := false.B
     }.otherwise{
         io.cache_miss := true.B
     }
+
+    val cache_read_en  = RegInit(false.B)
+    val cache_write_en = RegInit(false.B) 
+    val mem_read_en = RegInit(false.B)
+    val mem_write_en = RegInit(false.B)
+    val cache_addr = RegInit(0.U(32.W))
 
     io.mem_read_en := mem_read_en
     io.mem_write_en := mem_write_en
@@ -212,53 +203,27 @@ class cache_controller(
             mem_write_en := false.B 
         }
         is (s1){
-            when (!crossline_access && cur_state =/= s3){
-                cache_read_en := io.read_cache_en 
-                cache_write_en := io.write_cache_en
-                cache_addr := io.addr
-            }.elsewhen (!crossline_access && cur_state === s3){
-                cache_read_en := cache_read_en_r
-                cache_write_en := cache_write_en_r
-                cache_addr := cache_addr_r
-            }/*.otherwise{
-                cache_read_en := cache_read_en_r
-                cache_write_en := cache_write_en_r
-            }*/
+            cache_read_en := io.read_cache_en 
+            cache_write_en := io.write_cache_en
+            cache_addr := io.addr
             mem_read_en := false.B
             mem_write_en := false.B 
         }
         is (s2){
             cache_read_en := false.B
             cache_write_en := false.B 
-            when (cur_state === s1){
-                cache_read_en_r := cache_read_en
-                cache_write_en_r := cache_write_en
-                cache_addr_r := cache_addr
-            }
             mem_read_en := false.B
             mem_write_en := true.B 
         }
         is (s3){
             cache_read_en := false.B
             cache_write_en := false.B
-            when (cur_state === s1){
-                cache_read_en_r := cache_read_en
-                cache_write_en_r := cache_write_en
-                cache_addr_r := cache_addr
-            }
             mem_read_en := Mux(io.mem_read_fin,false.B,true.B)
             mem_write_en := false.B
         }
         is (s4){
-            
-            when (crossline_access === false.B && crossline_access_r === true.B){
-                cache_read_en := io.read_cache_en 
-                cache_write_en := io.write_cache_en
-                cache_read_en_r := io.read_cache_en 
-                cache_write_en_r := io.write_cache_en
-            }
-            //cache_read_en := io.read_cache_en 
-            //cache_write_en := io.write_cache_en
+            cache_read_en := io.read_cache_en 
+            cache_write_en := io.write_cache_en
             mem_read_en := false.B
             mem_write_en := false.B 
         }
@@ -270,7 +235,7 @@ class cache_controller(
         substitude := false.B 
     }
 
-    cache.io.addr := Mux(cache_curline_data_ready,cache_nextline_addr,cache_addr) 
+    cache.io.addr := Mux(cache_curline_data_ready,cache_nextline_addr,io.addr) 
     cache.io.write_data := write_data
     cache.io.read_en := cache_read_en
     cache.io.write_en := cache_write_en

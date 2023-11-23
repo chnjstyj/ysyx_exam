@@ -37,8 +37,6 @@ class pc extends Module{
     ce := 1.U
     when (ce === 0.U){
         inst_address := "h0000_0000_8000_0000".U 
-    }.elsewhen(io.stall_pc === 1.U){
-        inst_address := inst_address
     }.elsewhen (io.direct_jump === 1.U){
         inst_address := io.direct_jump_addr
     }.elsewhen (io.branch_jump === 1.U){
@@ -47,6 +45,8 @@ class pc extends Module{
         inst_address := io.ecall_addr
     }.elsewhen (io.mret === 1.U){
         inst_address := io.mret_addr
+    }.elsewhen(io.stall_pc === 1.U){
+        inst_address := inst_address
     }.otherwise{
         inst_address := next_inst_address
     }

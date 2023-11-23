@@ -88,10 +88,10 @@ void difftest_step()
     c = {ref_regs,pc_,0};
     //由于下个周期寄存器的值才会改变
     //先对比上个周期，再执行
+    ref_difftest_exec(1);
     ref_difftest_regcpy(&c,DIFFTEST_TO_DUT);
     checkregs(c);
     //exec 
-    ref_difftest_exec(1);
 }
 
 void checkregs(struct diff_context ref_context)

@@ -71,6 +71,7 @@ initial begin
     end
     set_gpr_ptr(regs_wire);
 end
+
 //read
 assign rs1_rdata = regs[rs1];
 assign rs2_rdata = regs[rs2];

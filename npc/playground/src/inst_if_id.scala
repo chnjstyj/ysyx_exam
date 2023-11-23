@@ -26,17 +26,17 @@ class inst_if_id extends RawModule{
         io.id_next_inst_address := RegEnable(io.inst_if_next_inst_address,enable)
         io.id_ce := RegEnable(io.inst_if_ce, false.B,enable)
 
-
-        val id_ce = RegInit(false.B)
-        when (io.stall_inst_if_id){
-            io.id_ce := false.B
-        }.otherwise{
-            io.id_ce := id_ce
-        }
-        when (io.stall_inst_if_id){
-            id_ce := false.B
-        }.otherwise{
-            id_ce := io.inst_if_ce
-        }
+        
+        //val id_ce = RegInit(false.B)
+        //when (io.stall_inst_if_id){
+        //    io.id_ce := false.B
+        //}.otherwise{
+            //io.id_ce := id_ce
+        //}
+        //when (io.stall_inst_if_id){
+            //id_ce := RegNext(false.B)
+        //}.otherwise{
+            //id_ce := io.inst_if_ce
+        //}
     }
 }

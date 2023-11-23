@@ -20,6 +20,7 @@ class ex_mem extends Module{
         val ex_ce = Input(Bool())
         val ex_save_next_inst_addr = Input(UInt(1.W))
         val ex_next_inst_address = Input(UInt(64.W))
+        val ex_inst = Input(UInt(32.W))
         
         val mem_alu_result = Output(UInt(64.W))
         val mem_reg_wen = Output(UInt(1.W))
@@ -37,6 +38,7 @@ class ex_mem extends Module{
         val mem_ce = Output(Bool())
         val mem_save_next_inst_addr = Output(UInt(1.W))
         val mem_next_inst_address = Output(UInt(64.W))
+        val mem_inst = Output(UInt(32.W))
 
         val stall_ex_mem = Input(Bool())
     })
@@ -56,8 +58,22 @@ class ex_mem extends Module{
     io.mem_csr_sen := RegEnable(io.ex_csr_sen,0.U,enable)
     io.mem_csr_addr := RegEnable(io.ex_csr_addr,0.U,enable)
     io.mem_exit_debugging := RegEnable(io.ex_exit_debugging,0.U,enable)
-    io.mem_ce := RegEnable(io.ex_ce,false.B,enable)
+    //io.mem_ce := RegEnable(io.ex_ce,false.B,enable)
     io.mem_save_next_inst_addr := RegEnable(io.ex_save_next_inst_addr,0.U,enable)
     io.mem_next_inst_address := RegEnable(io.ex_next_inst_address,0.U,enable)
+    io.mem_ce := RegEnable(io.ex_ce,false.B,enable)
+    io.mem_inst := RegEnable(io.ex_inst,0.U,enable)
 
+    /*
+    val mem_ce = RegInit(false.B)
+    //when (io.stall_ex_mem){
+    //    io.mem_ce := false.B
+    //}.otherwise{
+        io.mem_ce := mem_ce
+    //}
+    when (io.stall_ex_mem){
+        mem_ce := RegNext(false.B)
+    }.otherwise{
+        mem_ce := io.ex_ce
+    }*/
 }
