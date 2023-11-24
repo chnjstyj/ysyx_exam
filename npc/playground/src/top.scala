@@ -61,7 +61,7 @@ class top(
         //FIXME direct jump addr  judge branch
         pc.io.direct_jump := id.io.control_signal.direct_jump
         pc.io.direct_jump_addr := judge_branch_m.io.direct_jump_addr
-        pc.io.branch_jump := judge_branch_m.io.branch_jump
+        pc.io.branch_jump := judge_branch_m.io.branch_jump & !branch_bypass.io.stall_from_branch_bypass
         pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr 
     //}
 
@@ -363,6 +363,7 @@ class top(
     ca_wb.io.ca_next_inst_address := mem_ca.io.ca_next_inst_address
     ca_wb.io.ca_inst := mem_ca.io.ca_inst
 
+    val next_inst_address_r = RegNext(ca_wb.io.wb_next_inst_address,0.U)
     val inst_r = RegNext(ca_wb.io.wb_inst,0.U)
     io.diff_run := //id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump | 
     //RegNext(ca_wb.io.wb_diff_run,false.B)

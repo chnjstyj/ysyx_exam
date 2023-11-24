@@ -37,6 +37,8 @@ class branch_bypass extends Module{
         val stall_from_branch_bypass = Output(Bool())
     })
 
+    val stall_from_branch_bypass_r = RegNext(io.stall_from_branch_bypass, false.B)
+
     when (io.rs1 === 0.U){
         io.branch_rs1_rdata := io.rs1_rdata
     }.elsewhen (io.rs1 === io.ex_rd && (io.ex_reg_wen || io.ex_mem_read_en)){
@@ -89,7 +91,7 @@ class branch_bypass extends Module{
         || (io.rs2 === io.ex_rd && (io.ex_reg_wen || io.ex_mem_read_en))
         || (io.rs1 === io.mem_rd && io.mem_mem_read_en)
         || (io.rs2 === io.mem_rd && io.mem_mem_read_en))
-        && io.judge_branch
+        && io.judge_branch //&& !stall_from_branch_bypass_r
         ){
             io.stall_from_branch_bypass := true.B
         }.otherwise{

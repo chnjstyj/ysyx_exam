@@ -40,8 +40,6 @@ class cache_controller(
     val cache = Module(new cache(tag_width,index_width,offset_width,ways))
 
     val s0 :: s1 :: s2 :: s3 :: s4 :: Nil = Enum(5)
-
-    val addr_offset = WireDefault(io.addr(offset_width-1,0))
     
     val next_state = WireDefault(s0)
     val cur_state = RegNext(next_state,s0)
@@ -54,17 +52,6 @@ class cache_controller(
     val substitude = Wire(Bool())
     val substitude_data = WireDefault(io.mem_read_data)
     val substitude_fin = Wire(Bool())
-    
-    val offset1 = Wire(UInt(6.W))
-    val access_cache_size_6 = Wire(UInt(6.W))
-    val addr_offset_6 = Wire(UInt(6.W))
-    addr_offset_6 := addr_offset
-
-    val cache_curline_data_ready = RegInit(false.B)
-    val cache_curline_data = RegInit(0.U(64.W))
-    val cache_curline_write_mask = WireDefault((1 << offset_width).U - addr_offset_6)
-    val write_mask = RegInit(0.U(4.W))
-    val write_data = RegInit(0.U(64.W))
 
     val cache_read_en  = RegInit(false.B)
     val cache_write_en = RegInit(false.B) 
@@ -74,6 +61,18 @@ class cache_controller(
     val mem_write_en = RegInit(false.B)
     val cache_addr = RegInit(0.U(32.W))
     val cache_addr_r = RegInit(0.U(32.W))
+
+    val addr_offset = WireDefault(cache_addr(offset_width-1,0))
+    val offset1 = Wire(UInt(6.W))
+    val access_cache_size_6 = Wire(UInt(6.W))
+    val addr_offset_6 = Wire(UInt(6.W))
+    addr_offset_6 := addr_offset
+    
+    val cache_curline_data_ready = RegInit(false.B)
+    val cache_curline_data = RegInit(0.U(64.W))
+    val cache_curline_write_mask = WireDefault((1 << offset_width).U - addr_offset_6)
+    val write_mask = RegInit(0.U(4.W))
+    val write_data = RegInit(0.U(64.W))
 
     val cache_nextline_addr = WireDefault((cache_addr + (1 << (offset_width)).U) & (~((1 << (offset_width)) - 1).U(32.W)))
     val cache_nextline_data = Wire(UInt(64.W))
@@ -93,7 +92,7 @@ class cache_controller(
         io.mem_addr := cache_addr & (~((1 << (offset_width)) - 1).U(32.W))
     }
 
-    when (io.write_cache_en){
+    when (cache_write_en){
         access_cache_size_6 := io.write_cache_mask
     }.otherwise{
         access_cache_size_6 := io.read_cache_size
@@ -158,7 +157,7 @@ class cache_controller(
                 next_state := s2 
             }.elsewhen ((write_miss || read_miss) && (cache_read_en || cache_write_en)){
                 next_state := s3
-            }.elsewhen ((read_hit || write_hit) && cache_curline_data_ready){
+            }.elsewhen ((read_hit || write_hit)){
                 //read next line
                 next_state := s1 
             }.elsewhen ((cache_read_en || cache_write_en) && crossline_access){
@@ -179,7 +178,7 @@ class cache_controller(
 
     when (cur_state === s4 && (read_hit || write_hit)){
         cache_curline_data_ready := true.B 
-    }.elsewhen (cur_state === s1){
+    }.elsewhen (cur_state === s1 && !crossline_access){
         cache_curline_data_ready := false.B
     }
 
@@ -216,7 +215,7 @@ class cache_controller(
                 cache_read_en := io.read_cache_en 
                 cache_write_en := io.write_cache_en
                 cache_addr := io.addr
-            }.elsewhen (!crossline_access && cur_state === s3){
+            }.elsewhen (cur_state === s3){
                 cache_read_en := cache_read_en_r
                 cache_write_en := cache_write_en_r
                 cache_addr := cache_addr_r
