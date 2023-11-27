@@ -8,6 +8,7 @@ class alu_bypass extends Module {
         val ex_rs1_rdata = Input(UInt(64.W))
         val ex_rs2_rdata = Input(UInt(64.W))
         val ex_regfile_output_1 = Input(UInt(1.W))
+        //val ex_mem_write_en = Input(UInt(1.W))  //bypass for save , update the saved data
 
         val mem_alu_result = Input(UInt(64.W))
         val mem_rd = Input(UInt(5.W))

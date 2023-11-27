@@ -59,9 +59,9 @@ class top(
         //val branch_jump_r = RegNext( judge_branch_m.io.branch_jump )
         //val branch_jump_addr_r = RegNext( judge_branch_m.io.branch_jump_addr )
         //FIXME direct jump addr  judge branch
-        pc.io.direct_jump := id.io.control_signal.direct_jump
+        pc.io.direct_jump := id.io.control_signal.direct_jump & !branch_bypass.io.stall_from_branch_bypass & !stall.io.stall_inst_if_id
         pc.io.direct_jump_addr := judge_branch_m.io.direct_jump_addr
-        pc.io.branch_jump := judge_branch_m.io.branch_jump & !branch_bypass.io.stall_from_branch_bypass
+        pc.io.branch_jump := judge_branch_m.io.branch_jump & !branch_bypass.io.stall_from_branch_bypass & !stall.io.stall_inst_if_id
         pc.io.branch_jump_addr := judge_branch_m.io.branch_jump_addr 
     //}
 
@@ -134,6 +134,7 @@ class top(
     branch_bypass.io.mem_next_inst_address := ex_mem.io.mem_next_inst_address
     branch_bypass.io.ca_save_next_inst_addr := mem_ca.io.ca_save_next_inst_addr
     branch_bypass.io.ca_next_inst_address := mem_ca.io.ca_next_inst_address
+    branch_bypass.io.jalr_jump := (!id.io.control_signal.regfile_output_1 & id.io.control_signal.direct_jump)
 
     judge_branch_m.io.judge_branch := id.io.control_signal.judge_branch
     judge_branch_m.io.imm := id.io.imm 
@@ -252,7 +253,7 @@ class top(
     ex_mem.io.ex_mem_read_size := id_ex.io.ex_mem_read_size 
     ex_mem.io.ex_zero_extends := id_ex.io.ex_zero_extends
     ex_mem.io.ex_rs2 := id_ex.io.ex_rs2 
-    ex_mem.io.ex_rs2_rdata := id_ex.io.ex_rs2_rdata
+    ex_mem.io.ex_rs2_rdata := alu_bypass.io.alu_rs2_rdata
     ex_mem.io.ex_csr_sen := id_ex.io.ex_csr_sen
     ex_mem.io.ex_csr_addr := id_ex.io.ex_csr_addr
     ex_mem.io.ex_exit_debugging := id_ex.io.ex_exit_debugging 

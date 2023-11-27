@@ -67,7 +67,7 @@ class cache_controller(
     val access_cache_size_6 = Wire(UInt(6.W))
     val addr_offset_6 = Wire(UInt(6.W))
     addr_offset_6 := addr_offset
-    
+
     val cache_curline_data_ready = RegInit(false.B)
     val cache_curline_data = RegInit(0.U(64.W))
     val cache_curline_write_mask = WireDefault((1 << offset_width).U - addr_offset_6)
@@ -93,7 +93,7 @@ class cache_controller(
     }
 
     when (cache_write_en){
-        access_cache_size_6 := io.write_cache_mask
+        access_cache_size_6 := write_mask
     }.otherwise{
         access_cache_size_6 := io.read_cache_size
     }
@@ -106,6 +106,8 @@ class cache_controller(
     }.elsewhen (next_state === s1 && crossline_access){
         write_mask := offset1 - (1 << offset_width).U
         write_data := io.write_cache_data >> ((io.write_cache_mask - cache_curline_write_mask) << 3)
+    }.elsewhen (next_state === s2 || next_state === s3 || (next_state === s1 && cur_state === s3)){
+
     }.otherwise{
         write_mask := io.write_cache_mask
         write_data := io.write_cache_data
@@ -126,7 +128,7 @@ class cache_controller(
                 next_state := s2
             }.elsewhen ((write_miss || read_miss) && (cache_read_en || cache_write_en)){
                 next_state := s3
-            }.elsewhen ((cache_read_en || cache_write_en) && ((offset1) > (1 << offset_width).U && !cache_curline_data_ready)){
+            }.elsewhen ((cache_read_en || cache_write_en) && (((offset1) > (1 << offset_width).U) && !cache_curline_data_ready)){
                 next_state := s4
             }.elsewhen (cache_read_en || cache_read_en){
                 next_state := s1
@@ -188,7 +190,7 @@ class cache_controller(
         }
     }
 
-    io.crossline_access_stall := crossline_access && io.cache_miss//cur_state === s4
+    io.crossline_access_stall := crossline_access //&& io.cache_miss//cur_state === s4
 
     val cache_combined_data = Wire(UInt(64.W))
     cache_combined_data := cache_curline_data | (cache_nextline_data << (((1 << offset_width).U - addr_offset_6) << 3))

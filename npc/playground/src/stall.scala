@@ -64,7 +64,7 @@ class stall extends Module{
     }
 
     //io.flush_pc_inst_if := io.branch_jump | io.direct_jump
-    io.flush_inst_if_id := (io.branch_jump & !io.stall_from_branch_bypass) | io.direct_jump //| RegNext(io.stall_from_inst_if)
+    io.flush_inst_if_id := (io.branch_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | (io.direct_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id)  //| RegNext(io.stall_from_inst_if)
     io.flush_id_ex := false.B//io.branch_jump
     io.flush_ex_mem := false.B 
     io.flush_mem_ca := false.B 
