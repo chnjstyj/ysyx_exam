@@ -11,7 +11,6 @@
 !.gitignore
 !init.sh
 /fceux-am
-/am-kernels
-/am-kernels
 /nemu/tools/spike-diff/difftest.cc
 /nvboard
+/am-kernels

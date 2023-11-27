@@ -28,6 +28,7 @@
 #include "llvm/Support/TargetRegistry.h"
 #endif
 #include "llvm/Support/TargetSelect.h"
+#include "llvm/MC/MCSubtargetInfo.h"
 
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic pop
