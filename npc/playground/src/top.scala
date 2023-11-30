@@ -283,6 +283,8 @@ class top(
     mem_bypass.io.ca_reg_wen := mem_ca.io.ca_reg_wen
     mem_bypass.io.ca_alu_result := mem_ca.io.ca_alu_result
     
+    val mem_inst_address_r = RegNext(ex_mem.io.mem_inst_address,0.U)
+
     mem.io.ACLK := clock
     mem.io.ARESETn := ~(reset.asBool)
     mem.io.mem_addr := ex_mem.io.mem_alu_result
@@ -302,6 +304,7 @@ class top(
     mem.io.stall_mem_ca := stall.io.stall_mem_ca
     mem.io.ca_mem_read_en := mem_ca.io.ca_mem_read_en
     mem.io.ca_mem_write_en := mem_ca.io.ca_mem_write_en
+    mem.io.stall_mem := false.B// mem_inst_address_r === ex_mem.io.mem_inst_address//stall.io.stall_from_alu_bypass
 
     //mem_ca.io.clk := clock
     //mem_ca.io.rst := (reset.asBool | stall.io.flush_mem_ca)

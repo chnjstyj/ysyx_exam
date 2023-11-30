@@ -50,6 +50,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         val stall_from_dcache = Output(UInt(1.W))
         val crossline_access_stall = Input(Bool())
         val stall_mem_ca = Input(Bool())
+        val stall_mem = Input(Bool())
         val ca_mem_read_en = Input(Bool())
         val ca_mem_write_en = Input(Bool())
     })
@@ -73,15 +74,15 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
     val mem_write_mask = WireDefault(io.mem_wmask)//,0.U(4.W),!io.stall_mem_ca)
 
     io.dcache_read_addr := io.mem_addr(31,0) 
-    io.dcache_read_en := io.mem_read_en & !device_read //& !io.dcache_read_valid
+    io.dcache_read_en := io.mem_read_en & !device_read & !io.stall_mem //& !io.dcache_read_valid
     io.dcache_read_size := mem_read_size
 
-    io.dcache_write_en := io.mem_write_en & !device_read //& !io.dcache_write_fin
+    io.dcache_write_en := io.mem_write_en & !device_read & !io.stall_mem //& !io.dcache_write_fin
     io.dcache_write_data := io.mem_write_data 
     io.dcache_write_mask := mem_write_mask
 
-    io.direct_read_en := io.mem_read_en & device_read
-    io.direct_write_en := io.mem_write_en & device_read
+    io.direct_read_en := io.mem_read_en & device_read & !io.stall_mem
+    io.direct_write_en := io.mem_write_en & device_read & !io.stall_mem
     io.direct_write_data := io.mem_write_data
 
     val ca_stage = RegNext(io.mem_read_en | io.mem_write_en)
