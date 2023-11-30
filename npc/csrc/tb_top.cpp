@@ -166,7 +166,7 @@ extern "C" void pmem_read(
     }
     *RVALID = 1;
     *RLAST = 1;
-    printf("addr %lx read data %lx\n",ARADDR,*RDATA);
+    //printf("addr %lx read data %lx\n",ARADDR,*RDATA);
     if (ARADDR == RTC_ADDR)
     {
       struct timeval now;
