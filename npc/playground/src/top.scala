@@ -18,6 +18,7 @@ class top(
         val offset1 = Output(UInt(6.W))
         val diff_run = Output(Bool())
         val diff_jump = Output(Bool())
+        val diff_skip = Output(Bool())
     })
 
     val alu_control_width = 4
@@ -45,12 +46,14 @@ class top(
     val ca_wb = Module(new ca_wb)
 
     io.inst := ca_wb.io.wb_inst
+    /*
     when (pc.io.direct_jump === 1.U){
         io.inst_address := pc.io.inst_address | "h8000_0000".U 
     }.otherwise{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
-    }
-    io.next_inst_address := pc.io.next_inst_address
+    }*/
+    io.inst_address := ca_wb.io.wb_inst_address | "h8000_0000".U 
+    io.next_inst_address := ca_wb.io.wb_next_inst_address | "h8000_0000".U 
     io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
 
     //withClock((!clock.asBool).asClock){
@@ -203,6 +206,7 @@ class top(
     id_ex.io.id_next_inst_address := inst_if_id.io.id_next_inst_address
     id_ex.io.id_regfile_output_1 := id.io.control_signal.regfile_output_1
     id_ex.io.id_inst := inst_if_id.io.id_inst
+    id_ex.io.id_inst_address := inst_if_id.io.id_inst_address
 
     val stall_alu = WireDefault(id_ex.io.ex_next_inst_address === ex_mem.io.mem_next_inst_address) 
 
@@ -244,6 +248,8 @@ class top(
     alu.io.csr_sen := id_ex.io.ex_csr_sen
     alu.io.csr_rdata := id_ex.io.ex_csr_rdata
 
+    ex_mem.io.clk := clock
+    ex_mem.io.rst := (reset.asBool | stall.io.flush_ex_mem)
     ex_mem.io.ex_alu_result := alu.io.alu_result
     ex_mem.io.ex_reg_wen := id_ex.io.ex_reg_wen
     ex_mem.io.ex_rd := id_ex.io.ex_rd
@@ -262,6 +268,7 @@ class top(
     ex_mem.io.ex_save_next_inst_addr := id_ex.io.ex_save_next_inst_addr
     ex_mem.io.ex_next_inst_address := id_ex.io.ex_next_inst_address
     ex_mem.io.ex_inst := id_ex.io.ex_inst
+    ex_mem.io.ex_inst_address := id_ex.io.ex_inst_address
 
     mem_bypass.io.mem_rs2 := ex_mem.io.mem_rs2 
     mem_bypass.io.mem_rs2_rdata := ex_mem.io.mem_rs2_rdata 
@@ -311,6 +318,8 @@ class top(
     mem_ca.io.mem_save_next_inst_addr := ex_mem.io.mem_save_next_inst_addr
     mem_ca.io.mem_next_inst_address := ex_mem.io.mem_next_inst_address
     mem_ca.io.mem_inst := ex_mem.io.mem_inst
+    mem_ca.io.mem_inst_address := ex_mem.io.mem_inst_address
+    mem_ca.io.mem_direct_access := mem.io.direct_write_en | mem.io.direct_read_en
 
     dcache_controller.io.addr := mem.io.dcache_read_addr
     dcache_controller.io.read_cache_en := mem.io.dcache_read_en
@@ -363,11 +372,14 @@ class top(
     ca_wb.io.ca_save_next_inst_addr := mem_ca.io.ca_save_next_inst_addr
     ca_wb.io.ca_next_inst_address := mem_ca.io.ca_next_inst_address
     ca_wb.io.ca_inst := mem_ca.io.ca_inst
+    ca_wb.io.ca_inst_address := mem_ca.io.ca_inst_address
+    ca_wb.io.ca_direct_access := mem_ca.io.ca_direct_access
 
     val next_inst_address_r = RegNext(ca_wb.io.wb_next_inst_address,0.U)
     val inst_r = RegNext(ca_wb.io.wb_inst,0.U)
     io.diff_run := //id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump | 
     //RegNext(ca_wb.io.wb_diff_run,false.B)
-    ca_wb.io.wb_diff_run & (ca_wb.io.wb_inst =/= inst_r) & (ca_wb.io.wb_inst =/= 0.U)
+    ca_wb.io.wb_diff_run & (ca_wb.io.wb_inst =/= inst_r) & (ca_wb.io.wb_inst =/= 0.U) & !reset.asBool
     io.diff_jump := id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump
+    io.diff_skip := ca_wb.io.wb_direct_access
 }

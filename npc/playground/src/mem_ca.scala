@@ -15,6 +15,8 @@ class mem_ca extends Module{
         val mem_save_next_inst_addr = Input(UInt(1.W))
         val mem_next_inst_address = Input(UInt(64.W))
         val mem_inst = Input(UInt(32.W))
+        val mem_inst_address = Input(UInt(64.W))
+        val mem_direct_access = Input(UInt(1.W))
 
         val ca_alu_result = Output(UInt(64.W))
         val ca_reg_wen = Output(UInt(1.W))
@@ -28,6 +30,8 @@ class mem_ca extends Module{
         val ca_save_next_inst_addr = Output(UInt(1.W))
         val ca_next_inst_address = Output(UInt(64.W))
         val ca_inst = Output(UInt(32.W))
+        val ca_inst_address = Output(UInt(64.W))
+        val ca_direct_access = Output(UInt(1.W))
 
         val stall_mem_ca = Input(Bool())
     })
@@ -46,6 +50,8 @@ class mem_ca extends Module{
     io.ca_save_next_inst_addr := RegEnable(io.mem_save_next_inst_addr,0.U,enable)
     io.ca_next_inst_address := RegEnable(io.mem_next_inst_address,0.U,enable)
     io.ca_inst := RegEnable(io.mem_inst,0.U,enable)
+    io.ca_inst_address := RegEnable(io.mem_inst_address,0.U,enable)
+    io.ca_direct_access := RegEnable(io.mem_direct_access,0.U,enable)
 
     /*
     val ca_ce = RegInit(false.B)

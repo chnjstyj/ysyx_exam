@@ -34,6 +34,7 @@ class id_ex(
         val id_ce = Input(Bool())
         val id_save_next_inst_addr = Input(UInt(1.W))
         val id_next_inst_address = Input(UInt(64.W))
+        val id_inst_address = Input(UInt(64.W))
         val id_regfile_output_1 = Input(UInt(1.W))
         val id_inst = Input(UInt(32.W))
 
@@ -62,6 +63,7 @@ class id_ex(
         val ex_ce = Output(Bool())
         val ex_save_next_inst_addr = Output(Bool())
         val ex_next_inst_address = Output(UInt(64.W))
+        val ex_inst_address = Output(UInt(64.W))
         val ex_regfile_output_1 = Output(UInt(1.W))
         val ex_inst = Output(UInt(32.W))
 
@@ -100,6 +102,7 @@ class id_ex(
         io.ex_regfile_output_1 := RegEnable(io.id_regfile_output_1,0.U,enable)
         io.ex_ce := RegEnable(io.id_ce,false.B,enable)
         io.ex_inst := RegEnable(io.id_inst,0.U,enable)
+        io.ex_inst_address := RegEnable(io.id_inst_address,0.U,enable)
     }
 
     /*
