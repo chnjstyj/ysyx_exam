@@ -2,8 +2,10 @@ import chisel3._
 import chisel3.util._
 
 
-class ex_mem extends Module{
+class ex_mem extends RawModule{
     val io = IO(new Bundle{
+        val clk = Input(Clock())
+        val rst = Input(Reset())
         val ex_alu_result = Input(UInt(64.W))
         val ex_reg_wen = Input(UInt(1.W))
         val ex_rd = Input(UInt(5.W))
@@ -21,6 +23,7 @@ class ex_mem extends Module{
         val ex_save_next_inst_addr = Input(UInt(1.W))
         val ex_next_inst_address = Input(UInt(64.W))
         val ex_inst = Input(UInt(32.W))
+        val ex_inst_address = Input(UInt(64.W))
         
         val mem_alu_result = Output(UInt(64.W))
         val mem_reg_wen = Output(UInt(1.W))
@@ -39,9 +42,12 @@ class ex_mem extends Module{
         val mem_save_next_inst_addr = Output(UInt(1.W))
         val mem_next_inst_address = Output(UInt(64.W))
         val mem_inst = Output(UInt(32.W))
+        val mem_inst_address = Output(UInt(64.W))
 
         val stall_ex_mem = Input(Bool())
     })
+
+    withClockAndReset(io.clk,io.rst){
 
     val enable = WireDefault(!io.stall_ex_mem)
     
@@ -63,6 +69,9 @@ class ex_mem extends Module{
     io.mem_next_inst_address := RegEnable(io.ex_next_inst_address,0.U,enable)
     io.mem_ce := RegEnable(io.ex_ce,false.B,enable)
     io.mem_inst := RegEnable(io.ex_inst,0.U,enable)
+    io.mem_inst_address := RegEnable(io.ex_inst_address,0.U,enable)
+
+    }
 
     /*
     val mem_ce = RegInit(false.B)

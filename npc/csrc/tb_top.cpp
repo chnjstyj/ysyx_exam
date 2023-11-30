@@ -166,6 +166,7 @@ extern "C" void pmem_read(
     }
     *RVALID = 1;
     *RLAST = 1;
+    //printf("addr %lx read data %lx\n",ARADDR,*RDATA);
     if (ARADDR == RTC_ADDR)
     {
       struct timeval now;
@@ -374,6 +375,7 @@ void single_cycle(Vtop* top)
 
 void inline diff_run()
 {
+  /*
   uint32_t inst = top->io_inst;
   uint32_t inst_6_0 = inst & 0x7f;
   uint32_t inst_31_20 = (inst & 0xfff00000) >> 20;
@@ -381,8 +383,10 @@ void inline diff_run()
   uint32_t inst_11_7  = (inst & 0xf80     ) >> 7 ;
   uint32_t inst_19_15 = (inst & 0xf8000   ) >> 15;
   uint32_t offset = inst_6_0 == 3 ? inst_31_20: inst_31_25 | inst_11_7;
-  uint32_t address = offset + gpr[inst_19_15];
-  if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+  uint32_t address = offset + gpr[inst_19_15];*/
+  //printf("diff run %x %x %x\n",top->io_inst,address,top->io_diff_skip);
+  //if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
+  if (top->io_diff_skip)
   {
     //printf("skip diff\n");
     difftest_skip();

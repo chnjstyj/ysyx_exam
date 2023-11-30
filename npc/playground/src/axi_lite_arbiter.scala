@@ -75,6 +75,10 @@ class axi_lite_arbiter(
     val arbiter_to_mem_read = Module(new mem_read)
     val arbiter_to_mem_write = Module(new mem_write)
 
+    val direct_write_data = RegNext(io.lsu_direct_write_data,0.U)
+    val direct_write_mask = RegNext(io.lsu_direct_write_mask,0.U)
+    val direct_addr = RegNext(io.lsu_direct_addr,0.U)
+
     switch (cur_state){
         is (s0){
             when (ifu_en === 1.U){
@@ -108,6 +112,8 @@ class axi_lite_arbiter(
         is (s3){
             when ((dir_finish & ifu_en) === 1.U){
                 next_state := s1 
+            }.elsewhen (dir_finish === 1.U && dir_en){
+                next_state := s3
             }.elsewhen (dir_finish === 1.U){
                 next_state := s0
             }.otherwise{
@@ -158,8 +164,6 @@ class axi_lite_arbiter(
         }
     }.elsewhen (cur_state === s2){
         addr := dcache_read_addr 
-    }.elsewhen (cur_state === s3){
-        addr := io.lsu_direct_addr
     }.otherwise{
         addr := 0.U
     }
@@ -257,17 +261,17 @@ class axi_lite_arbiter(
 
     arbiter_to_mem_read.io.ACLK := io.ACLK 
     arbiter_to_mem_read.io.ARESETn := io.ARESETn 
-    arbiter_to_mem_read.io.addr := addr 
-    arbiter_to_mem_read.io.en := mem_read_en & !lsu_finish
+    arbiter_to_mem_read.io.addr := Mux(next_state === s3,io.lsu_direct_addr,addr) 
+    arbiter_to_mem_read.io.en := Mux(next_state === s3,io.lsu_direct_read_en,mem_read_en & !lsu_finish)
     mem_read_valid := arbiter_to_mem_read.io.valid 
     mem_rdata := arbiter_to_mem_read.io.rdata
 
     arbiter_to_mem_write.io.ACLK := io.ACLK 
     arbiter_to_mem_write.io.ARESETn := io.ARESETn 
-    arbiter_to_mem_write.io.addr := addr 
-    arbiter_to_mem_write.io.en := mem_write_en & !lsu_finish & !mem_write_finish
-    arbiter_to_mem_write.io.wdata := dcache_write_data
-    arbiter_to_mem_write.io.wmask := Mux(cur_state === s3,io.lsu_direct_write_mask,"b1000".U)
+    arbiter_to_mem_write.io.addr := Mux(next_state === s3,io.lsu_direct_addr,addr) 
+    arbiter_to_mem_write.io.en := Mux(next_state === s3,io.lsu_direct_write_en,mem_write_en & !lsu_finish & !mem_write_finish)
+    arbiter_to_mem_write.io.wdata := Mux(next_state === s3,io.lsu_direct_write_data,dcache_write_data)
+    arbiter_to_mem_write.io.wmask := Mux(next_state === s3,io.lsu_direct_write_mask,"b1000".U)
     mem_write_finish := arbiter_to_mem_write.io.finish
 
 }

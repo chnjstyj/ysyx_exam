@@ -53,7 +53,7 @@ class stall extends Module{
 
         //io.stall_pc_inst_if := stall_inst_if_reg | stall_alu_reg | io.stall_from_mem | io.stall_from_mem_bypass
         io.stall_pc := io.stall_from_inst_if | io.stall_from_alu | io.stall_from_mem | io.stall_from_mem_bypass | io.stall_from_ca | io.stall_from_branch_bypass | io.stall_from_dcache | io.stall_from_alu_bypass
-        io.stall_inst_if_id := io.stall_from_inst_if | io.stall_from_alu | io.stall_from_mem | io.stall_from_mem_bypass | io.stall_from_ca | io.stall_from_branch_bypass | io.stall_from_dcache | io.stall_from_alu_bypass
+        io.stall_inst_if_id := /*io.stall_from_inst_if |*/ io.stall_from_alu | io.stall_from_mem | io.stall_from_mem_bypass | io.stall_from_ca | io.stall_from_branch_bypass | io.stall_from_dcache | io.stall_from_alu_bypass
         io.stall_id_ex := io.stall_from_alu | io.stall_from_mem | io.stall_from_mem_bypass | io.stall_from_ca | io.stall_from_dcache | io.stall_from_alu_bypass
         io.stall_ex_mem := io.stall_from_alu | io.stall_from_mem | io.stall_from_mem_bypass | io.stall_from_ca | io.stall_from_dcache | io.stall_from_alu_bypass
         io.stall_mem_ca := io.stall_from_mem | io.stall_from_ca | io.stall_from_dcache
@@ -64,9 +64,9 @@ class stall extends Module{
     }
 
     //io.flush_pc_inst_if := io.branch_jump | io.direct_jump
-    io.flush_inst_if_id := (io.branch_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | (io.direct_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id)  //| RegNext(io.stall_from_inst_if)
+    io.flush_inst_if_id := (io.branch_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | (io.direct_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | (io.stall_from_inst_if & !io.stall_from_mem & !io.stall_from_branch_bypass)
     io.flush_id_ex := false.B//io.branch_jump
-    io.flush_ex_mem := false.B 
+    io.flush_ex_mem := io.stall_from_alu_bypass
     io.flush_mem_ca := false.B 
     io.flush_ca_wb := false.B 
     

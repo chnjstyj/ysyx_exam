@@ -22,8 +22,8 @@ class inst_if_id extends RawModule{
         val enable = WireDefault(!io.stall_inst_if_id)
 
         io.id_inst := RegEnable(io.inst_if_inst, 0.U,enable)
-        io.id_inst_address := RegEnable(io.inst_if_inst_address,"h80000000".U,enable)
-        io.id_next_inst_address := RegEnable(io.inst_if_next_inst_address,"h80000004".U,enable)
+        io.id_inst_address := RegEnable(io.inst_if_inst_address,0.U,enable)
+        io.id_next_inst_address := RegEnable(io.inst_if_next_inst_address,0.U,enable)
         io.id_ce := RegEnable(io.inst_if_ce, false.B,enable)
 
         
