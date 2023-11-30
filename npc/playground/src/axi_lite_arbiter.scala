@@ -171,7 +171,7 @@ class axi_lite_arbiter(
     val counter_end = ((1 << (offset_width - 3)) - 1)
 
     icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U)
-    when (next_state === s1){
+    when (cur_state === s1){
         //icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U) //next 64 bits block
         when(mem_read_valid && icache_read_counter < counter_end.U){
             //icache_read_data_fin := false.B 

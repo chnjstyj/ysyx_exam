@@ -284,7 +284,7 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       else if (AWADDR >= 0x80000000 && AWADDR < 0x80000000 + PMEM_SIZE)
       {
         uint64_t addr = (uint64_t)AWADDR & (uint64_t)0x7fffffff;
-        //printf("\nwrite addr: %x wmask: %d %lx pc: %x\n",addr,wmask,WDATA,top->io_inst_address);
+        printf("write addr: %x wmask: %d %lx pc: %x\n",addr,wmask,WDATA,top->io_inst_address);
         for (i = 0; i < wmask; i ++)
         {
           pmem[addr + i] = (uint8_t)(WDATA >> 8 * i);
