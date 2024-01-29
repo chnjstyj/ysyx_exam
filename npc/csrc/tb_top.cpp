@@ -60,6 +60,7 @@ static char* image_name = NULL;
 
 #define MAX_SIM_TIME 100
 vluint64_t sim_time = 0;
+uint64_t inst_counts = 0;
 
 //void nvboard_bind_all_pins(Vtop *top);
 
@@ -309,6 +310,20 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
   }
 }
 
+void print_message()
+{
+  double ipc = 0;
+  double icache_missing_rate = 0;
+  double dcache_missing_rate = 0;
+  //double bp_missing_rate = 0;
+
+  //sim_time / 2 == total cycles
+  ipc = sim_time == 0 ? 0 : ((double)inst_counts / ((double)sim_time / 2));
+
+  printf("===================\n");
+  printf("IPC: %lf\n",ipc);
+}
+
 void exit_ebreak()
 {
   #ifdef waveform
@@ -318,13 +333,23 @@ void exit_ebreak()
   delete top;
   delete pmem;
   delete ftrace_infos;
+  //nvboard_quit();
   #ifdef itrace_
   fclose(flog_file);
   #endif
-  //nvboard_quit();
-  printf("ebreak\nHIT GOOD TRAP!\n");
-  printf("total steps:%d\n",total_steps);
-  exit(0);
+  if (gpr[10] == 0)
+  {
+    printf("ebreak\nHIT GOOD TRAP!\n");
+    printf("total steps:%d\n",total_steps);
+  }
+  else 
+  {
+    printf("exit\nHIT BAD TRAP!\n");
+    print_itrace_buf();
+    printf("total steps:%d\n",total_steps);
+  }
+  print_message();
+  exit(gpr[10]);
 }
 
 void exit_npc()
@@ -342,6 +367,7 @@ void exit_npc()
   printf("exit\nHIT BAD TRAP!\n");
   print_itrace_buf();
   printf("total steps:%d\n",total_steps);
+  print_message();
   exit(1);
 }
 
@@ -411,6 +437,10 @@ void cpu_exec(int steps)
     {
       total_steps++;
       single_cycle(top);
+      if (top->io_diff_skip)
+      {
+        inst_counts++;
+      }
       #ifdef itrace_
       disassemble(str,96,top->io_inst_address,(uint8_t*)&(top->io_inst),4);
       strcpy(iringbuf[iringbuf_head],str);
