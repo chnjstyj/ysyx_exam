@@ -195,6 +195,7 @@ class top(
     id_ex.io.id_imm := id.io.imm
     id_ex.io.id_sign_less_than := id.io.control_signal.sign_less_than
     id_ex.io.id_csr_sen := id.io.control_signal.csr_sen
+    id_ex.io.id_csr_wen := id.io.control_signal.csr_wen
     id_ex.io.id_csr_addr := id.io.imm
     id_ex.io.id_sign_divrem := id.io.control_signal.sign_divrem
     id_ex.io.id_rs1 := id.io.rs1 
@@ -261,6 +262,7 @@ class top(
     ex_mem.io.ex_rs2 := id_ex.io.ex_rs2 
     ex_mem.io.ex_rs2_rdata := alu_bypass.io.alu_rs2_rdata
     ex_mem.io.ex_csr_sen := id_ex.io.ex_csr_sen
+    ex_mem.io.ex_csr_wen := id_ex.io.ex_csr_wen
     ex_mem.io.ex_csr_addr := id_ex.io.ex_csr_addr
     ex_mem.io.ex_exit_debugging := id_ex.io.ex_exit_debugging 
     ex_mem.io.stall_ex_mem := stall.io.stall_ex_mem

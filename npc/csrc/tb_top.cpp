@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <math.h>
+#include <curses.h>
 
 #include "Vtop.h"
 #include "sdb.h"
@@ -203,7 +204,7 @@ extern "C" void pmem_read(
     else 
     {
       *RVALID = 0;
-      printf("invalid read address %x\n",ARADDR);
+      printf("invalid read address %x at pc :%lx\n",ARADDR,top->io_inst_address);
       printf("total steps:%d\n",total_steps);
       #ifdef waveform
       m_trace->close();
@@ -321,6 +322,7 @@ void print_message()
   ipc = sim_time == 0 ? 0 : ((double)inst_counts / ((double)sim_time / 2));
 
   printf("===================\n");
+  printf("%d %d\n",inst_counts,sim_time);
   printf("IPC: %lf\n",ipc);
 }
 
@@ -431,13 +433,14 @@ void cpu_exec(int steps)
   int i = steps;
   int j = 0;
   char str[50] = {0};
+  double ipc;
   if (steps == -1)
   {
     while (1)
     {
       total_steps++;
       single_cycle(top);
-      if (top->io_diff_skip)
+      if (top->io_diff_run)
       {
         inst_counts++;
       }

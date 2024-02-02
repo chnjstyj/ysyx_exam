@@ -8,7 +8,7 @@ class mem_bypass extends Module{
         val mem_read_en = Input(Bool()) 
 
         val wb_rd = Input(UInt(5.W))
-        val wb_alu_result = Input(UInt(5.W))
+        val wb_alu_result = Input(UInt(64.W))
         val wb_reg_wen = Input(Bool())
 
         val ca_rd = Input(UInt(5.W))

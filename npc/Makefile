@@ -49,7 +49,7 @@ VERILATOR_CFLAGS += --trace -MMD --build -cc  \
 # rules for verilator
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CFLAGS += -g $(INCFLAGS) $(shell llvm-config --cxxflags) -fPIE -DTOP_NAME="\"V$(TOPNAME)\""
-LDFLAGS += -lSDL2 -lSDL2_image -lreadline $(shell llvm-config --libs)
+LDFLAGS += -lSDL2 -lSDL2_image -lcurses -lreadline $(shell llvm-config --libs)
 
 verilator:${VSRCS} $(CSRCS) $(NVBOARD_ARCHIVE) auto_bind.cpp
 	verilator $(VERILATOR_CFLAGS) \

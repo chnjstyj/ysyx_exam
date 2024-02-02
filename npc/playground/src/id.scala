@@ -131,6 +131,11 @@ class id(alu_control_width:Int) extends Module{
                     //addi 
                     io.control_signal.alu_control := alu_ops.ADD
                 }
+                is ("b010".U){
+                    //slti
+                    io.control_signal.alu_control := alu_ops.LESS_THAN
+                    io.control_signal.sign_less_than := 1.U
+                }
                 is ("b011".U){
                     //sltiu
                     io.control_signal.alu_control := alu_ops.LESS_THAN

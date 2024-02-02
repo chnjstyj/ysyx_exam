@@ -25,6 +25,7 @@ class cache(
         val read_en = Input(Bool())
         val write_en = Input(Bool())
         val substitude = Input(Bool())
+        val substitude_index = Input(UInt(ways.W))
         val substitude_data = Input(UInt((1 << (offset_width + 3)).W))
         val substitude_fin = Output(Bool())
         val dirty_bit = Output(Bool())
@@ -34,6 +35,7 @@ class cache(
         val write_miss = Output(Bool()) 
         val writeback_data = Output(UInt((1 << (offset_width + 3)).W)) 
         val writeback_addr = Output(UInt(32.W))
+        val writeback_index = Output(UInt(ways.W))
         val read_data = Output(UInt(64.W)) 
         val write_mask = Input(UInt(4.W))
     })
@@ -122,6 +124,7 @@ class cache(
         }}
     }.otherwise{
         when (io.substitude){
+            /*
            when (counter_equal){
                 //val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
                 //newData := io.substitude_data << (addr_offset_3 << 3)
@@ -129,16 +132,16 @@ class cache(
                 cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).dirty := false.B 
                 cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).tag := io.addr(31,32 - tag_width)
                 cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).data := io.substitude_data//cache_blocks(counters(0))(io.addr(index_width + offset_width - 1,offset_width)).data | newData
-                substitude_fin := true.B 
-           }.otherwise{
+                substitude_fin := true.B */
+           //}.otherwise{
                 //val newData = WireDefault(0.U((1 << (offset_width + 3)).W))
                 //newData := io.substitude_data << (addr_offset << 3)
-                cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).valid := true.B 
-                cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).dirty := false.B 
-                cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).tag := io.addr(31,32 - tag_width)
-                cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).data := io.substitude_data//cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).data | newData
+                cache_blocks(io.substitude_index)(io.addr(index_width + offset_width - 1,offset_width)).valid := true.B 
+                cache_blocks(io.substitude_index)(io.addr(index_width + offset_width - 1,offset_width)).dirty := false.B 
+                cache_blocks(io.substitude_index)(io.addr(index_width + offset_width - 1,offset_width)).tag := io.addr(31,32 - tag_width)
+                cache_blocks(io.substitude_index)(io.addr(index_width + offset_width - 1,offset_width)).data := io.substitude_data//cache_blocks(counter_min)(io.addr(index_width + offset_width - 1,offset_width)).data | newData
                 substitude_fin := true.B 
-           }
+           //}
         }.otherwise{
             substitude_fin := false.B 
         }
@@ -206,12 +209,14 @@ class cache(
         //io.writeback_data := Cat(Seq(cache_line_hitted(counters(0)).data).reverse)
         //val dataSeq: Seq[chisel3.UInt] = cache_line_hitted(counters(0)).data.toSeq
         io.writeback_data := cache_line_hitted(counters(0)).data
+        io.writeback_index := 0.U 
         io.writeback_addr := Cat(cache_line_hitted(counters(0)).tag,io.addr(index_width + offset_width - 1,offset_width),0.U(offset_width.W))
     }.otherwise{
         io.dirty_bit := cache_line_hitted(counter_min).dirty 
         //io.writeback_data := Cat(Seq(cache_line_hitted(counter_min).data).reverse)
         //val dataSeq: Seq[chisel3.UInt] = cache_line_hitted(counters(0)).data.toSeq
         io.writeback_data := cache_line_hitted(counter_min).data
+        io.writeback_index := counter_min
         io.writeback_addr := Cat(cache_line_hitted(counter_min).tag,io.addr(index_width + offset_width - 1,offset_width),0.U(offset_width.W))
     }
 

@@ -71,9 +71,21 @@ class icache_controller(
     cache_nextline_data := cache.io.read_data
     val crossline_access = RegInit(false.B) 
 
+    val cache_writeback_addr = RegInit(0.U(32.W))
+    val cache_writeback_index = RegInit(0.U(ways.W))
+    val cache_writeback_data = RegInit(0.U((1 << (offset_width + 3)).W))
+    io.cache_writeback_data := cache_writeback_data
+
     io.read_cache_fin := Mux(crossline_access & !read_hit,false.B,read_hit) 
     io.write_cache_fin := Mux(crossline_access,false.B,write_hit) 
     //io.mem_addr := Mux(cur_state === s2,cache.io.writeback_addr,io.addr & (~((1 << (offset_width)) - 1).U(32.W)))
+
+    when (next_state === s2 && cur_state =/= s1){
+        cache_writeback_addr := cache.io.writeback_addr
+        cache_writeback_index := cache.io.writeback_index
+        cache_writeback_data := cache.io.writeback_data
+    }
+
     when (cur_state === s2){
         io.mem_addr := cache.io.writeback_addr
     }.elsewhen (cur_state === s3 && crossline_access && cache_curline_data_ready){
@@ -241,13 +253,13 @@ class icache_controller(
     cache.io.write_en := cache_write_en
     cache.io.substitude := substitude  
     cache.io.substitude_data := substitude_data
+    cache.io.substitude_index := cache_writeback_index
     substitude_fin :=  cache.io.substitude_fin
     dirty_bit := cache.io.dirty_bit 
     read_hit := cache.io.read_hit  
     read_miss := cache.io.read_miss 
     write_hit := cache.io.write_hit
     write_miss := cache.io.write_miss
-    io.cache_writeback_data := cache.io.writeback_data
     cache.io.write_mask := write_mask
 
 }
