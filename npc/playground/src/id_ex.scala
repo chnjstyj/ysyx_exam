@@ -28,6 +28,7 @@ class id_ex(
         val id_csr_sen = Input(UInt(1.W))
         val id_csr_wen = Input(UInt(1.W))
         val id_csr_addr = Input(UInt(12.W))
+        val id_csr_write_to_reg = Input(UInt(1.W))
         val id_sign_divrem = Input(UInt(1.W))
         val id_rs1 = Input(UInt(5.W))
         val id_rs2 = Input(UInt(5.W))
@@ -38,6 +39,7 @@ class id_ex(
         val id_inst_address = Input(UInt(64.W))
         val id_regfile_output_1 = Input(UInt(1.W))
         val id_inst = Input(UInt(32.W))
+        val id_ecall = Input(UInt(1.W))
 
         val ex_alu_src = Output(UInt(1.W))
         val ex_alu_control = Output(UInt(alu_control_width.W))
@@ -58,6 +60,7 @@ class id_ex(
         val ex_csr_sen = Output(UInt(1.W))
         val ex_csr_wen = Output(UInt(1.W))
         val ex_csr_addr = Output(UInt(12.W))
+        val ex_csr_write_to_reg = Output(UInt(1.W))
         val ex_sign_divrem = Output(UInt(1.W))
         val ex_rs1 = Output(UInt(5.W))
         val ex_rs2 = Output(UInt(5.W))
@@ -68,6 +71,7 @@ class id_ex(
         val ex_inst_address = Output(UInt(64.W))
         val ex_regfile_output_1 = Output(UInt(1.W))
         val ex_inst = Output(UInt(32.W))
+        val ex_ecall = Output(UInt(1.W))
 
         val stall_id_ex = Input(Bool())
     })
@@ -95,6 +99,7 @@ class id_ex(
         io.ex_csr_sen := RegEnable(io.id_csr_sen,0.U,enable)
         io.ex_csr_wen := RegEnable(io.id_csr_wen,0.U,enable)
         io.ex_csr_addr := RegEnable(io.id_csr_addr,0.U,enable)
+        io.ex_csr_write_to_reg := RegEnable(io.id_csr_write_to_reg,0.U,enable)
         io.ex_sign_divrem := RegEnable(io.id_sign_divrem,0.U,enable)
         io.ex_rs1 := RegEnable(io.id_rs1,0.U,enable)
         io.ex_rs2 := RegEnable(io.id_rs2,0.U,enable)
@@ -106,6 +111,7 @@ class id_ex(
         io.ex_ce := RegEnable(io.id_ce,false.B,enable)
         io.ex_inst := RegEnable(io.id_inst,0.U,enable)
         io.ex_inst_address := RegEnable(io.id_inst_address,0.U,enable)
+        io.ex_ecall := RegEnable(io.id_ecall,0.U,enable)
     }
 
     /*

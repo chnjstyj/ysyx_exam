@@ -65,6 +65,7 @@ class mul(
     when (io.flush){
         counter := 0.U 
         result := 0.U 
+        running := false.B 
     }.elsewhen (io.mul_valid & !running){
         running := true.B 
         below_zero := io.multiplier(xlen - 1) && (io.mul_signed === "b11".U)

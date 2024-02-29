@@ -44,6 +44,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         val direct_write_en = Output(Bool()) 
         val direct_write_data = Output(UInt(64.W))
         val direct_fin = Input(Bool())
+        val direct_addr = Output(UInt(32.W))
         //stall 
         val dcache_miss = Input(Bool())
         val stall_from_mem = Output(UInt(1.W))
@@ -67,11 +68,16 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
     val device_read = WireDefault(io.mem_addr(29).asBool())
 
     val read_data = WireDefault(0.U(64.W))
-    read_data := Mux(io.direct_read_en,io.direct_read_data,io.dcache_read_data)
-    io.mem_read_data := Mux(io.direct_read_en,io.direct_read_data,io.dcache_read_data)
+    read_data := Mux(io.direct_fin,io.direct_read_data,io.dcache_read_data)
+    io.mem_read_data := Mux(io.direct_fin,io.direct_read_data,io.dcache_read_data)
     val mem_read_size = RegEnable(io.mem_read_size,0.U(4.W),!io.stall_mem_ca)
     val zero_extends = RegEnable(io.zero_extends,false.B,!io.stall_mem_ca)
     val mem_write_mask = WireDefault(io.mem_wmask)//,0.U(4.W),!io.stall_mem_ca)
+
+    val ca_stage = RegEnable(io.mem_read_en | io.mem_write_en,false.B,!io.stall_from_mem.asBool)
+    val direct_stage = RegEnable(io.direct_read_en | io.direct_write_en,false.B,!io.stall_from_mem.asBool)
+    val direct_read_en_r = RegNext(io.direct_read_en,false.B)
+    val direct_write_en_r = RegNext(io.direct_write_en,false.B) 
 
     io.dcache_read_addr := io.mem_addr(31,0) 
     io.dcache_read_en := io.mem_read_en & !device_read & !io.stall_mem //& !io.dcache_read_valid
@@ -81,12 +87,30 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
     io.dcache_write_data := io.mem_write_data 
     io.dcache_write_mask := mem_write_mask
 
-    io.direct_read_en := io.mem_read_en & device_read & !io.stall_mem
-    io.direct_write_en := io.mem_write_en & device_read & !io.stall_mem
-    io.direct_write_data := io.mem_write_data
+    io.direct_read_en := (io.mem_read_en & device_read & !io.stall_mem) | (direct_stage && !io.direct_fin && direct_read_en_r)
+    io.direct_write_en := (io.mem_write_en & device_read & !io.stall_mem) | (direct_stage && !io.direct_fin && direct_write_en_r)
+    
+    val direct_write_data_r = RegInit(0.U(64.W))
+    val direct_addr_r = RegInit(0.U(32.W))
+    when (direct_stage && !io.direct_fin){
+        io.direct_write_data := direct_write_data_r
+    }.otherwise{
+        io.direct_write_data := io.mem_write_data
+    }
 
-    val ca_stage = RegEnable(io.mem_read_en | io.mem_write_en,false.B,!io.stall_from_mem.asBool)
-    val direct_stage = RegEnable(io.direct_read_en | io.direct_write_en,false.B,!io.stall_from_mem.asBool)
+    when (direct_stage && !io.direct_fin){
+        io.direct_addr := direct_addr_r 
+    }.otherwise{
+        io.direct_addr := io.mem_addr(31,0)
+    }
+
+    when (io.mem_write_en & device_read & !io.stall_mem){
+        direct_write_data_r := io.mem_write_data
+    }
+
+    when (io.mem_write_en & device_read & !io.stall_mem){
+        direct_addr_r := io.mem_addr(31,0)
+    }
 
     /*
     when (!io.direct_fin && (io.direct_read_en | io.direct_write_en)){

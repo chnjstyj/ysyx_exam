@@ -1,19 +1,20 @@
 module csrs(
 input clock,
+input [11:0] csr_read_addr,
 input [11:0] csr_addr,
 input [63:0] rs1_rdata,
 output reg [63:0] csr_rdata,
 input [63:0] rd_wdata,
 input csr_wen,
 input csr_sen,
-input ecall,
+input ecall_read,
+input ecall_write,
 input [63:0] ecall_idx,
 input [63:0] pc,
 output wire [63:0] mret_addr
 );
 
-wire [63:0] csr_wdata = csr_wen ? rs1_rdata : 
-csr_sen ? rd_wdata : 64'h0;
+wire [63:0] csr_wdata = (csr_wen | csr_sen) ? rd_wdata : 64'h0;
 //immI[7:0]
 //[11:10] read/write
 //[9:8] lowest privilege level
@@ -28,11 +29,11 @@ assign mret_addr = mepc;
 //csr read
 //assign csr_rdata = csrs[csr_addr[7:0]];
 always @(*) begin 
-    if (ecall == 1'b1) begin 
+    if (ecall_read == 1'b1) begin 
         csr_rdata = mtvec;
     end 
     else begin
-        case (csr_addr[11:0])
+        case (csr_read_addr[11:0])
         12'h341:csr_rdata = mepc;
         12'h300:csr_rdata = mstatus;
         12'h342:csr_rdata = mcause;
@@ -52,7 +53,7 @@ always @(posedge clock) begin
         default:;
         endcase
     end
-    else if (ecall) begin 
+    else if (ecall_write) begin 
         mepc <= pc;
         mcause <= ecall_idx;
     end

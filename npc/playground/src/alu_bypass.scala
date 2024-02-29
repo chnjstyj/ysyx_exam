@@ -30,6 +30,8 @@ class alu_bypass extends Module {
         val wb_reg_wen = Input(Bool())
         val wb_mem_read_en = Input(Bool())
         val wb_mem_read_data = Input(UInt(64.W))
+        val wb_csr_write_to_reg = Input(Bool())
+        val wb_csr_rdata = Input(UInt(64.W))
 
         val alu_rs1_rdata = Output(UInt(64.W))
         val alu_rs2_rdata = Output(UInt(64.W))
@@ -65,6 +67,8 @@ class alu_bypass extends Module {
         io.alu_rs1_rdata := io.wb_alu_result
     }.elsewhen (io.ex_rs1 === io.wb_rd && io.wb_mem_read_en){
         io.alu_rs1_rdata := io.wb_mem_read_data
+    }.elsewhen (io.ex_rs1 === io.wb_rd && io.wb_csr_write_to_reg){
+        io.alu_rs1_rdata := io.wb_csr_rdata
     }.elsewhen ((io.stall_ex_mem || stall_ex_mem_r.asBool) && io.ex_rs1 === alu_rs1_r){
         io.alu_rs1_rdata := alu_rs1_rdata_r
     }.otherwise{
@@ -91,6 +95,8 @@ class alu_bypass extends Module {
         io.alu_rs2_rdata := io.wb_alu_result
     }.elsewhen (io.ex_rs2 === io.wb_rd && io.wb_mem_read_en){
         io.alu_rs2_rdata := io.wb_mem_read_data
+    }.elsewhen (io.ex_rs2 === io.wb_rd && io.wb_csr_write_to_reg){
+        io.alu_rs2_rdata := io.wb_csr_rdata
     }.elsewhen ((io.stall_ex_mem || stall_ex_mem_r.asBool) && io.ex_rs2 === alu_rs2_r){
         io.alu_rs2_rdata := alu_rs2_rdata_r
     }.otherwise{

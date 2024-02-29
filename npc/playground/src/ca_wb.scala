@@ -7,7 +7,10 @@ class ca_wb extends Module{
         val ca_reg_wen = Input(UInt(1.W))
         val ca_rd = Input(UInt(5.W))
         val ca_csr_sen = Input(UInt(1.W))
+        val ca_csr_wen = Input(UInt(1.W))
         val ca_csr_addr = Input(UInt(12.W))
+        val ca_csr_write_to_reg = Input(UInt(1.W))
+        val ca_csr_rdata = Input(UInt(64.W))
         val ca_mem_read_data = Input(UInt(64.W))
         val ca_mem_read_en = Input(UInt(1.W))
         val ca_exit_debugging = Input(UInt(1.W))
@@ -17,12 +20,16 @@ class ca_wb extends Module{
         val ca_inst = Input(UInt(32.W))
         val ca_inst_address = Input(UInt(64.W))
         val ca_direct_access = Input(UInt(1.W))
+        val ca_ecall = Input(UInt(1.W))
 
         val wb_alu_result = Output(UInt(64.W))
         val wb_reg_wen = Output(UInt(1.W))
         val wb_rd = Output(UInt(5.W))
         val wb_csr_sen = Output(UInt(1.W))
+        val wb_csr_wen = Output(UInt(1.W))
         val wb_csr_addr = Output(UInt(12.W))
+        val wb_csr_write_to_reg = Output(UInt(1.W))
+        val wb_csr_rdata = Output(UInt(64.W))
         val wb_mem_read_data = Output(UInt(64.W))
         val wb_mem_read_en = Output(UInt(1.W))
         val wb_exit_debugging = Output(UInt(1.W))
@@ -31,6 +38,7 @@ class ca_wb extends Module{
         val wb_inst = Output(UInt(32.W))
         val wb_inst_address = Output(UInt(64.W))
         val wb_direct_access = Output(UInt(1.W))
+        val wb_ecall = Output(UInt(1.W))
 
         val wb_diff_run = Output(UInt(1.W))
 
@@ -43,7 +51,10 @@ class ca_wb extends Module{
     io.wb_reg_wen := RegEnable(io.ca_reg_wen,0.U,enable)
     io.wb_rd := RegEnable(io.ca_rd,0.U,enable)
     io.wb_csr_sen := RegEnable(io.ca_csr_sen,0.U,enable)
+    io.wb_csr_wen := RegEnable(io.ca_csr_wen,0.U,enable)
     io.wb_csr_addr := RegEnable(io.ca_csr_addr,0.U,enable)
+    io.wb_csr_write_to_reg := RegEnable(io.ca_csr_write_to_reg,0.U,enable)
+    io.wb_csr_rdata := RegEnable(io.ca_csr_rdata,0.U,enable)
     io.wb_mem_read_data := RegEnable(io.ca_mem_read_data,0.U,enable)
     io.wb_mem_read_en := RegEnable(io.ca_mem_read_en,0.U,enable)
     io.wb_exit_debugging := RegEnable(io.ca_exit_debugging,0.U,enable)
@@ -53,5 +64,6 @@ class ca_wb extends Module{
     io.wb_inst := RegEnable(io.ca_inst,0.U,enable)
     io.wb_inst_address := RegEnable(io.ca_inst_address,0.U,enable)
     io.wb_direct_access := RegEnable(io.ca_direct_access,0.U,enable)
+    io.wb_ecall := RegEnable(io.ca_ecall,0.U,enable)
 
 }

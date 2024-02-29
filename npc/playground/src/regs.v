@@ -18,8 +18,9 @@ output wire [63:0] ecall_idx
 reg [63:0] regs[31:0];
 wire [63:0] regs_wire[31:0];
 
+assign regs_wire[0] = 64'd0;
 genvar j;
-for (j = 0; j < 32; j = j + 1) begin 
+for (j = 1; j < 32; j = j + 1) begin 
     assign regs_wire[j] = rd === j && reg_wen ? rd_wdata : regs[j];
 end
 

@@ -153,18 +153,22 @@ class top(
     regfile.io.reg_wen := ca_wb.io.wb_reg_wen & io.diff_run
     regfile.io.regfile_output_1 := id.io.control_signal.regfile_output_1
     regfile.io.inst_address := inst_if_id.io.id_inst_address
+    regfile.io.ecall_inst_address := ca_wb.io.wb_inst_address
     //FIXME save_next_inst_addr & next_instaddress
     regfile.io.save_next_inst_addr := ca_wb.io.wb_save_next_inst_addr
     regfile.io.mem_read_en := ca_wb.io.wb_mem_read_en
     regfile.io.rd_wdata := MuxCase(ca_wb.io.wb_alu_result,Seq(
         ca_wb.io.wb_save_next_inst_addr.asBool -> ca_wb.io.wb_next_inst_address,
         ca_wb.io.wb_mem_read_en.asBool -> ca_wb.io.wb_mem_read_data))
-    regfile.io.csr_wen := id.io.control_signal.csr_wen
+    regfile.io.csr_wen := ca_wb.io.wb_csr_wen
     //FIXME from wb 
     regfile.io.csr_sen := ca_wb.io.wb_csr_sen
+    regfile.io.csr_read_addr := id.io.imm
     regfile.io.csr_addr := ca_wb.io.wb_csr_addr
-    regfile.io.ecall := id.io.control_signal.ecall
-    regfile.io.csr_write_to_reg := id.io.control_signal.csr_write_to_reg
+    regfile.io.ecall_read := id.io.control_signal.ecall
+    regfile.io.ecall_write := ca_wb.io.wb_ecall
+    regfile.io.csr_write_to_reg := ca_wb.io.wb_csr_write_to_reg
+    regfile.io.rd_csr_wdata := ca_wb.io.wb_csr_rdata
     regfile.io.stall_ca_wb := stall.io.stall_ca_wb
     regfile.io.stall_id_ex := stall.io.stall_id_ex
     /*
@@ -197,6 +201,7 @@ class top(
     id_ex.io.id_csr_sen := id.io.control_signal.csr_sen
     id_ex.io.id_csr_wen := id.io.control_signal.csr_wen
     id_ex.io.id_csr_addr := id.io.imm
+    id_ex.io.id_csr_write_to_reg := id.io.control_signal.csr_write_to_reg
     id_ex.io.id_sign_divrem := id.io.control_signal.sign_divrem
     id_ex.io.id_rs1 := id.io.rs1 
     id_ex.io.id_rs2 := id.io.rs2 
@@ -208,6 +213,7 @@ class top(
     id_ex.io.id_regfile_output_1 := id.io.control_signal.regfile_output_1
     id_ex.io.id_inst := inst_if_id.io.id_inst
     id_ex.io.id_inst_address := inst_if_id.io.id_inst_address
+    id_ex.io.id_ecall := id.io.control_signal.ecall
 
     val stall_alu = WireDefault(id_ex.io.ex_next_inst_address === ex_mem.io.mem_next_inst_address) 
 
@@ -236,6 +242,8 @@ class top(
     alu_bypass.io.ca_save_next_inst_addr := mem_ca.io.ca_save_next_inst_addr
     alu_bypass.io.ca_next_inst_address := mem_ca.io.ca_next_inst_address
     alu_bypass.io.stall_alu := stall_alu
+    alu_bypass.io.wb_csr_write_to_reg := ca_wb.io.wb_csr_write_to_reg
+    alu_bypass.io.wb_csr_rdata := ca_wb.io.wb_csr_rdata
 
     alu.io.alu_control := id_ex.io.ex_alu_control
     alu.io.alu_src := id_ex.io.ex_alu_src
@@ -248,6 +256,7 @@ class top(
     alu.io.funct3 := id_ex.io.ex_funct3
     alu.io.csr_sen := id_ex.io.ex_csr_sen
     alu.io.csr_rdata := id_ex.io.ex_csr_rdata
+    alu.io.alu_bypass_stall := alu_bypass.io.stall_from_alu_bypass
 
     ex_mem.io.clk := clock
     ex_mem.io.rst := (reset.asBool | stall.io.flush_ex_mem)
@@ -264,6 +273,8 @@ class top(
     ex_mem.io.ex_csr_sen := id_ex.io.ex_csr_sen
     ex_mem.io.ex_csr_wen := id_ex.io.ex_csr_wen
     ex_mem.io.ex_csr_addr := id_ex.io.ex_csr_addr
+    ex_mem.io.ex_csr_write_to_reg := id_ex.io.ex_csr_write_to_reg
+    ex_mem.io.ex_csr_rdata := id_ex.io.ex_csr_rdata
     ex_mem.io.ex_exit_debugging := id_ex.io.ex_exit_debugging 
     ex_mem.io.stall_ex_mem := stall.io.stall_ex_mem
     ex_mem.io.ex_ce := id_ex.io.ex_ce
@@ -271,6 +282,7 @@ class top(
     ex_mem.io.ex_next_inst_address := id_ex.io.ex_next_inst_address
     ex_mem.io.ex_inst := id_ex.io.ex_inst
     ex_mem.io.ex_inst_address := id_ex.io.ex_inst_address
+    ex_mem.io.ex_ecall := id_ex.io.ex_ecall
 
     mem_bypass.io.mem_rs2 := ex_mem.io.mem_rs2 
     mem_bypass.io.mem_rs2_rdata := ex_mem.io.mem_rs2_rdata 
@@ -314,7 +326,10 @@ class top(
     mem_ca.io.mem_reg_wen := ex_mem.io.mem_reg_wen
     mem_ca.io.mem_rd := ex_mem.io.mem_rd
     mem_ca.io.mem_csr_sen := ex_mem.io.mem_csr_sen
+    mem_ca.io.mem_csr_wen := ex_mem.io.mem_csr_wen
     mem_ca.io.mem_csr_addr := ex_mem.io.mem_csr_addr
+    mem_ca.io.mem_csr_write_to_reg := ex_mem.io.mem_csr_write_to_reg
+    mem_ca.io.mem_csr_rdata := ex_mem.io.mem_csr_rdata
     mem_ca.io.mem_mem_read_en := ex_mem.io.mem_mem_read_en
     mem_ca.io.mem_mem_write_en := ex_mem.io.mem_mem_write_en
     mem_ca.io.mem_exit_debugging := ex_mem.io.mem_exit_debugging
@@ -325,6 +340,7 @@ class top(
     mem_ca.io.mem_inst := ex_mem.io.mem_inst
     mem_ca.io.mem_inst_address := ex_mem.io.mem_inst_address
     mem_ca.io.mem_direct_access := mem.io.direct_write_en | mem.io.direct_read_en
+    mem_ca.io.mem_ecall := ex_mem.io.mem_ecall
 
     dcache_controller.io.addr := mem.io.dcache_read_addr
     dcache_controller.io.read_cache_en := mem.io.dcache_read_en
@@ -348,6 +364,8 @@ class top(
     stall.io.stall_from_branch_bypass := branch_bypass.io.stall_from_branch_bypass
     stall.io.branch_jump := judge_branch_m.io.branch_jump
     stall.io.direct_jump := id.io.control_signal.direct_jump
+    stall.io.mret := pc.io.mret
+    stall.io.ecall := id.io.control_signal.ecall
     stall.io.stall_from_dcache := mem.io.stall_from_dcache
 
     axi_lite_arbiter.io.ACLK := clock 
@@ -362,13 +380,16 @@ class top(
     axi_lite_arbiter.io.lsu_direct_write_en := mem.io.direct_write_en
     axi_lite_arbiter.io.lsu_direct_write_data := mem.io.direct_write_data 
     axi_lite_arbiter.io.lsu_direct_write_mask := mem.io.dcache_write_mask
-    axi_lite_arbiter.io.lsu_direct_addr := mem.io.mem_addr
+    axi_lite_arbiter.io.lsu_direct_addr := mem.io.direct_addr
 
     ca_wb.io.ca_alu_result := mem_ca.io.ca_alu_result
     ca_wb.io.ca_reg_wen := mem_ca.io.ca_reg_wen
     ca_wb.io.ca_rd := mem_ca.io.ca_rd
     ca_wb.io.ca_csr_sen := mem_ca.io.ca_csr_sen
+    ca_wb.io.ca_csr_wen := mem_ca.io.ca_csr_wen
     ca_wb.io.ca_csr_addr := mem_ca.io.ca_csr_addr
+    ca_wb.io.ca_csr_write_to_reg := mem_ca.io.ca_csr_write_to_reg
+    ca_wb.io.ca_csr_rdata := mem_ca.io.ca_csr_rdata
     ca_wb.io.ca_mem_read_data := mem.io.mem_read_data
     ca_wb.io.ca_mem_read_en := mem_ca.io.ca_mem_read_en
     ca_wb.io.stall_ca_wb := stall.io.stall_ca_wb
@@ -379,6 +400,7 @@ class top(
     ca_wb.io.ca_inst := mem_ca.io.ca_inst
     ca_wb.io.ca_inst_address := mem_ca.io.ca_inst_address
     ca_wb.io.ca_direct_access := mem_ca.io.ca_direct_access
+    ca_wb.io.ca_ecall := mem_ca.io.ca_ecall
 
     val next_inst_address_r = RegNext(ca_wb.io.wb_next_inst_address,0.U)
     val inst_r = RegNext(ca_wb.io.wb_inst,0.U)

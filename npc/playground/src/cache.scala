@@ -209,7 +209,7 @@ class cache(
         //io.writeback_data := Cat(Seq(cache_line_hitted(counters(0)).data).reverse)
         //val dataSeq: Seq[chisel3.UInt] = cache_line_hitted(counters(0)).data.toSeq
         io.writeback_data := cache_line_hitted(counters(0)).data
-        io.writeback_index := 0.U 
+        io.writeback_index := counters(0)
         io.writeback_addr := Cat(cache_line_hitted(counters(0)).tag,io.addr(index_width + offset_width - 1,offset_width),0.U(offset_width.W))
     }.otherwise{
         io.dirty_bit := cache_line_hitted(counter_min).dirty 

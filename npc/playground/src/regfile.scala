@@ -6,11 +6,14 @@ class regfile extends Module{
     val io = IO(new Bundle{
         val rs1 = Input(UInt(5.W))
         val rs2 = Input(UInt(5.W))
+        val csr_read_addr = Input(UInt(12.W))
         val csr_addr = Input(UInt(12.W))
         val rd = Input(UInt(5.W))
         val rd_wdata = Input(UInt(64.W))
+        val rd_csr_wdata = Input(UInt(64.W))  //csr write to regfile
 
         val inst_address = Input(UInt(64.W))
+        val ecall_inst_address = Input(UInt(64.W))
         
         val save_next_inst_addr = Input(UInt(1.W))
         val reg_wen = Input(UInt(1.W))
@@ -18,7 +21,8 @@ class regfile extends Module{
         val regfile_output_1 = Input(UInt(2.W))
         val csr_wen = Input(UInt(1.W))
         val csr_sen = Input(UInt(1.W))
-        val ecall = Input(UInt(1.W))
+        val ecall_read = Input(UInt(1.W))
+        val ecall_write = Input(UInt(1.W))
         val csr_write_to_reg = Input(UInt(1.W))
 
         val rs1_rdata = Output(UInt(64.W))
@@ -50,10 +54,12 @@ class regfile extends Module{
     csrs.io.rd_wdata := io.rd_wdata
     csrs.io.csr_wen := !io.stall_id_ex & io.csr_wen
     csrs.io.csr_sen := io.csr_sen
+    csrs.io.csr_read_addr := io.csr_read_addr
     csrs.io.csr_addr := io.csr_addr
-    csrs.io.ecall := io.ecall
+    csrs.io.ecall_read := io.ecall_read 
+    csrs.io.ecall_write := io.ecall_write
     csrs.io.ecall_idx := regs.io.ecall_idx
-    csrs.io.pc := io.inst_address
+    csrs.io.pc := io.ecall_inst_address
     csr_rdata := csrs.io.csr_rdata
     io.csr_rdata := csr_rdata
 
@@ -83,7 +89,7 @@ class regfile extends Module{
     when (io.rd =/= 0.U && csr_write_to_reg =/= 1.U){
         regs.io.rd_wdata := io.rd_wdata
     }.elsewhen (io.rd =/= 0.U && csr_write_to_reg === 1.U){
-        regs.io.rd_wdata := csr_rdata
+        regs.io.rd_wdata := io.rd_csr_wdata
     }
 
 }

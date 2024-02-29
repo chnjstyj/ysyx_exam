@@ -241,7 +241,7 @@ class axi_lite_arbiter(
         dcache_write_data := 0.U
     }
 
-    io.lsu_direct_fin := mem_write_finish | mem_read_valid 
+    io.lsu_direct_fin := (mem_write_finish | mem_read_valid) && cur_state === s3
     /*
     when (next_state === s3 && io.lsu_direct_write_en){
         when (mem_write_finish){

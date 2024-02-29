@@ -324,6 +324,7 @@ class id(alu_control_width:Int) extends Module{
                     io.control_signal.csr_wen := 1.U 
                     io.imm := imm_I
                     io.control_signal.csr_write_to_reg := 1.U
+                    io.control_signal.alu_control := alu_ops.NONE
                 }
                 is ("b010".U){
                     //CSRRS

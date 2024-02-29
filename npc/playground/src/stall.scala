@@ -19,6 +19,8 @@ class stall extends Module{
         val stall_from_branch_bypass = Input(Bool())
         val branch_jump = Input(Bool())
         val direct_jump = Input(Bool())
+        val mret = Input(Bool())
+        val ecall = Input(Bool())
 
         val stall_global = Output(UInt(1.W))
         //val stall_pc_inst_if = Output(UInt(1.W))
@@ -64,9 +66,15 @@ class stall extends Module{
     }
 
     //io.flush_pc_inst_if := io.branch_jump | io.direct_jump
-    io.flush_inst_if_id := (io.branch_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | (io.direct_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | (io.stall_from_inst_if & !io.stall_from_alu & !io.stall_from_mem & !io.stall_from_branch_bypass & !io.stall_from_alu_bypass)
-    io.flush_id_ex := (io.stall_from_branch_bypass & !io.stall_from_alu & !io.stall_from_mem & !io.stall_from_alu_bypass)
-    io.flush_ex_mem := io.stall_from_alu_bypass
+    io.flush_inst_if_id := (io.branch_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | 
+    (io.direct_jump & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | 
+    (io.mret & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | 
+    (io.ecall & !io.stall_from_branch_bypass & !io.stall_inst_if_id) | 
+    (io.stall_from_inst_if & !io.stall_from_alu & !io.stall_from_mem & !io.stall_from_branch_bypass & !io.stall_from_alu_bypass & !io.stall_from_mem_bypass)
+
+
+    io.flush_id_ex := (io.stall_from_branch_bypass & !io.stall_from_mem_bypass & !io.stall_from_alu & !io.stall_from_mem & !io.stall_from_alu_bypass)
+    io.flush_ex_mem := (io.stall_from_alu_bypass & !io.stall_from_mem & !io.stall_from_mem_bypass & !io.stall_from_ca & !io.stall_from_dcache)
     io.flush_mem_ca := false.B 
     io.flush_ca_wb := false.B 
     

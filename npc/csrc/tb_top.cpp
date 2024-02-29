@@ -28,7 +28,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define waveform 1
+//#define waveform 1
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -271,6 +271,7 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       {
         *BVALID = 1;
         ready_to_write = 0;
+        //printf("vgasync: %x\n",WDATA);
         vgasync = (uint8_t)WDATA;
       }
       else if ((unsigned int)AWADDR >= FB_ADDR && (unsigned int)AWADDR < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
@@ -280,6 +281,7 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         {
           *((uint8_t*)vmem + addr + i) = (uint8_t)(WDATA >> 8 * i);
         }
+        printf("gbuf: %x\n",WDATA);
         ready_to_write = 0;
         *BVALID = 1;
       }
@@ -319,10 +321,11 @@ void print_message()
   //double bp_missing_rate = 0;
 
   //sim_time / 2 == total cycles
-  ipc = sim_time == 0 ? 0 : ((double)inst_counts / ((double)sim_time / 2));
+  printf("Printing Messages\n");
+  ipc = total_steps == 0 ? 0 : ((double)inst_counts / (double)total_steps);
 
   printf("===================\n");
-  printf("%d %d\n",inst_counts,sim_time);
+  printf("%d %d\n",inst_counts,total_steps);
   printf("IPC: %lf\n",ipc);
 }
 
@@ -458,7 +461,7 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      if (j == 25600)
+      if (j == 2560)
       {
         j = 0;
         update_device();
