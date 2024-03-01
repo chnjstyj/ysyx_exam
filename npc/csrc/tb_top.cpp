@@ -28,7 +28,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#define waveform 1
+//#define waveform 1
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -281,7 +281,7 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         {
           *((uint8_t*)vmem + addr + i) = (uint8_t)(WDATA >> 8 * i);
         }
-        printf("gbuf: %x\n",WDATA);
+        //printf("gbuf: %x\n",WDATA);
         ready_to_write = 0;
         *BVALID = 1;
       }
@@ -393,13 +393,13 @@ void single_cycle(Vtop* top)
   top->clock = 1;top->eval();
   sim_time++;
   #ifdef waveform
-  //if (total_steps > 141965000)
+  if (total_steps > 25160000)
     m_trace->dump(sim_time);
   #endif
   top->clock = 0;top->eval();
   sim_time++;
   #ifdef waveform
-  //if (total_steps > 141965000)
+  if (total_steps > 25160000)
     m_trace->dump(sim_time);
   #endif
 }
@@ -482,8 +482,14 @@ void cpu_exec(int steps)
     {
       total_steps++;
       single_cycle(top);
+      if (top->io_diff_run)
+      {
+        inst_counts++;
+      }
+      #ifdef itrace_
       disassemble(str,96,INST_ADDR,(uint8_t*)&(INST),4);
       printf("%lx %s\n",top->io_inst_address,str);
+      #endif
       j++;
       if (j == 25600)
       {

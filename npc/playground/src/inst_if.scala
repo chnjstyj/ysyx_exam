@@ -31,10 +31,13 @@ class inst_if(image_file:String = "") extends Module{
 
         val icache_miss = Input(Bool())
 
+        val branch_jump = Input(Bool())
+        val direct_jump = Input(Bool())
+
     })
 
     io.icache_read_addr := io.inst_address(31,0)
-    io.icache_read_en := io.ce //& !io.stall_from_mem_reg
+    io.icache_read_en := io.ce & !io.stall_inst_if & !io.direct_jump & !io.branch_jump //& !io.stall_from_mem_reg
     val valid = WireDefault(io.icache_read_valid)
 
     when (!valid && io.ce.asBool){

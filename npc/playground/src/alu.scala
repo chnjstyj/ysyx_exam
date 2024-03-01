@@ -40,6 +40,7 @@ class alu(alu_control_width:Int) extends Module{
         val alu_result = Output(UInt(64.W))
         val alu_stall = Output(Bool())
         val alu_bypass_stall = Input(Bool())
+        val mem_stall = Input(Bool()) //stall from dcache access
     })
     import ALU.ALU_OPS
 
@@ -66,7 +67,7 @@ class alu(alu_control_width:Int) extends Module{
     Cat(Fill(32,0.U(1.W)),real_data_b(31,0)),real_data_b))
     
     mul.io.mul_valid := io.alu_control === alu_ops.MUL & RegNext(!alu_stall)
-    mul.io.flush := io.alu_bypass_stall
+    mul.io.flush := io.alu_bypass_stall | io.mem_stall
     mul.io.mulw := io.alu_result_size
     when (io.funct3 === "b000".U || io.funct3 === "b001".U){
         mul.io.mul_signed := "b11".U 

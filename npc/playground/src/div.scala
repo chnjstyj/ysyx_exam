@@ -90,7 +90,7 @@ class div(
         //}.otherwise{
             counter_max := (xlen-1).U
         //}
-        when (io.dividend(xlen-1) =/= 1.U && !io.divw){
+        when ((io.dividend(xlen-1) =/= 1.U && !io.divw) || !io.div_signed){
             dividend_s := Cat(0.U(xlen.W),io.dividend)
         }.elsewhen (io.dividend(xlen/2-1) === 1.U && io.divw && io.div_signed){
             dividend_s := Cat(0.U((xlen + xlen/2).W),(~(io.dividend(xlen/2-1,0)) + 1.U))

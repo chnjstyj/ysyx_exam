@@ -93,6 +93,8 @@ class top(
     inst_if.io.icache_read_data := icache_controller.io.cache_data 
     inst_if.io.icache_read_valid := icache_controller.io.read_cache_fin
     inst_if.io.icache_miss := icache_controller.io.cache_miss
+    inst_if.io.branch_jump := judge_branch_m.io.branch_jump & !branch_bypass.io.stall_from_branch_bypass & !stall.io.stall_inst_if_id
+    inst_if.io.direct_jump := id.io.control_signal.direct_jump & !branch_bypass.io.stall_from_branch_bypass & !stall.io.stall_inst_if_id
 
     icache_controller.io.addr := inst_if.io.icache_read_addr 
     icache_controller.io.read_cache_en := inst_if.io.icache_read_en 
@@ -257,6 +259,7 @@ class top(
     alu.io.csr_sen := id_ex.io.ex_csr_sen
     alu.io.csr_rdata := id_ex.io.ex_csr_rdata
     alu.io.alu_bypass_stall := alu_bypass.io.stall_from_alu_bypass
+    alu.io.mem_stall := mem.io.stall_from_mem
 
     ex_mem.io.clk := clock
     ex_mem.io.rst := (reset.asBool | stall.io.flush_ex_mem)
