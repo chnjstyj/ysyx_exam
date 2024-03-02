@@ -246,6 +246,7 @@ class top(
     alu_bypass.io.stall_alu := stall_alu
     alu_bypass.io.wb_csr_write_to_reg := ca_wb.io.wb_csr_write_to_reg
     alu_bypass.io.wb_csr_rdata := ca_wb.io.wb_csr_rdata
+    alu_bypass.io.stall_from_mem := mem.io.stall_from_mem
 
     alu.io.alu_control := id_ex.io.ex_alu_control
     alu.io.alu_src := id_ex.io.ex_alu_src

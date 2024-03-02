@@ -39,6 +39,7 @@ class alu_bypass extends Module {
         val stall_ex_mem = Input(Bool())
         val stall_from_alu_bypass = Output(Bool())
         val stall_alu = Input(Bool())
+        val stall_from_mem = Input(Bool())
     })
 
     val alu_rs1_rdata_r = RegNext(io.alu_rs1_rdata,0.U)
@@ -46,7 +47,7 @@ class alu_bypass extends Module {
     val alu_rs2_rdata_r = RegNext(io.alu_rs2_rdata,0.U)
     val alu_rs2_r = RegNext(io.ex_rs2,0.U)
     val stall_ex_mem_r = RegNext(io.stall_ex_mem,0.U)
-    val stall_from_alu_bypass_r = RegNext(io.stall_from_alu_bypass,0.U)
+    val stall_from_alu_bypass_r = RegNext(io.stall_from_alu_bypass & !io.stall_from_mem,0.U)
 
     when (io.stall_alu){
         io.alu_rs1_rdata := alu_rs1_rdata_r

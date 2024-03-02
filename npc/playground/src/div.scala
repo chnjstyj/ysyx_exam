@@ -30,6 +30,7 @@ class div(
     val ready = RegInit(false.B)
     val running = RegInit(false.B)
     val divw = RegInit(false.B)
+    val final_step = RegInit(false.B)
 
     val mask = WireDefault(UInt((2*xlen).W),((1.U << (xlen-1).U) - 1.U))
     val part = WireDefault(dividend_s(2*xlen-1,xlen-1))
@@ -54,6 +55,10 @@ class div(
         substi := subs << ((1 << (xlen-1)) - 1).U
     }*/
 
+    val end_31 = WireDefault(io.dividend(xlen/2-1))
+    val sor_31 = WireDefault(io.divisor(xlen/2-1))
+    val xor_ = WireDefault(end_31 ^ sor_31)
+
     when (io.div_valid){
         when (io.dividend(xlen-1) === 1.U && io.div_signed){
             remainder_sign := false.B 
@@ -64,9 +69,9 @@ class div(
         }
     }    
     when (io.div_valid){
-        when ((io.dividend(xlen-1) ^ io.divisor(xlen-1) === 1.U) && io.div_signed){
+        when ((io.dividend(xlen-1) ^ io.divisor(xlen-1) === 1.U) && io.div_signed){  
             quotient_sign := false.B 
-        }.elsewhen (io.divw && io.div_signed && (io.dividend(xlen/2-1) ^ io.divisor(xlen/2-1) === 1.U)){
+        }.elsewhen (io.divw && io.div_signed && (xor_ === 1.U)){
             quotient_sign := false.B
         }.otherwise{
             quotient_sign := true.B 
@@ -81,6 +86,7 @@ class div(
         valid := false.B
         quotient := 0.U 
         remainder := 0.U
+        final_step := false.B
     }.elsewhen (io.div_valid){
         ready := false.B
         valid := false.B 
@@ -112,6 +118,7 @@ class div(
         counter := 0.U
         quotient := 0.U 
         remainder := 0.U
+        final_step := false.B
     }.elsewhen (running && counter =/= counter_max){
         counter := counter + 1.U
         when ((subs).asSInt >= 0.S){
@@ -121,15 +128,23 @@ class div(
             dividend_s := dividend_s << 1.U
         }
     }.elsewhen (running && counter === counter_max){
-        when ((subs).asSInt >= 0.S){
-            quotient := quotient | (1.U << (counter_max - counter))
+        when (subs.asSInt >= 0.S){
+            when (!quotient_sign){
+                quotient := (-(quotient | (1.U)).asSInt).asUInt
+            }.otherwise{
+                quotient := quotient | (1.U)
+            }
             dividend_s := ((dividend_s & mask) | (subs << (xlen-1).U)) << 1.U
         }.otherwise{
+            when (!quotient_sign){
+                quotient := (-(quotient).asSInt).asUInt
+            }
             dividend_s := dividend_s << 1.U
         }
+        /*
         when (!quotient_sign){
             quotient := ~quotient + 1.U 
-        }
+        }*/
         //when (!remainder_sign){
             //remainder := ~subs + 1.U 
         //}.otherwise{
@@ -138,11 +153,22 @@ class div(
         }.otherwise{
             remainder := Mux(remainder_sign,subs,~subs+1.U)
         }
+        //final_step := true.B
         running := false.B
         valid := true.B 
         ready := true.B  
         counter := 0.U 
-    }.otherwise{
+    }/*.elsewhen (running && final_step){
+        when (!quotient_sign){
+            quotient := ((-quotient.asSInt)).asUInt
+        }
+        final_step := false.B
+        running := false.B
+        valid := true.B 
+        ready := true.B  
+        counter := 0.U 
+    }*/.otherwise{
+        final_step := false.B
         valid := false.B 
     }
 }

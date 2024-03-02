@@ -9,6 +9,7 @@
 #include <sys/time.h>
 #include <math.h>
 #include <curses.h>
+#include <SDL2/SDL.h>
 
 #include "Vtop.h"
 #include "sdb.h"
@@ -29,6 +30,7 @@
 #include <readline/history.h>
 
 //#define waveform 1
+#define wave_steps 1100000000
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -89,6 +91,9 @@ bool ftrace_enable = false;
 //diff
 bool diff_enable = false;
 static uint64_t total_steps;
+
+//SDL
+SDL_Window* window = NULL;
 
 void init_pmem(const char* file_name)
 {
@@ -393,13 +398,13 @@ void single_cycle(Vtop* top)
   top->clock = 1;top->eval();
   sim_time++;
   #ifdef waveform
-  if (total_steps > 25160000)
+  if (total_steps >= wave_steps)
     m_trace->dump(sim_time);
   #endif
   top->clock = 0;top->eval();
   sim_time++;
   #ifdef waveform
-  if (total_steps > 25160000)
+  if (total_steps >= wave_steps)
     m_trace->dump(sim_time);
   #endif
 }
@@ -429,6 +434,10 @@ void inline diff_run()
 void inline update_device()
 {
   vga_update_screen();
+  //char title[128];
+  //double ipc = total_steps == 0 ? 0 : ((double)inst_counts / (double)total_steps);
+  //sprintf(title, "counters:%ld pc:%lx",total_steps,top->io_inst_address);
+  //SDL_SetWindowTitle(window, title);
 }
 
 void cpu_exec(int steps)
@@ -461,7 +470,7 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      if (j == 2560)
+      if (j == 10)
       {
         j = 0;
         update_device();
@@ -528,7 +537,7 @@ int main(int argc,char *argv[])
   init_pmem("inst.bin");
   init_disasm("riscv64-pc-linux-gnu");
   init_regex();
-  init_gpu();
+  window = init_gpu();
   itrace = fopen("itrace.log","w");
   for (i = 0; i < argc; i++)
   {

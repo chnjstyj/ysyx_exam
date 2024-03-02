@@ -12,7 +12,7 @@ inline uint32_t screen_size() {
   return 400 *300 * sizeof(uint32_t);
 }
 
-void init_gpu()
+SDL_Window* init_gpu()
 {
   SDL_Window *window = NULL;
   char title[128];
@@ -28,6 +28,7 @@ void init_gpu()
 
   vmem = (uint32_t*)malloc(screen_size());
   memset(vmem, 0, screen_size());
+  return window;
 }
 
 inline void update_screen() {

@@ -5,8 +5,9 @@
 #define SCREEN_H 300
 
 #include <stdint.h>
+#include <SDL2/SDL.h>
 
-void init_gpu();
+SDL_Window* init_gpu();
 void vga_update_screen();
 
 extern uint8_t vgasync;
