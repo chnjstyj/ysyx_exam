@@ -286,7 +286,7 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         {
           *((uint8_t*)vmem + addr + i) = (uint8_t)(WDATA >> 8 * i);
         }
-        //printf("gbuf: %x\n",WDATA);
+        //printf("gbuf wmask: %d\n",wmask);
         ready_to_write = 0;
         *BVALID = 1;
       }
