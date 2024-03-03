@@ -9,6 +9,7 @@ int main()
     uint32_t i = 0;
     struct timeval time_ = {0};
     NDL_Init(0);
+    printf("start timer test\n");
     while (1)
     {
         time = NDL_GetTicks();
