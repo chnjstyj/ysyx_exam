@@ -61,7 +61,7 @@ int SDL_WaitEvent(SDL_Event *event) {
   char str[64] = {0};
   while (NDL_PollEvent(str,sizeof(str)) == 0)
   {
-    ;
+    printf("test wait event\n");
   }
 
   if (strncmp(str,"kd",2) == 0)

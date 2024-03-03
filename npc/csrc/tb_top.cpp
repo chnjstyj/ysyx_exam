@@ -279,7 +279,7 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         //printf("vgasync: %x\n",WDATA);
         vgasync = (uint8_t)WDATA;
       }
-      else if ((unsigned int)AWADDR >= FB_ADDR && (unsigned int)AWADDR < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
+      else if ((unsigned int)AWADDR >= FB_ADDR && ((unsigned int)AWADDR < (FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))))
       {
         uint32_t addr = (uint32_t)AWADDR - FB_ADDR;
         //for (i = 0; i < wmask; i ++)

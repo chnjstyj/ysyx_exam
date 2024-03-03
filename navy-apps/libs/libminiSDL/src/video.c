@@ -10,11 +10,13 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   assert(dst->format->BitsPerPixel == src->format->BitsPerPixel);
   int src_base,dst_base;
   int i,j,k = 0;
+  uint32_t sum = 0;
   if (srcrect != NULL && dstrect != NULL) 
   {
     //FIXME srcrect < 0
     src_base = srcrect->y * src->w + srcrect->x;
     dst_base = 0;
+    sum = dstrect->y * dst->w;
     for (i = dstrect->y; i < dstrect->y + srcrect->h; i++)
     {
       src_base = (srcrect->y + k) * src->w + srcrect->x;
@@ -23,13 +25,14 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
         {
           if (dst->format->BitsPerPixel == 8)
-            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+            *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
           else
-            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+            *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
         }
         src_base++;
       }
       k++;
+      sum += dst->w;
     }
     return;
   }
@@ -39,6 +42,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
     //printf("%d %d\n",dst->h,dst->w);
     src_base = 0;
     dst_base = 0;
+    sum = dstrect->y * dst->w;
     for (i = dstrect->y; i < dstrect->y + src->h; i++)
     {
       for (j = dstrect->x; j < dstrect->x + src->w; j++)
@@ -46,12 +50,13 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
         {
           if (dst->format->BitsPerPixel == 8)
-            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+            *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
           else 
-            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+            *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
         }
         src_base++;
       }
+      sum += dst->w;
     }
     return;
   }
@@ -59,6 +64,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   {
     //src_base = srcrect->y * src->w + srcrect->x;
     dst_base = 0;
+    sum = 0;
     for (i = 0; i < srcrect->h; i++)
     {
       src_base = (srcrect->y + i) * src->w + srcrect->x;
@@ -67,18 +73,20 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
         {
           if (dst->format->BitsPerPixel == 8)
-            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+            *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
           else 
-            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+            *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
         }
         src_base++;
       }
+      sum += dst->w;
     }
     return;
   }
   else 
   {
     dst_base = 0;
+    sum = 0;
     for (i = 0; i < src->h; i++)
     {
       for (j = 0; j < src->w; j++)
@@ -86,12 +94,13 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
         {
           if (dst->format->BitsPerPixel == 8)
-            *((uint8_t*)dst->pixels + i * dst->w + j) = *((uint8_t*)src->pixels + src_base);
+            *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
           else 
-            *((uint32_t*)dst->pixels + i * dst->w + j) = *((uint32_t*)src->pixels + src_base);
+            *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
         }
         src_base++;
       }
+      sum += dst->w;
     }
     return;
   }
@@ -102,6 +111,7 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   //根据dstrect中的坐标计算dst中pixel的偏移，将color填充进去。
   uint32_t rcolor = color;
   int i,j,k;
+  uint32_t sum = 0;
   if (dst->format->BitsPerPixel == 8)
   {
     uint8_t r,g,b,a;
@@ -119,13 +129,15 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
       {
         if (dstrect != NULL)
         {
+          sum = dstrect->y * dst->w;
           for (j = dstrect->y; j < dstrect->y + dstrect->h; j++)
           {
             for (k = dstrect->x; k < dstrect->w + dstrect->x; k++)
             {
               if (j >= 0 && k >= 0 && j < dst->h && k < dst->w)
-                *((uint8_t*)dst->pixels + j * dst->w + k) = i;
+                *((uint8_t*)dst->pixels + sum + k) = i;
             }
+            sum += dst->w;
           }
         }
         else 
@@ -141,13 +153,15 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   }
   if (dstrect != NULL)
   {
+    sum = dstrect->y * dst->w;
     for (i = dstrect->y; i < dstrect->y + dstrect->h; i++)
     {
       for (j = dstrect->x; j < dstrect->w + dstrect->x; j++)
       {
         if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
-          *((uint32_t*)dst->pixels + i * dst->w + j) = color;
+          *((uint32_t*)dst->pixels + sum + j) = color;
       }
+      sum += dst->w;
     }
   }
   else 
