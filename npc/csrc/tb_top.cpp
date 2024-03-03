@@ -294,6 +294,8 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
             break;
           case 4: *(uint32_t *)(vmem + addr) = WDATA;
             break;
+          case 8: *(uint64_t *)(vmem + addr) = WDATA;
+            break;
           default: *(uint32_t *)(vmem + addr) = WDATA;
             break;
         }

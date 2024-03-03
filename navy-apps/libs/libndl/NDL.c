@@ -99,19 +99,23 @@ void NDL_DrawRect(uint32_t *pixels, int x, int y, int w, int h) {
   write(gpu_fb,canvas,canvas_w * canvas_h); */
   
   int i,j,k = 0;
+  uint64_t sum = y * canvas_w;
+  uint64_t sum2 = y * screen_w;
   for (i = y;i < y + h; i++)
   {
     for (j = x; j < x + w; j++)
     {
       if (i >= 0 && j >= 0 && i < canvas_h && j < canvas_w)
       {
-        *(canvas + i * canvas_w + j) = *(pixels + i * canvas_w + j);
+        *(canvas + sum + j) = *(pixels + sum + j);
         //printf("%x\n",*(canvas + i * canvas_w + j));
         k++;
       }
     }
-    lseek(gpu_fb,screen_w * i,SEEK_SET);  
-    write(gpu_fb,canvas + i * canvas_w,canvas_w); 
+    lseek(gpu_fb,sum2,SEEK_SET);  
+    write(gpu_fb,canvas + sum,canvas_w); 
+    sum += canvas_w;
+    sum2 += screen_w;
     k = 0;
   }
 }

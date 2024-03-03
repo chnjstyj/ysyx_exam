@@ -32,6 +32,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
     int i,j;
     int k,l;
     k = 0;l = 0;
+    uint32_t sum = ctl->y * w ;
     for (i = ctl->y; i < ctl->h + ctl->y; i++)
     {
       for (j = ctl->x; j < ctl->w + ctl->x; j++)
@@ -39,12 +40,15 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
         if (i < h && j < w) 
         {
           //fb[i * w + j] = p[k * ctl->w + l];
-          fb[i * w + j] = p[l];
+          //fb[i * w + j] = p[l];
+          fb[sum + j] = p[l];
         }
         l++;
       }
       k++;
-      l = 0;
+      sum += w;
+      //l = 0;
+      //printf("test l\n");
     }
   }
   if (ctl->sync) {

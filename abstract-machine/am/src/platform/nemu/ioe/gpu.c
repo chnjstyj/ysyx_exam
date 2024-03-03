@@ -46,6 +46,7 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
       }
       k++;
       //l = 0;
+      //printf("test l\n");
     }
   }
   if (ctl->sync) {
