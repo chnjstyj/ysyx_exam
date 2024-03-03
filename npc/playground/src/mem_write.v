@@ -79,10 +79,10 @@ end
 
 always @(*) begin 
   case (wmask) 
-    4'b1000:WSTRB = 8'b11111111; 
-    4'b0100:WSTRB = 8'b00001111;
-    4'b0010:WSTRB = 8'b00000011;
-    4'b0001:WSTRB = 8'b00000001;
+    4'b1000:WSTRB = 8'b11111111; //i = 8
+    4'b0100:WSTRB = 8'b00001111; //i = 4
+    4'b0010:WSTRB = 8'b00000011; //i = 2
+    4'b0001:WSTRB = 8'b00000001; //i = 1
     default:WSTRB = 8'b11111111;
   endcase 
 end

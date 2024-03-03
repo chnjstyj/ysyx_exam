@@ -30,7 +30,7 @@
 #include <readline/history.h>
 
 //#define waveform 1
-#define wave_steps 1100000000
+#define wave_steps 0//1100000000
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -282,9 +282,20 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       else if ((unsigned int)AWADDR >= FB_ADDR && (unsigned int)AWADDR < FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))
       {
         uint32_t addr = (uint32_t)AWADDR - FB_ADDR;
-        for (i = 0; i < wmask; i ++)
+        //for (i = 0; i < wmask; i ++)
+        //{
+        //  *((uint8_t*)vmem + addr + i) = (uint8_t)(WDATA >> 8 * i);
+        //}
+        switch (wmask)
         {
-          *((uint8_t*)vmem + addr + i) = (uint8_t)(WDATA >> 8 * i);
+          case 1: *(uint8_t *)(vmem + addr) = WDATA;
+            break;
+          case 2: *(uint16_t *)(vmem + addr) = WDATA;
+            break;
+          case 4: *(uint32_t *)(vmem + addr) = WDATA;
+            break;
+          default: *(uint32_t *)(vmem + addr) = WDATA;
+            break;
         }
         //printf("gbuf wmask: %d\n",wmask);
         ready_to_write = 0;
