@@ -150,17 +150,18 @@ static bool finish_writing = 0;
 
 //dpi-c
 extern "C" void pmem_read(
-  svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, long long* RDATA,
-  svLogicVecVal* RRESP) {
+  svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, svLogicVecVal* RDATA,
+  svLogicVecVal* RRESP, char* ARLEN, svLogicVecVal* ARSIZE, svLogicVecVal* ARBURST) {
   // 总是读取地址为`raddr & ~0x7ull`的8字节返回给`rdata`
   int i;
   *ARREADY = 1;
   unsigned long long temp;
+  uint32_t temp_32;
   svLogicVecVal RRESP_status = {{0}};
   svPutPartselLogic(RRESP,RRESP_status,0,4);
   if (ARVALID)  //address for reading is valid
   {
-    
+    /*
     if (!ready_to_read) 
     {
       *RVALID = 0;
@@ -170,7 +171,7 @@ extern "C" void pmem_read(
       ready_to_read = 1;
       return;
       //delay for 1 cycle
-    }
+    }*/
     *RVALID = 1;
     *RLAST = 1;
     //printf("addr %lx read data %lx\n",ARADDR,*RDATA);
@@ -181,12 +182,15 @@ extern "C" void pmem_read(
       uint64_t us = now.tv_sec * 1000000 + now.tv_usec;
       if (boot_time == 0) boot_time = us;
       //printf("%lld\n",us - boot_time);
-      *RDATA = (long long)(us - boot_time);
+      //*RDATA = (long long)(us - boot_time);
+      RDATA[0].aval = (us - boot_time) & 0xffffffff;
+      RDATA[1].aval = ((us - boot_time) >> 32) & 0xffffffff;
       ready_to_read = 0;
     }
     else if (ARADDR == VGACTL_ADDR)
     {
-      *RDATA = SCREEN_W << 16 | SCREEN_H;
+      //*RDATA = SCREEN_W << 16 | SCREEN_H;
+      RDATA[0].aval = SCREEN_W << 16 | SCREEN_H;
       ready_to_read = 0;
     }
     else if (ARADDR >= 0x80000000 && ARADDR < 0x80000000 + PMEM_SIZE)
@@ -195,12 +199,19 @@ extern "C" void pmem_read(
       #ifdef mtrace_
       update_mtrace("read",raddr);
       #endif
-      *RDATA = 0;
+      //*RDATA = 0;
+      /*
       for (i = 0; i < 8; i++)
       {
         temp = (pmem[addr + i] & 0xff);
         temp = temp << (8 * i);
         *RDATA |= temp;
+      }*/
+      for (i = 0; i < 8; i++)
+      {
+        temp_32 = *((uint32_t *)(pmem + addr) + i);
+        //*RDATA |= temp;
+        RDATA[i].aval = temp_32;
       }
       //printf("running %lx %lx\n",ARADDR,*RDATA);
       //printf("addr %lx read data %lx\n",ARADDR,*RDATA);
@@ -224,8 +235,9 @@ extern "C" void pmem_read(
 long long indexbit = 0;
 inline void update_screen();
 void exit_npc();
-extern "C" void pmem_write(svBit AWVALID, int AWADDR, svBit WVALID, long long WDATA, svBit WLAST, 
-const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* BVALID, svLogicVecVal* BRESP)
+extern "C" void pmem_write(svBit AWVALID, int AWADDR, svBit WVALID, const svLogicVecVal* WDATA, svBit WLAST, 
+const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* BVALID, svLogicVecVal* BRESP,
+char* AWLEN, svLogicVecVal* AWSIZE, svLogicVecVal* AWBURST)
 {
   // 总是往地址为`waddr & ~0x7ull`的8字节按写掩码`wmask`写入`wdata`
   // `wmask`中每比特表示`wdata`中1个字节的掩码,
@@ -270,14 +282,15 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         *BVALID = 1;
         ready_to_write = 0;
         //printf("putchar: %x\n",WDATA);
-        putchar((uint8_t)WDATA);
+        putchar((uint8_t)WDATA[0].aval);
       }
       else if (AWADDR == SYNC_ADDR)
       {
         *BVALID = 1;
         ready_to_write = 0;
         //printf("vgasync: %x\n",WDATA);
-        vgasync = (uint8_t)WDATA;
+        //vgasync = (uint8_t)WDATA;
+        vgasync = (uint8_t)WDATA[0].aval;
       }
       else if ((unsigned int)AWADDR >= FB_ADDR && ((unsigned int)AWADDR < (FB_ADDR + SCREEN_W * SCREEN_H * sizeof(uint32_t))))
       {
@@ -288,15 +301,15 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
         //}
         switch (wmask)
         {
-          case 1: *(uint8_t *)(vmem + addr) = WDATA;
+          case 1: *(uint8_t *)(vmem + addr) = WDATA[0].aval;
             break;
-          case 2: *(uint16_t *)(vmem + addr) = WDATA;
+          case 2: *(uint16_t *)(vmem + addr) = WDATA[0].aval;
             break;
-          case 4: *(uint32_t *)(vmem + addr) = WDATA;
+          case 4: *(uint32_t *)(vmem + addr) = WDATA[0].aval;
             break;
-          case 8: *(uint64_t *)(vmem + addr) = WDATA;
+          case 8: *(uint64_t *)(vmem + addr) = (WDATA[0].aval & 0xffffffff) | (WDATA[1].aval << 32);
             break;
-          default: *(uint32_t *)(vmem + addr) = WDATA;
+          default: *(uint32_t *)(vmem + addr) = WDATA[0].aval;
             break;
         }
         //printf("gbuf wmask: %d\n",wmask);
@@ -307,9 +320,14 @@ const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* 
       {
         uint64_t addr = (uint64_t)AWADDR & (uint64_t)0x7fffffff;
         //printf("write addr: %x wmask: %d %lx pc: %x\n",addr,wmask,WDATA,top->io_inst_address);
-        for (i = 0; i < wmask; i ++)
+        /*for (i = 0; i < wmask; i ++)
         {
           pmem[addr + i] = (uint8_t)(WDATA >> 8 * i);
+        }*/
+        for (i = 0; i < wmask; i ++)
+        {
+          *((uint32_t*)(pmem + addr) + i) = WDATA[i].aval;
+          //printf("%x %x\n",addr+i,WDATA[i].aval);
         }
         *BVALID = 1;
         ready_to_write = 0;

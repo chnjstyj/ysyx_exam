@@ -20,13 +20,10 @@ int SDL_PushEvent(SDL_Event *ev) {
   return 0;
 }
 
-uint64_t counter = 0;
 int SDL_PollEvent(SDL_Event *ev) {
   int i;
   char str[64] = {0};
   //CallbackHelper();
-  counter++;
-    printf("test poll event %ld\n",counter);
   if (NDL_PollEvent(str,sizeof(str)) == 1)
   {
     if (strncmp(str,"kd",2) == 0)

@@ -1,14 +1,15 @@
 import "DPI-C" function void pmem_write(
    input bit AWVALID, input int AWADDR, input bit WVALID, 
-   input longint WDATA, input bit WLAST, input logic[7:0] WSTRB,
+   input logic[255:0] WDATA, input bit WLAST, input logic[7:0] WSTRB,
    input bit BREADY,
-   output bit AWREADY, output bit WREADY, output bit BVALID, output logic[1:0] BRESP);
+   output bit AWREADY, output bit WREADY, output bit BVALID, output logic[1:0] BRESP,
+   output byte AWLEN, output logic[2:0] AWSIZE, output logic[1:0] AWBURST);
 module mem_write(
   input ACLK,
   input ARESETn,
   input [31:0] addr,
   input en,
-  input [63:0] wdata,
+  input [255:0] wdata,
   input [3:0] wmask,
   output reg finish
 );
@@ -18,10 +19,13 @@ reg AWVALID;
 wire AWREADY;
 reg [31:0] AWADDR;
 reg [2:0] AWPORT;
+reg [7:0] AWLEN; //突发传输长度 
+reg [2:0] AWSIZE; //突发传输宽度 width = 2 ^ ARSIZE
+reg [1:0] AWBURST; //突发传输类型  00 FIXED 01 INCR 10 WRAP 11 RESERVED
 //write data channel
 reg WVALID;
 wire WREADY;
-reg [63:0] WDATA;
+reg [255:0] WDATA;
 reg WLAST;
 reg [7:0] WSTRB;  //equal to wmask
 //write response channel
@@ -31,7 +35,7 @@ reg BREADY;
 
 always @(posedge ACLK) begin 
   pmem_write(AWVALID,AWADDR,WVALID,WDATA,WLAST,WSTRB,BREADY,AWREADY,
-  WREADY,BVALID,BRESP);
+  WREADY,BVALID,BRESP,AWLEN,AWSIZE,AWBURST);
 end
 
 always @(*) begin 
@@ -39,8 +43,14 @@ always @(*) begin
     AWVALID = 1'b0;
     AWADDR = 32'b0;
     AWPORT = 3'b111;
+    AWLEN = 8'b0;
+    AWSIZE = 3'b101; //256 bits
+    AWBURST = 2'b01;
   end 
   else begin 
+    AWLEN = 8'b0;
+    AWSIZE = 3'b101; //256 bits
+    AWBURST = 2'b01;
     if (en) begin 
       AWADDR = addr;
       AWVALID = 1'b1;
@@ -57,7 +67,7 @@ end
 always @(*) begin 
   if (!ARESETn) begin 
     WVALID = 1'b0;
-    WDATA = 64'b0;
+    WDATA = 256'b0;
     WLAST = 1'b0;
     //WUSER = 8'hff;
   end 
@@ -71,7 +81,7 @@ always @(*) begin
     else begin 
       WVALID = 1'b0;
       WLAST = 1'b0;
-      WDATA = 64'b0;
+      WDATA = 256'b0;
       //WUSER = wmask;
     end 
   end 
