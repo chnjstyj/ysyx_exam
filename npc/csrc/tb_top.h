@@ -17,8 +17,7 @@ extern uint32_t* memory;
 extern uint64_t* gpr;
 
 extern "C" void pmem_read(
-  svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, long long* RDATA,
-  svLogicVecVal* RRESP);
+  svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, svLogicVecVal* RDATA, svLogicVecVal* RRESP, char* ARLEN, svLogicVecVal* ARSIZE, svLogicVecVal* ARBURST);
 
 extern int ftrace_func_nums;
 extern ftrace_info* ftrace_infos;

@@ -49,7 +49,7 @@ class axi_lite_arbiter(
 
     val dcache_write_counter = RegInit(0.U(((1 << (offset_width - 3)) - 2).W)) 
     val dcache_write_data_fin = RegInit(false.B) 
-    val dcache_write_data = WireDefault(0.U(64.W))
+    val dcache_write_data = WireDefault(0.U(256.W))
 
     val lsu_direct_fin = RegInit(false.B)
 
@@ -67,7 +67,7 @@ class axi_lite_arbiter(
     val addr = WireDefault(0.U(32.W))
     val mem_read_en = RegInit(false.B)
     val mem_write_en = RegInit(false.B)
-    val mem_rdata = WireDefault(0.U(64.W)) 
+    val mem_rdata = WireDefault(0.U(256.W)) 
     //val mem_rdata_r = RegNext(RegNext(mem_rdata))
     val mem_read_valid = RegInit(false.B) 
     val mem_write_finish = RegInit(false.B)
@@ -145,13 +145,14 @@ class axi_lite_arbiter(
             mem_write_en := 1.U 
         }
     }.elsewhen (next_state === s3){
+        /*
         when (io.lsu_direct_read_en){
             mem_read_en := 1.U 
             mem_write_en := 0.U 
         }.elsewhen (io.lsu_direct_write_en){
             mem_read_en := 0.U 
             mem_write_en := 1.U 
-        }
+        }*/
     }
     
     when (cur_state === s0){
@@ -168,7 +169,7 @@ class axi_lite_arbiter(
         addr := 0.U
     }
 
-    val counter_end = ((1 << (offset_width - 3)) - 1)
+    val counter_end = 0 //((1 << (offset_width - 3)) - 1)
 
     icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U)
     when (cur_state === s1){
@@ -199,7 +200,7 @@ class axi_lite_arbiter(
     }
 
     dcache_read_addr := io.lsu_addr + Mux(io.lsu_write_en,(dcache_write_counter << 3.U),(dcache_read_counter << 3.U))
-    when (next_state === s2 && mem_read_en.asBool()){
+    when (cur_state === s2 && mem_read_en.asBool()){
         when (mem_read_valid && dcache_read_counter < counter_end.U){
             dcache_read_data_fin := false.B 
             dcache_read_counter := dcache_read_counter + 1.U 
@@ -220,7 +221,7 @@ class axi_lite_arbiter(
     }
 
     when (next_state === s2 && mem_write_en.asBool()){
-        dcache_write_data := (io.lsu_write_data >> (dcache_write_counter << 6.U))(63,0)
+        dcache_write_data := (io.lsu_write_data >> (dcache_write_counter << 6.U))
         when (mem_write_finish && dcache_write_counter < counter_end.U){
             dcache_write_counter := dcache_write_counter + 1.U 
             dcache_write_data_fin := false.B 
