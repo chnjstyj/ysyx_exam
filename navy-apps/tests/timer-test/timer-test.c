@@ -13,7 +13,8 @@ int main()
     while (1)
     {
         time = NDL_GetTicks();
-        if (time - i * 500000 >= 500000)
+        //printf("time passed %d\n",time);
+        if (time - i * 500 >= 500)
         {
             i++;
             printf("time has passed 0.5 sec NDL version %d\n",time);
