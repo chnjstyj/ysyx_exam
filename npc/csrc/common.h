@@ -15,3 +15,6 @@
 #define FB_ADDR         (MMIO_BASE   + 0x1000000)
 #define AUDIO_SBUF_ADDR (MMIO_BASE   + 0x1200000)
 #define SYNC_ADDR (VGACTL_ADDR + 8)
+
+#define concat_temp(x, y) x ## y
+#define concat(x, y) concat_temp(x, y)
