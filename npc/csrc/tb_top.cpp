@@ -21,6 +21,7 @@
 #include "dl.h"
 #include "mtrace.h"
 #include "gpu.h"
+#include "keyboard.h"
 
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
@@ -148,6 +149,10 @@ static bool ready_to_read = 0;
 static bool ready_to_write = 0;
 static bool finish_writing = 0;
 
+long long indexbit = 0;
+inline void update_screen();
+void exit_npc();
+
 //dpi-c
 extern "C" void pmem_read(
   svBit ARVALID, int ARADDR, svBit RREADY, svBit* ARREADY, svBit* RVALID, svBit* RLAST, svLogicVecVal* RDATA,
@@ -193,6 +198,10 @@ extern "C" void pmem_read(
       RDATA[0].aval = SCREEN_W << 16 | SCREEN_H;
       ready_to_read = 0;
     }
+    else if (ARADDR == KBD_ADDR)
+    {
+      RDATA[0].aval = key_dequeue();
+    }
     else if (ARADDR >= 0x80000000 && ARADDR < 0x80000000 + PMEM_SIZE)
     {
       long long addr = ARADDR & 0x7fffffff;
@@ -232,9 +241,6 @@ extern "C" void pmem_read(
   }
 }
 
-long long indexbit = 0;
-inline void update_screen();
-void exit_npc();
 extern "C" void pmem_write(svBit AWVALID, int AWADDR, svBit WVALID, const svLogicVecVal* WDATA, svBit WLAST, 
 const svLogicVecVal* WSTRB, svBit BREADY, svBit* AWREADY, svBit* WREADY, svBit* BVALID, svLogicVecVal* BRESP,
 char* AWLEN, svLogicVecVal* AWSIZE, svLogicVecVal* AWBURST)
@@ -469,6 +475,23 @@ void inline update_device()
   //double ipc = total_steps == 0 ? 0 : ((double)inst_counts / (double)total_steps);
   //sprintf(title, "counters:%ld pc:%lx",total_steps,top->io_inst_address);
   //SDL_SetWindowTitle(window, title);
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    switch (event.type) {
+      case SDL_QUIT:
+        exit_npc();
+        break;
+      // If a key was pressed
+      case SDL_KEYDOWN:
+      case SDL_KEYUP: {
+        uint8_t k = event.key.keysym.scancode;
+        bool is_keydown = (event.key.type == SDL_KEYDOWN);
+        send_key(k, is_keydown);
+        break;
+      }
+      default: break;
+    }
+  }
 }
 
 void cpu_exec(int steps)
@@ -569,6 +592,7 @@ int main(int argc,char *argv[])
   init_disasm("riscv64-pc-linux-gnu");
   init_regex();
   window = init_gpu();
+  init_keymap();
   itrace = fopen("itrace.log","w");
   for (i = 0; i < argc; i++)
   {
