@@ -49,7 +49,8 @@ class cache(
     //val cache_block = Vec((1 << index_width),new cache_line(tag_width,offset_width))
     //val cache_blocks = Reg(Vec(ways,cache_block))
     //cache_blocks := VecInit(Seq.fill(ways)(VecInit(Seq.fill(1 << index_width)(init_cache_line))))
-    val cache_blocks = RegInit(VecInit(Seq.fill(ways)(VecInit(Seq.fill(1 << index_width)(init_cache_line)))))
+    //val cache_blocks = RegInit(VecInit(Seq.fill(ways)(VecInit(Seq.fill(1 << index_width)(init_cache_line)))))
+    val cache_blocks = Reg(Vec(ways,Vec(1 << index_width,new cache_line(tag_width,offset_width))))
 
     val cache_line_hitted = Wire(Vec(ways, new cache_line(tag_width, offset_width)))
     cache_line_hitted := VecInit((0 until ways).map(i => cache_blocks(i)(io.addr(index_width + offset_width - 1,offset_width))))
