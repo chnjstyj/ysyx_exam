@@ -10,6 +10,7 @@
 #include <math.h>
 #include <curses.h>
 #include <SDL2/SDL.h>
+#include <time.h>
 
 #include "Vtop.h"
 #include "sdb.h"
@@ -31,7 +32,7 @@
 #include <readline/history.h>
 
 //#define waveform 1
-#define wave_steps 0//1100000000
+#define wave_steps 0
 //#define mtrace_ 1
 //#define itrace_ 1
 
@@ -500,6 +501,9 @@ void cpu_exec(int steps)
   int j = 0;
   char str[50] = {0};
   double ipc;
+  int icount = 0;
+  clock_t start,end;
+  double used_time;
   if (steps == -1)
   {
     while (1)
@@ -541,6 +545,8 @@ void cpu_exec(int steps)
   }
   else 
   {
+    icount = i;
+    start = clock();
     for (;i > 0; i --)
     {
       total_steps++;
@@ -554,7 +560,7 @@ void cpu_exec(int steps)
       printf("%lx %s\n",top->io_inst_address,str);
       #endif
       j++;
-      if (j == 25600)
+      if (j == 2560)
       {
         j = 0;
         update_device();
@@ -568,6 +574,10 @@ void cpu_exec(int steps)
         }
       }
     }
+    end = clock();
+    used_time = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("running %d instructions used %f \n",icount,used_time);
+    printf("inst/time %f\n",icount/used_time);
   }
 }
 
