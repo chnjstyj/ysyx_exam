@@ -193,7 +193,7 @@ class axi_lite_arbiter(
         icache_read_data := 0.U 
     }
 
-    when (mem_read_valid && icache_read_counter === counter_end.U){
+    when (mem_read_valid && icache_read_counter === counter_end.U && cur_state === s1){
         icache_read_data_fin := true.B 
     }.otherwise{
         icache_read_data_fin := false.B

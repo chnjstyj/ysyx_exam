@@ -108,7 +108,7 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         direct_write_data_r := io.mem_write_data
     }
 
-    when (io.mem_write_en & device_read & !io.stall_mem){
+    when ((io.mem_write_en | io.mem_read_en) & device_read & !io.stall_mem){
         direct_addr_r := io.mem_addr(31,0)
     }
 
@@ -132,8 +132,8 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
         io.stall_from_dcache := 0.U
         io.stall_from_mem := 1.U 
     }.elsewhen (direct_stage && !io.direct_fin){
-        io.stall_from_mem := 1.U 
         io.stall_from_dcache := 0.U
+        io.stall_from_mem := 1.U 
     }.otherwise{
         io.stall_from_dcache := 0.U
         io.stall_from_mem := 0.U
