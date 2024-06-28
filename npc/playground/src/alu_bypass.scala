@@ -70,7 +70,7 @@ class alu_bypass extends Module {
         io.alu_rs1_rdata := io.wb_mem_read_data
     }.elsewhen (io.ex_rs1 === io.wb_rd && io.wb_csr_write_to_reg){
         io.alu_rs1_rdata := io.wb_csr_rdata
-    }.elsewhen ((io.stall_ex_mem || stall_ex_mem_r.asBool) && io.ex_rs1 === alu_rs1_r){
+    }.elsewhen ((stall_ex_mem_r.asBool) && io.ex_rs1 === alu_rs1_r){
         io.alu_rs1_rdata := alu_rs1_rdata_r
     }.otherwise{
         io.alu_rs1_rdata := io.ex_rs1_rdata
@@ -98,7 +98,7 @@ class alu_bypass extends Module {
         io.alu_rs2_rdata := io.wb_mem_read_data
     }.elsewhen (io.ex_rs2 === io.wb_rd && io.wb_csr_write_to_reg){
         io.alu_rs2_rdata := io.wb_csr_rdata
-    }.elsewhen ((io.stall_ex_mem || stall_ex_mem_r.asBool) && io.ex_rs2 === alu_rs2_r){
+    }.elsewhen ((stall_ex_mem_r.asBool) && io.ex_rs2 === alu_rs2_r){
         io.alu_rs2_rdata := alu_rs2_rdata_r
     }.otherwise{
         io.alu_rs2_rdata := io.ex_rs2_rdata

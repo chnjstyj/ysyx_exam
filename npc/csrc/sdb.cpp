@@ -35,7 +35,21 @@ static int cmd_si(char *args) {
 }
 
 static int cmd_c(char *args) {
+  extern bool running;
+  running = true;
   cpu_exec(-1);
+  return 0;
+}
+
+static int cmd_record(char *args) {
+  extern bool recording;
+  recording = true;
+  return 0;
+}
+
+static int cmd_derecord(char *args) {
+  extern bool recording;
+  recording = false;
   return 0;
 }
 
@@ -133,6 +147,8 @@ static struct {
   { "info", "Print program status,r regfiles w watchpoints", cmd_info },
   { "x", "Print memory", cmd_x },
   { "q", "Exit", cmd_q },
+  { "re", "Turn on recording", cmd_record },
+  { "dere", "Turn off recording", cmd_derecord },
 
   /* TODO: Add more commands */
 

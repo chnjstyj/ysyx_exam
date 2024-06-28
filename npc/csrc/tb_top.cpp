@@ -27,11 +27,12 @@
 #include "svdpi.h"
 #include "Vtop__Dpi.h"
 #include "verilated_dpi.h"
+#include "verilated_save.h"
 
 #include <readline/readline.h>
 #include <readline/history.h>
 
-//#define waveform 1
+#define waveform 1
 #define wave_steps 0
 //#define mtrace_ 1
 //#define itrace_ 1
@@ -66,6 +67,8 @@ static char* image_name = NULL;
 #define MAX_SIM_TIME 100
 vluint64_t sim_time = 0;
 uint64_t inst_counts = 0;
+bool running = false;
+bool recording = false;
 
 //void nvboard_bind_all_pins(Vtop *top);
 
@@ -436,13 +439,13 @@ void single_cycle(Vtop* top)
   top->clock = 1;top->eval();
   sim_time++;
   #ifdef waveform
-  if (total_steps >= wave_steps)
+  if (total_steps >= wave_steps && recording == true)
     m_trace->dump(sim_time);
   #endif
   top->clock = 0;top->eval();
   sim_time++;
   #ifdef waveform
-  if (total_steps >= wave_steps)
+  if (total_steps >= wave_steps && recording == true)
     m_trace->dump(sim_time);
   #endif
 }
@@ -480,7 +483,8 @@ void inline update_device()
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
       case SDL_QUIT:
-        exit_npc();
+        //exit_npc();
+        running = false;
         break;
       // If a key was pressed
       case SDL_KEYDOWN:
@@ -506,7 +510,7 @@ void cpu_exec(int steps)
   double used_time;
   if (steps == -1)
   {
-    while (1)
+    while (running)
     {
       total_steps++;
       single_cycle(top);
