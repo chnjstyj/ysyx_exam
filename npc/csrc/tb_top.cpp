@@ -532,7 +532,7 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      if (j == 2560)
+      if (j == 100)
       {
         j = 0;
         update_device();
