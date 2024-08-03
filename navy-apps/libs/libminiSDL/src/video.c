@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <memory.h>
 
 void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_Rect *dstrect) {
   assert(dst && src);
@@ -11,6 +12,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   int src_base,dst_base;
   int i,j,k = 0;
   uint32_t sum = 0;
+  int length = 0;
   if (srcrect != NULL && dstrect != NULL) 
   {
     //FIXME srcrect < 0
@@ -20,16 +22,50 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
     for (i = dstrect->y; i < dstrect->y + srcrect->h; i++)
     {
       src_base = (srcrect->y + k) * src->w + srcrect->x;
-      for (j = dstrect->x; j < dstrect->x + srcrect->w; j++)
+      // for (j = dstrect->x; j < dstrect->x + srcrect->w; j++)
+      // {
+      //   if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+      //   {
+      //     if (dst->format->BitsPerPixel == 8)
+      //       *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
+      //     else
+      //       *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
+      //   }
+      //   src_base++;
+      // }
+      j = dstrect->x;
+      if (i >= 0 && i < dst->h)
       {
-        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        if (j > 0)
         {
+          if (j + srcrect->w > dst->w)
+          {
+            length = dst->w - j;
+          }
+          else 
+          {
+            length = srcrect->w;
+          }
           if (dst->format->BitsPerPixel == 8)
-            *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
-          else
-            *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
+            memcpy(dst->pixels + sum + j,src->pixels + src_base,length * sizeof(uint8_t));
+          else 
+            memcpy(dst->pixels + sum + j,src->pixels + src_base,length * sizeof(uint32_t));
         }
-        src_base++;
+        else 
+        {
+          if (j + srcrect->w > dst->w)
+          {
+            length = dst->w;
+          }
+          else 
+          {
+            length = srcrect->w;
+          }
+          if (dst->format->BitsPerPixel == 8)
+            memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint8_t));
+          else 
+            memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint32_t));
+        }
       }
       k++;
       sum += dst->w;
@@ -45,16 +81,50 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
     sum = dstrect->y * dst->w;
     for (i = dstrect->y; i < dstrect->y + src->h; i++)
     {
-      for (j = dstrect->x; j < dstrect->x + src->w; j++)
+      // for (j = dstrect->x; j < dstrect->x + src->w; j++)
+      // {
+      //   if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+      //   {
+      //     if (dst->format->BitsPerPixel == 8)
+      //       *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
+      //     else 
+      //       *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
+      //   }
+      //   src_base++;
+      // }
+      j = dstrect->x;
+      if (i >= 0 && i < dst->h)
       {
-        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+        if (j > 0)
         {
-          if (dst->format->BitsPerPixel == 8)
-            *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
+          if (j + src->w > dst->w)
+          {
+            length = dst->w - j;
+          }
           else 
-            *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
+          {
+            length = src->w;
+          }
+          if (dst->format->BitsPerPixel == 8)
+            memcpy(dst->pixels + sum + j,src->pixels + src_base,length * sizeof(uint8_t));
+          else 
+            memcpy(dst->pixels + sum + j,src->pixels + src_base,length * sizeof(uint32_t));
         }
-        src_base++;
+        else 
+        {
+          if (j + src->w > dst->w)
+          {
+            length = dst->w;
+          }
+          else 
+          {
+            length = src->w;
+          }
+          if (dst->format->BitsPerPixel == 8)
+            memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint8_t));
+          else 
+            memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint32_t));
+        }
       }
       sum += dst->w;
     }
@@ -68,16 +138,28 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
     for (i = 0; i < srcrect->h; i++)
     {
       src_base = (srcrect->y + i) * src->w + srcrect->x;
-      for (j = 0; j < srcrect->w; j++)
+      // for (j = 0; j < srcrect->w; j++)
+      // {
+      //   if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+      //   {
+      //     if (dst->format->BitsPerPixel == 8)
+      //       *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
+      //     else 
+      //       *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
+      //   }
+      //   src_base++;
+      // }
+      if (srcrect->w > dst->w)
+        length = dst->w;
+      else 
+        length = srcrect->w;
+
+      if (i >= 0 && i < dst->h)
       {
-        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
-        {
-          if (dst->format->BitsPerPixel == 8)
-            *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
-          else 
-            *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
-        }
-        src_base++;
+        if (dst->format->BitsPerPixel == 8)
+          memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint8_t));
+        else 
+          memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint32_t));
       }
       sum += dst->w;
     }
@@ -87,20 +169,33 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
   {
     dst_base = 0;
     sum = 0;
+    src_base = 0;
     for (i = 0; i < src->h; i++)
     {
-      for (j = 0; j < src->w; j++)
+      // for (j = 0; j < src->w; j++)
+      // {
+      //   if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+      //   {
+      //     if (dst->format->BitsPerPixel == 8)
+      //       *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
+      //     else 
+      //       *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
+      //   }
+      //   src_base++;
+      // }
+      if (src->w > dst->w)
+        length = dst->w;
+      else 
+        length = src->w;
+      if (i >= 0 && i < dst->h)
       {
-        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
-        {
-          if (dst->format->BitsPerPixel == 8)
-            *((uint8_t*)dst->pixels + sum + j) = *((uint8_t*)src->pixels + src_base);
-          else 
-            *((uint32_t*)dst->pixels + sum + j) = *((uint32_t*)src->pixels + src_base);
-        }
-        src_base++;
+        if (dst->format->BitsPerPixel == 8)
+          memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint8_t));
+        else 
+          memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint32_t));
       }
       sum += dst->w;
+      src_base += src->w;
     }
     return;
   }
@@ -112,6 +207,7 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
   uint32_t rcolor = color;
   int i,j,k;
   uint32_t sum = 0;
+  int length = 0;
   if (dst->format->BitsPerPixel == 8)
   {
     uint8_t r,g,b,a;
@@ -119,57 +215,117 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
     for (i = 0; i < dst->format->palette->ncolors; i ++)
     {
       //FIXME 
-      r = palette->colors[i].r;  // 获取红色分量值
-      g = palette->colors[i].g;  // 获取绿色分量值
-      b = palette->colors[i].b;  // 获取蓝色分量值
-      a = palette->colors[i].a;
-      uint32_t c = (r << 16) | (g << 8) | (b << 0);
+      // r = palette->colors[i].r;  // 获取红色分量值
+      // g = palette->colors[i].g;  // 获取绿色分量值
+      // b = palette->colors[i].b;  // 获取蓝色分量值
+      // a = palette->colors[i].a;
+      i = color & 0xFF;
+      // r = palette->colors[i].r;  // 获取红色分量值
+      // g = palette->colors[i].g;  // 获取绿色分量值
+      // b = palette->colors[i].b;  // 获取蓝色分量值
+      // a = palette->colors[i].a;
+      // uint32_t c = (r << 16) | (g << 8) | (b << 0);
       //palette->colors[i].val;
-      if (c == color) 
-      {
+      //if (c == color) 
+      //{
         if (dstrect != NULL)
         {
           sum = dstrect->y * dst->w;
           for (j = dstrect->y; j < dstrect->y + dstrect->h; j++)
           {
-            for (k = dstrect->x; k < dstrect->w + dstrect->x; k++)
+            // for (k = dstrect->x; k < dstrect->w + dstrect->x; k++)
+            // {
+            //   if (j >= 0 && k >= 0 && j < dst->h && k < dst->w)
+            //     *((uint8_t*)dst->pixels + sum + k) = i;
+            // }
+            k = dstrect->x;
+            if (k >= 0)
             {
-              if (j >= 0 && k >= 0 && j < dst->h && k < dst->w)
-                *((uint8_t*)dst->pixels + sum + k) = i;
+              if (k + dstrect->w > dst->w)
+              {
+                length = dst->w - k;
+              }
+              else 
+              {
+                length = dstrect->w;
+              }
+              if (j > 0 && j < dst->h)
+                memset(dst->pixels + sum + k,i,length);
+            }
+            else 
+            {
+              if (k + dstrect->w > dst->w)
+              {
+                length = dst->w;
+              }
+              else 
+              {
+                length = dstrect->w;
+              }
+              if (j > 0 && j < dst->h)
+                memset(dst->pixels + sum,i,length);
             }
             sum += dst->w;
           }
         }
         else 
         {
-          for (j = 0; j < dst->h * dst->w; j++)
-          {
-            *((uint8_t*)dst->pixels + j) = i;
-          }
+          memset(dst->pixels,i,dst->h * dst->w);
+          // for (j = 0; j < dst->h * dst->w; j++)
+          // {
+          //   *((uint8_t*)dst->pixels + j) = i;
+          // }
         }
         return;
-      }
+      //}
     }
+    return;
   }
   if (dstrect != NULL)
   {
     sum = dstrect->y * dst->w;
     for (i = dstrect->y; i < dstrect->y + dstrect->h; i++)
     {
-      for (j = dstrect->x; j < dstrect->w + dstrect->x; j++)
+      // for (j = dstrect->x; j < dstrect->w + dstrect->x; j++)
+      // {
+      //   if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
+      //     *((uint32_t*)dst->pixels + sum + j) = color;
+      // }
+      j = dstrect->x;
+      if (j >= 0)
       {
-        if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
-          *((uint32_t*)dst->pixels + sum + j) = color;
+        if (j + dstrect->w > dst->w)
+        {
+          length = dst->w - j;
+        }
+        else 
+        {
+          length = dstrect->w;
+        }
+        memset(dst->pixels + sum + j,color,length * sizeof(uint32_t));
+      }
+      else 
+      {
+        if (j + dstrect->w > dst->w)
+        {
+          length = dst->w;
+        }
+        else 
+        {
+          length = dstrect->w;
+        }
+        memset(dst->pixels + sum,color,length * sizeof(uint32_t));
       }
       sum += dst->w;
     }
   }
   else 
   {
-    for (i = 0; i < dst->h * dst->w; i++)
-    {
-      *((uint32_t*)dst->pixels + i) = color;
-    }
+    memset(dst->pixels,color,dst->h * dst->w);
+    // for (i = 0; i < dst->h * dst->w; i++)
+    // {
+    //   *((uint32_t*)dst->pixels + i) = color;
+    // }
   }
 }
 
