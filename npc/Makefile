@@ -43,6 +43,7 @@ clean:
 # rules for NVBoard
 include $(NVBOARD_HOME)/scripts/nvboard.mk
 
+#VERILATOR_CFLAGS += --prof-cfuncs 
 VERILATOR_CFLAGS += --savable --trace -MMD --build -cc  \
 				-O3 --x-assign fast --x-initial fast --noassert
 

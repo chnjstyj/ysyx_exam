@@ -339,6 +339,7 @@ char* AWLEN, svLogicVecVal* AWSIZE, svLogicVecVal* AWBURST)
           *((uint32_t*)(pmem + addr) + i) = WDATA[i].aval;
           //printf("%x %x\n",addr+i,WDATA[i].aval);
         }
+        //memcpy(pmem + addr,WDATA,wmask);
         *BVALID = 1;
         ready_to_write = 0;
         //printf("write success %d\n",*BVALID);
@@ -532,7 +533,7 @@ void cpu_exec(int steps)
       }
       #endif
       j++;
-      if (j == 100)
+      if (j == 2560)
       {
         j = 0;
         update_device();
