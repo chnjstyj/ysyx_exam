@@ -1,6 +1,7 @@
 #include <am.h>
 #include <riscv/riscv.h>
 #include <stdio.h>
+#include <string.h>
 
 #define SYNC_ADDR (VGACTL_ADDR + 8)
 static int w;
@@ -32,19 +33,31 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
     int i,j;
     int k,l;
     k = 0;l = 0;
+    int length = 0;
     uint32_t sum = ctl->y * w ;
     for (i = ctl->y; i < ctl->h + ctl->y; i++)
     {
-      for (j = ctl->x; j < ctl->w + ctl->x; j++)
+      // for (j = ctl->x; j < ctl->w + ctl->x; j++)
+      // {
+      //   if (i < h && j < w) 
+      //   {
+      //     //fb[i * w + j] = p[k * ctl->w + l];
+      //     //fb[i * w + j] = p[l];
+      //     fb[sum + j] = p[l];
+      //   }
+      //   l++;
+      // }
+      j = ctl->x;
+      if ((j + ctl->x) > w) 
       {
-        if (i < h && j < w) 
-        {
-          //fb[i * w + j] = p[k * ctl->w + l];
-          //fb[i * w + j] = p[l];
-          fb[sum + j] = p[l];
-        }
-        l++;
+        length = w - ctl->x;
+      } 
+      else 
+      {
+        length = ctl->w;
       }
+      memcpy(&fb[sum + j], &p[l], length * sizeof(uint32_t));
+      l += length;
       k++;
       sum += w;
       //l = 0;

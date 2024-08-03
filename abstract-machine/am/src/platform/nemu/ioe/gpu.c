@@ -1,6 +1,7 @@
 #include <am.h>
 #include <nemu.h>
 #include <stdio.h>
+#include <string.h>
 
 #define SYNC_ADDR (VGACTL_ADDR + 8)
 static int w;
@@ -30,23 +31,32 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
     uint32_t *fb = (uint32_t *)(uintptr_t)FB_ADDR;
     uint32_t *p = (uint32_t *)(uintptr_t)ctl->pixels;
     int i,j;
-    int k,l;
-    k = 0;l = 0;
+    int l;
+    //k = 0;
+    l = 0;
+    int length = 0;
+    int i_sum = ctl->y * w;
     for (i = ctl->y; i < ctl->h + ctl->y; i++)
     {
+      /*
       for (j = ctl->x; j < ctl->w + ctl->x; j++)
       {
         if (i < h && j < w) 
         {
-          //fb[i * w + j] = p[k * ctl->w + l];
           fb[i * w + j] = p[l];
-          //printf("%x\n",fb[i * w + j]);
         }
         l++;
-      }
-      k++;
-      //l = 0;
-      //printf("test l\n");
+      }*/
+      
+      j = ctl->x;
+      if ((j + ctl->x) > w) 
+        length = w - ctl->x;
+      else 
+        length = ctl->w;
+      memcpy(&fb[i_sum + j], &p[l], length * sizeof(uint32_t));
+      l += length;
+      //k++;
+      i_sum += w;
     }
   }
   if (ctl->sync) {
