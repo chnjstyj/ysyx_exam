@@ -14,4 +14,4 @@
 /fceux-am
 /nemu/tools/spike-diff/difftest.cc
 /nvboard
-/am-kernels
+!/am-kernels
