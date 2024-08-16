@@ -10,6 +10,7 @@
 !README.md
 !.gitignore
 !init.sh
+!/doc/*
 /fceux-am
 /nemu/tools/spike-diff/difftest.cc
 /nvboard

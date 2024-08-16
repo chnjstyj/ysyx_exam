@@ -1,0 +1,2 @@
+NEMU:1 min
+NPC:9 min
