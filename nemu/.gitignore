@@ -10,5 +10,3 @@
 !Kconfig
 include/config
 include/generated
-!/tools/spike-diff/repo/
-!/../am-kernels/
