@@ -21,7 +21,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
     sum = dstrect->y * dst->w;
     for (i = dstrect->y; i < dstrect->y + srcrect->h; i++)
     {
-      src_base = (srcrect->y + k) * src->w + srcrect->x;
+      //src_base = (srcrect->y + k) * src->w + srcrect->x;
       // for (j = dstrect->x; j < dstrect->x + srcrect->w; j++)
       // {
       //   if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
@@ -49,7 +49,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
           if (dst->format->BitsPerPixel == 8)
             memcpy(dst->pixels + sum + j,src->pixels + src_base,length * sizeof(uint8_t));
           else 
-            memcpy(dst->pixels + sum + j,src->pixels + src_base,length * sizeof(uint32_t));
+            memcpy(dst->pixels + (sum + j) * 4,src->pixels + src_base,length * sizeof(uint32_t));
         }
         else 
         {
@@ -64,11 +64,12 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
           if (dst->format->BitsPerPixel == 8)
             memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint8_t));
           else 
-            memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint32_t));
+            memcpy(dst->pixels + sum * 4,src->pixels + src_base,length * sizeof(uint32_t));
         }
       }
       k++;
       sum += dst->w;
+      src_base += srcrect->w;
     }
     return;
   }
@@ -108,7 +109,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
           if (dst->format->BitsPerPixel == 8)
             memcpy(dst->pixels + sum + j,src->pixels + src_base,length * sizeof(uint8_t));
           else 
-            memcpy(dst->pixels + sum + j,src->pixels + src_base,length * sizeof(uint32_t));
+            memcpy(dst->pixels + (sum + j) * 4,src->pixels + src_base * 4,length * sizeof(uint32_t));
         }
         else 
         {
@@ -123,21 +124,22 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
           if (dst->format->BitsPerPixel == 8)
             memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint8_t));
           else 
-            memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint32_t));
+            memcpy(dst->pixels + sum * 4,src->pixels + src_base * 4,length * sizeof(uint32_t));
         }
       }
       sum += dst->w;
+      src_base += src->w;
     }
     return;
   }
   else if (srcrect != NULL && dstrect == NULL) //copied to entire surface
   {
-    //src_base = srcrect->y * src->w + srcrect->x;
+    src_base = srcrect->y * src->w + srcrect->x;
     dst_base = 0;
     sum = 0;
     for (i = 0; i < srcrect->h; i++)
     {
-      src_base = (srcrect->y + i) * src->w + srcrect->x;
+      //src_base = (srcrect->y + i) * src->w + srcrect->x;
       // for (j = 0; j < srcrect->w; j++)
       // {
       //   if (i >= 0 && j >= 0 && i < dst->h && j < dst->w)
@@ -159,9 +161,10 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
         if (dst->format->BitsPerPixel == 8)
           memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint8_t));
         else 
-          memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint32_t));
+          memcpy(dst->pixels + sum * 4,src->pixels + src_base,length * sizeof(uint32_t));
       }
       sum += dst->w;
+      src_base += srcrect->w;
     }
     return;
   }
@@ -192,7 +195,7 @@ void SDL_BlitSurface(SDL_Surface *src, SDL_Rect *srcrect, SDL_Surface *dst, SDL_
         if (dst->format->BitsPerPixel == 8)
           memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint8_t));
         else 
-          memcpy(dst->pixels + sum,src->pixels + src_base,length * sizeof(uint32_t));
+          memcpy(dst->pixels + sum * 4,src->pixels + src_base,length * sizeof(uint32_t));
       }
       sum += dst->w;
       src_base += src->w;
@@ -302,7 +305,7 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
         {
           length = dstrect->w;
         }
-        memset(dst->pixels + sum + j,color,length * sizeof(uint32_t));
+        memset(dst->pixels + (sum + j) * 4,color,length * sizeof(uint32_t));
       }
       else 
       {
@@ -314,7 +317,7 @@ void SDL_FillRect(SDL_Surface *dst, SDL_Rect *dstrect, uint32_t color) {
         {
           length = dstrect->w;
         }
-        memset(dst->pixels + sum,color,length * sizeof(uint32_t));
+        memset(dst->pixels + sum * 4,color,length * sizeof(uint32_t));
       }
       sum += dst->w;
     }

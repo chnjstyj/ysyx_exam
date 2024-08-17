@@ -36,24 +36,24 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
     l = 0;
     int length = 0;
     int i_sum = ctl->y * w;
-    for (i = ctl->y; i < ctl->h + ctl->y; i++)
+    for (i = ctl->y; (i < ctl->h + ctl->y) && i_sum < w * h; i++)
     {
-      /*
-      for (j = ctl->x; j < ctl->w + ctl->x; j++)
-      {
-        if (i < h && j < w) 
-        {
-          fb[i * w + j] = p[l];
-        }
-        l++;
-      }*/
+      
+      // for (j = ctl->x; j < ctl->w + ctl->x; j++)
+      // {
+      //   if (i < h && j < w) 
+      //   {
+      //     fb[i * w + j] = p[l];
+      //   }
+      //   l++;
+      // }
       
       j = ctl->x;
-      if ((j + ctl->x) > w) 
+      if ((j + ctl->w) > w) 
         length = w - ctl->x;
       else 
         length = ctl->w;
-      memcpy(&fb[i_sum + j], &p[l], length * sizeof(uint32_t));
+      memcpy((fb + i_sum + j), &p[l], length * sizeof(uint32_t));
       l += length;
       //k++;
       i_sum += w;

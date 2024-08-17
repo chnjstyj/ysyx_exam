@@ -35,5 +35,5 @@ run: image
 	cp $(BIN_FILE) $(NPC_HOME)/inst.bin
 	cp $(ELF_FILE) $(NPC_HOME)/inst_rom.elf
 	cp $(INST_FILE) $(NPC_HOME)/inst_rom.txt
-	cd $(NPC_HOME) && ./Vtop
+	cd $(NPC_HOME) && make sim && ./Vtop
 

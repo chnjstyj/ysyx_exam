@@ -144,6 +144,7 @@ static void display_menu(int n) {
   SDL_Rect rect = { .x = screen->w - logo_sf->w, .y = 0 };
   //SDL_Rect rect = { .x = 0, .y = 0 };
   SDL_BlitSurface(logo_sf, 0, screen, &rect);
+  
   //FIXME
   SDL_UpdateRect(screen, 0, 0, 0, 0);
   printf("Available applications:\n");

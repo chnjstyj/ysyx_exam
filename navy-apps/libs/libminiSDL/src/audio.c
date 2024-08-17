@@ -36,7 +36,7 @@ int SDL_OpenAudio(SDL_AudioSpec *desired, SDL_AudioSpec *obtained) {
   s = desired;
   stream = (uint8_t*)malloc(CONFIG_SB_SIZE * sizeof(uint8_t*));
   return 0;*/
-  return -1;
+  return 0;
 }
 
 void SDL_CloseAudio() {
