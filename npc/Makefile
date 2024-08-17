@@ -41,7 +41,7 @@ clean:
 	-rm -rf $(BUILD_DIR) auto_bind.cpp
 
 # rules for NVBoard
-include $(NVBOARD_HOME)/scripts/nvboard.mk
+#include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 #VERILATOR_CFLAGS += --prof-cfuncs 
 VERILATOR_CFLAGS += --savable --trace -MMD --build -cc  \
