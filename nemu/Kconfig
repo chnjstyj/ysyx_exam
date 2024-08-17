@@ -157,23 +157,23 @@ config DIFFTEST
 
 config WATCHPOINT
   bool "Enable Watchpoint debugging"
-  default y
+  default n
   
 config MTRACE
 bool "Enable mtrace debugging"
-default y
+default n
 
 config FTRACE
 bool "Enable ftrace debugging"
-default y
+default n
 
 config DTRACE
 bool "Enable dtrace debugging"
-default y
+default n
 
 config ETRACE
 bool "Enable etrace debugging"
-default y
+default n
 
 choice
   prompt "Reference design"
