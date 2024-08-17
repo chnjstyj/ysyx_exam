@@ -52,7 +52,7 @@ INCFLAGS = $(addprefix -I, $(INC_PATH))
 CFLAGS += -g $(INCFLAGS) $(shell llvm-config --cxxflags) -fPIE -DTOP_NAME="\"V$(TOPNAME)\""
 LDFLAGS += -lSDL2 -lSDL2_image -lcurses -lreadline $(shell llvm-config --libs)
 
-verilator:${VSRCS} $(CSRCS) $(NVBOARD_ARCHIVE) auto_bind.cpp
+verilator:${VSRCS} $(CSRCS)
 	verilator $(VERILATOR_CFLAGS) \
 	--top-module $(top_name) $^ \
 	$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
