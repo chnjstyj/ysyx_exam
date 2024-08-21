@@ -31,37 +31,33 @@ void __am_gpu_fbdraw(AM_GPU_FBDRAW_T *ctl) {
     uint32_t *fb = (uint32_t *)(uintptr_t)FB_ADDR;
     uint32_t *p = (uint32_t *)(uintptr_t)ctl->pixels;
     int i,j;
-    int k,l;
-    k = 0;l = 0;
+    int l;
+    //k = 0;
+    l = 0;
     int length = 0;
-    uint32_t sum = ctl->y * w ;
-    for (i = ctl->y; i < ctl->h + ctl->y; i++)
+    //uint32_t sum = ctl->y * w ;
+    int i_sum = ctl->y * w;
+    for (i = ctl->y; (i < ctl->h + ctl->y) && i_sum < w * h; i++)
     {
+      
       // for (j = ctl->x; j < ctl->w + ctl->x; j++)
       // {
       //   if (i < h && j < w) 
       //   {
-      //     //fb[i * w + j] = p[k * ctl->w + l];
-      //     //fb[i * w + j] = p[l];
-      //     fb[sum + j] = p[l];
+      //     fb[i * w + j] = p[l];
       //   }
       //   l++;
       // }
+      
       j = ctl->x;
-      if ((j + ctl->x) > w) 
-      {
+      if ((j + ctl->w) > w) 
         length = w - ctl->x;
-      } 
       else 
-      {
         length = ctl->w;
-      }
-      memcpy(&fb[sum + j], &p[l], length * sizeof(uint32_t));
+      memcpy((fb + i_sum + j), &p[l], length * sizeof(uint32_t));
       l += length;
-      k++;
-      sum += w;
-      //l = 0;
-      //printf("test l\n");
+      //k++;
+      i_sum += w;
     }
   }
   if (ctl->sync) {
