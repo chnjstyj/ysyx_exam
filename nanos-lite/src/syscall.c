@@ -48,7 +48,7 @@ void naive_uload(PCB *pcb, const char *filename);
 void do_syscall(Context *c) {
   uintptr_t a[4];
   a[0] = c->GPR1;
-  update_strace(c);
+  //update_strace(c);
   //printf("syscall %d\n",a[0]);
   switch (a[0]) {
     case SYS_yield:yield(); break;

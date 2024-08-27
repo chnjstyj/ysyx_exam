@@ -14,7 +14,7 @@ class stall_v extends BlackBox with HasBlackBoxPath{
         val stall_global = Output(UInt(1.W))
     })
 
-    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/stall.v").getCanonicalPath)
+    addPath(new File("playground/src/stall.v").getCanonicalPath)
     /*
     withClock ((!clock).asClock){
         val stall_mem_reg = RegNext(io.stall_from_mem)

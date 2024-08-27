@@ -13,7 +13,7 @@ class mem_read extends BlackBox with HasBlackBoxPath{
         val rdata = Output(UInt(256.W))
     })
 
-    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem_read.v").getCanonicalPath)
+    addPath(new File("playground/src/mem_read.v").getCanonicalPath)
 }
 
 class mem_write extends BlackBox with HasBlackBoxPath{
@@ -27,5 +27,5 @@ class mem_write extends BlackBox with HasBlackBoxPath{
         val finish = Output(Bool())
     })
 
-    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/mem_write.v").getCanonicalPath)
+    addPath(new File("playground/src/mem_write.v").getCanonicalPath)
 }

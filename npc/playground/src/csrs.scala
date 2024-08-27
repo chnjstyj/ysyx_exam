@@ -22,5 +22,5 @@ class csrs extends BlackBox with HasBlackBoxPath{
         val pc = Input(UInt(64.W))
         val mret_addr = Output(UInt(64.W))
     })
-    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/csrs.v").getCanonicalPath)
+    addPath(new File("playground/src/csrs.v").getCanonicalPath)
 }

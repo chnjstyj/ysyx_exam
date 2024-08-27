@@ -11,6 +11,6 @@ class div_unit extends BlackBox with HasBlackBoxPath{
         val result = Output(UInt(64.W))
     })
 
-    addPath(new File("/home/tang/ysyx-workbench/npc/playground/src/div.v").getCanonicalPath)
+    addPath(new File("playground/src/div.v").getCanonicalPath)
 
 }
