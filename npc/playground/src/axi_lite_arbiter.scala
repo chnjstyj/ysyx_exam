@@ -1,6 +1,170 @@
 import chisel3._ 
 import chisel3.util._ 
 
+
+package AXI{
+    val axi_width:Int = 32
+    class axi_master_aw extends Bundle{
+        val master_awready = Output(Bool())
+        val master_awvalid = Output(Bool())
+        val master_awaddr = Output(UInt(32.W))
+        val master_awid = Output(UInt(4.W))
+        val master_awlen = Output(UInt(8.W))
+        val master_awsize = Output(UInt(3.W))
+        val master_awburst = Output(UInt(2.W))
+    }
+
+    class axi_master_w extends Bundle{
+        val master_wready = Input(Bool())
+        val master_wvalid = Output(Bool())
+        val master_wdata = Output(UInt(32.W))
+        val master_wstrb = Output(UInt(4.W))
+        val master_wlast = Output(Bool()) 
+    }
+
+    class axi_master_b extends Bundle{
+        val master_bready = Output(Bool())
+        val master_bvalid = Input(Bool())
+        val master_bresp = Input(UInt(2.W))
+        val master_bid = Input(UInt(4.W))
+    }
+
+    class axi_master_ar extends Bundle{
+        val master_arready = Input(Bool())
+        val master_arvalid = Output(Bool())
+        val master_araddr = Output(UInt(32.W))
+        val master_arid = Output(UInt(4.W))
+        val master_arlen = Output(UInt(8.W))
+        val master_arsize = Output(UInt(3.W))
+        val master_arburst = Output(UInt(2.W))
+    }
+
+    class axi_master_r extends Bundle{
+        val master_rready = Output(Bool())
+        val master_rvalid = Input(Bool())
+        val master_rresp = Input(UInt(2.W))
+        val master_rdata = Input(UInt(32.W))
+        val master_rlast = Input(Bool())
+        val master_rid = Input(UInt(4.W))
+    }
+
+    class axi_slave_aw extends Bundle{
+        val slave_awready = Output(Bool())
+        val slave_awvalid = Input(Bool())
+        val slave_awaddr = Input(UInt(32.W))
+        val slave_awid = Input(UInt(4.W))
+        val slave_awlen = Input(UInt(8.W))
+        val slave_awsize = Input(UInt(3.W))
+        val slave_awburst = Input(UInt(2.W))
+    }
+
+    class axi_slave_w extends Bundle{
+        val slave_wready = Input(Bool())
+        val slave_wvalid = Output(Bool())
+        val slave_wdata = Input(UInt(32.W))
+        val slave_wstrb = Input(UInt(4.W))
+        val slave_wlast = Input(Bool())
+    }
+
+    class axi_slave_b extends Bundle{
+        val slave_bready = Input(Bool())
+        val slave_bvalid = Output(Bool())
+        val slave_bresp = Output(UInt(2.W))
+        val slave_bid = Output(UInt(4.W))
+    }
+
+    class axi_slave_ar extends Bundle{
+        val slave_arready = Output(Bool())
+        val slave_arvalid = Input(Bool())
+        val slave_araddr = Input(UInt(32.W))
+        val slave_arid = Input(UInt(4.W))
+        val slave_arlen = Input(UInt(8.W))
+        val slave_arsize = Input(UInt(3.W))
+        val slave_arburst = Input(UInt(2.W))
+    }
+
+    class axi_slave_r extends Bundle{
+        val slave_rready = Input(Bool())
+        val slave_rvalid = Output(Bool())
+        val slave_rresp = Output(UInt(2.W))
+        val slave_rdata = Output(UInt(32.W))
+        val slave_rlast = Output(Bool())
+        val slave_rid = Output(UInt(4.W))
+    }
+
+    class axi_master extends Bundle{
+        val master_awready = Output(Bool())
+        val master_awvalid = Output(Bool())
+        val master_awaddr = Output(UInt(32.W))
+        val master_awid = Output(UInt(4.W))
+        val master_awlen = Output(UInt(8.W))
+        val master_awsize = Output(UInt(3.W))
+        val master_awburst = Output(UInt(2.W))
+
+        val master_wready = Input(Bool())
+        val master_wvalid = Output(Bool())
+        val master_wdata = Output(UInt(32.W))
+        val master_wstrb = Output(UInt(4.W))
+        val master_wlast = Output(Bool()) 
+
+        val master_bready = Output(Bool())
+        val master_bvalid = Input(Bool())
+        val master_bresp = Input(UInt(2.W))
+        val master_bid = Input(UInt(4.W))
+        
+        val master_arready = Input(Bool())
+        val master_arvalid = Output(Bool())
+        val master_araddr = Output(UInt(32.W))
+        val master_arid = Output(UInt(4.W))
+        val master_arlen = Output(UInt(8.W))
+        val master_arsize = Output(UInt(3.W))
+        val master_arburst = Output(UInt(2.W))
+
+        val master_rready = Output(Bool())
+        val master_rvalid = Input(Bool())
+        val master_rresp = Input(UInt(2.W))
+        val master_rdata = Input(UInt(32.W))
+        val master_rlast = Input(Bool())
+        val master_rid = Input(UInt(4.W))
+    }
+
+    class axi_slave extends Bundle{
+        val slave_awready = Output(Bool())
+        val slave_awvalid = Input(Bool())
+        val slave_awaddr = Input(UInt(32.W))
+        val slave_awid = Input(UInt(4.W))
+        val slave_awlen = Input(UInt(8.W))
+        val slave_awsize = Input(UInt(3.W))
+        val slave_awburst = Input(UInt(2.W))
+        
+        val slave_wready = Output(Bool())
+        val slave_wvalid = Input(Bool())
+        val slave_wdata = Input(UInt(32.W))
+        val slave_wstrb = Input(UInt(4.W))
+        val slave_wlast = Input(Bool())
+        
+        val slave_bready = Input(Bool())
+        val slave_bvalid = Output(Bool())
+        val slave_bresp = Output(UInt(2.W))
+        val slave_bid = Output(UInt(4.W))
+        
+        val slave_arready = Output(Bool())
+        val slave_arvalid = Input(Bool())
+        val slave_araddr = Input(UInt(32.W))
+        val slave_arid = Input(UInt(4.W))
+        val slave_arlen = Input(UInt(8.W))
+        val slave_arsize = Input(UInt(3.W))
+        val slave_arburst = Input(UInt(2.W)) 
+        
+        val slave_rready = Input(Bool())
+        val slave_rvalid = Output(Bool())
+        val slave_rresp = Output(UInt(2.W))
+        val slave_rdata = Output(UInt(32.W))
+        val slave_rlast = Output(Bool())
+        val slave_rid = Output(UInt(4.W))
+    }
+}
+
 class axi_lite_arbiter(
     offset_width:Int
 ) extends Module {
@@ -169,7 +333,7 @@ class axi_lite_arbiter(
         addr := 0.U
     }
 
-    val counter_end = 0 //((1 << (offset_width - 3)) - 1)
+    val counter_end = (1 << (offset_width + 3)) / AXI.axi_width
 
     icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U)
     when (cur_state === s1){
@@ -264,6 +428,7 @@ class axi_lite_arbiter(
     arbiter_to_mem_read.io.ARESETn := io.ARESETn 
     arbiter_to_mem_read.io.addr := Mux(next_state === s3,io.lsu_direct_addr,addr) 
     arbiter_to_mem_read.io.en := Mux(next_state === s3,io.lsu_direct_read_en,mem_read_en & !lsu_finish)
+    arbiter_to_mem_read.io.length := Mux(next_state === s3,0.U,(counter_end - 1).U)
     mem_read_valid := arbiter_to_mem_read.io.valid 
     mem_rdata := arbiter_to_mem_read.io.rdata
 
