@@ -3,9 +3,11 @@ import chisel3.util._
 
 
 package AXI{
-    val axi_width:Int = 32
+    class param{
+        val axi_width:Int = 32
+    }
     class axi_master_aw extends Bundle{
-        val master_awready = Output(Bool())
+        val master_awready = Input(Bool())
         val master_awvalid = Output(Bool())
         val master_awaddr = Output(UInt(32.W))
         val master_awid = Output(UInt(4.W))
@@ -93,7 +95,7 @@ package AXI{
     }
 
     class axi_master extends Bundle{
-        val master_awready = Output(Bool())
+        val master_awready = Input(Bool())
         val master_awvalid = Output(Bool())
         val master_awaddr = Output(UInt(32.W))
         val master_awid = Output(UInt(4.W))
@@ -193,6 +195,15 @@ class axi_lite_arbiter(
         val lsu_direct_read_data = Output(UInt(64.W)) 
         val lsu_direct_fin = Output(Bool())
         val lsu_direct_addr = Input(UInt(32.W))
+
+        //axi 
+
+        val axi_master_ar = new AXI.axi_master_ar()
+        val axi_master_r = new AXI.axi_master_r()
+
+        val axi_master_aw = new AXI.axi_master_aw()
+        val axi_master_w = new AXI.axi_master_w()
+        val axi_master_b = new AXI.axi_master_b()
     })
     
     //s0 : idle
@@ -202,18 +213,18 @@ class axi_lite_arbiter(
     val s0 :: s1 :: s2 :: s3 :: Nil = Enum(4)
 
     val icache_read_data = RegInit(0.U((1 << (offset_width + 3)).W))
-    val icache_read_counter = RegInit(0.U(((1 << (offset_width - 3)) - 2).W))
+    val icache_read_counter = RegInit(0.U(((1 << (offset_width - 3))).W))
     val icache_read_data_fin = RegInit(false.B)
     val icache_read_addr = Wire(UInt(32.W))
 
     val dcache_read_data = RegInit(0.U((1 << (offset_width + 3)).W)) 
-    val dcache_read_counter = RegInit(0.U(((1 << (offset_width - 3)) - 2).W)) 
+    val dcache_read_counter = RegInit(0.U(((1 << (offset_width - 3))).W)) 
     val dcache_read_data_fin = RegInit(false.B) 
     val dcache_read_addr = Wire(UInt(32.W))
 
-    val dcache_write_counter = RegInit(0.U(((1 << (offset_width - 3)) - 2).W)) 
+    val dcache_write_counter = RegInit(0.U(((1 << (offset_width - 3))).W)) 
     val dcache_write_data_fin = RegInit(false.B) 
-    val dcache_write_data = WireDefault(0.U(256.W))
+    val dcache_write_data = WireDefault(0.U(32.W))
 
     val lsu_direct_fin = RegInit(false.B)
 
@@ -231,7 +242,7 @@ class axi_lite_arbiter(
     val addr = WireDefault(0.U(32.W))
     val mem_read_en = RegInit(false.B)
     val mem_write_en = RegInit(false.B)
-    val mem_rdata = WireDefault(0.U(256.W)) 
+    val mem_rdata = WireDefault(0.U(32.W)) 
     //val mem_rdata_r = RegNext(RegNext(mem_rdata))
     val mem_read_valid = RegInit(false.B) 
     val mem_write_finish = RegInit(false.B)
@@ -301,12 +312,17 @@ class axi_lite_arbiter(
             mem_read_en := 1.U 
             mem_write_en := 0.U 
     }.elsewhen (next_state === s2){
-        when (io.lsu_read_en){
-            mem_read_en := 1.U 
-            mem_write_en := 0.U 
-        }.elsewhen (io.lsu_write_en){
+        when (cur_state === s1){
             mem_read_en := 0.U 
-            mem_write_en := 1.U 
+            mem_write_en := 0.U 
+        }.otherwise{
+            when (io.lsu_read_en){
+                mem_read_en := 1.U 
+                mem_write_en := 0.U 
+            }.elsewhen (io.lsu_write_en){
+                mem_read_en := 0.U 
+                mem_write_en := 1.U 
+            }
         }
     }.elsewhen (next_state === s3){
         /*
@@ -333,19 +349,19 @@ class axi_lite_arbiter(
         addr := 0.U
     }
 
-    val counter_end = (1 << (offset_width + 3)) / AXI.axi_width
+    val counter_end = (1 << (offset_width + 3)) / 32
 
-    icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U)
+    icache_read_addr := io.ifu_read_addr //+ (icache_read_counter << 3.U)
     when (cur_state === s1){
         //icache_read_addr := io.ifu_read_addr + (icache_read_counter << 3.U) //next 64 bits block
         when(mem_read_valid && icache_read_counter < counter_end.U){
             //icache_read_data_fin := false.B 
             icache_read_counter := icache_read_counter + 1.U 
-            icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 6.U))
+            icache_read_data := icache_read_data | (RegNext(mem_rdata) << (icache_read_counter << 5.U))
         }.elsewhen (mem_read_valid && icache_read_counter === counter_end.U){
             //last one to read
             //icache_read_data_fin := true.B 
-            icache_read_data := icache_read_data | (mem_rdata << (icache_read_counter << 6.U))
+            icache_read_data := icache_read_data | (RegNext(mem_rdata) << (icache_read_counter << 5.U))
             icache_read_counter := 0.U
         }.otherwise{
             //icache_read_data_fin := false.B 
@@ -357,31 +373,38 @@ class axi_lite_arbiter(
         icache_read_data := 0.U 
     }
 
-    when (mem_read_valid && icache_read_counter === counter_end.U && cur_state === s1){
+    when (mem_read_valid && icache_read_counter === (counter_end-1).U && cur_state === s1){
         icache_read_data_fin := true.B 
     }.otherwise{
         icache_read_data_fin := false.B
     }
 
-    dcache_read_addr := io.lsu_addr + Mux(io.lsu_write_en,(dcache_write_counter << 3.U),(dcache_read_counter << 3.U))
+    dcache_read_addr := io.lsu_addr //+ Mux(io.lsu_write_en,(dcache_write_counter << 3.U),(dcache_read_counter << 3.U))
     when (cur_state === s2 && mem_read_en.asBool()){
         when (mem_read_valid && dcache_read_counter < counter_end.U){
-            dcache_read_data_fin := false.B 
+            //dcache_read_data_fin := false.B 
             dcache_read_counter := dcache_read_counter + 1.U 
-            dcache_read_data := dcache_read_data | (mem_rdata << (dcache_read_counter << 6.U))
+            dcache_read_data := dcache_read_data | (RegNext(mem_rdata) << (dcache_read_counter << 5.U))
         }.elsewhen (mem_read_valid && dcache_read_counter === counter_end.U){
             //last one to read
-            dcache_read_data_fin := true.B 
-            dcache_read_data := dcache_read_data | (mem_rdata << (dcache_read_counter << 6.U))
+            //dcache_read_data_fin := true.B 
+            dcache_read_data := dcache_read_data | (RegNext(mem_rdata) << (dcache_read_counter << 5.U))
             dcache_read_counter := 0.U
         }.otherwise{
-            dcache_read_data_fin := false.B 
+            //dcache_read_data_fin := false.B 
         }
     }.otherwise{
-        dcache_read_data_fin := false.B 
+        //dcache_read_data_fin := false.B 
         //dcache_read_addr := 0.U 
         dcache_read_counter := 0.U 
         dcache_read_data := 0.U 
+    }
+
+
+    when (mem_read_valid && dcache_read_counter === (counter_end-1).U && cur_state === s2){
+        dcache_read_data_fin := true.B 
+    }.otherwise{
+        dcache_read_data_fin := false.B
     }
 
     when (next_state === s2 && mem_write_en.asBool()){
@@ -424,20 +447,33 @@ class axi_lite_arbiter(
         lsu_direct_fin := false.B
     }*/
 
-    arbiter_to_mem_read.io.ACLK := io.ACLK 
-    arbiter_to_mem_read.io.ARESETn := io.ARESETn 
+    val direct_read_en = WireDefault(io.lsu_direct_read_en)
+    when (next_state === s3 && cur_state =/= s3){
+        direct_read_en := 0.U
+    }.otherwise{
+        direct_read_en := io.lsu_direct_read_en
+    }
+
+    //arbiter_to_mem_read.io.ACLK := io.ACLK 
+    //arbiter_to_mem_read.io.ARESETn := io.ARESETn 
     arbiter_to_mem_read.io.addr := Mux(next_state === s3,io.lsu_direct_addr,addr) 
-    arbiter_to_mem_read.io.en := Mux(next_state === s3,io.lsu_direct_read_en,mem_read_en & !lsu_finish)
+    arbiter_to_mem_read.io.en := Mux(next_state === s3,direct_read_en,mem_read_en & !lsu_finish)
     arbiter_to_mem_read.io.length := Mux(next_state === s3,0.U,(counter_end - 1).U)
     mem_read_valid := arbiter_to_mem_read.io.valid 
     mem_rdata := arbiter_to_mem_read.io.rdata
 
-    arbiter_to_mem_write.io.ACLK := io.ACLK 
-    arbiter_to_mem_write.io.ARESETn := io.ARESETn 
+    //arbiter_to_mem_write.io.ACLK := io.ACLK 
+    //arbiter_to_mem_write.io.ARESETn := io.ARESETn 
     arbiter_to_mem_write.io.addr := Mux(next_state === s3,io.lsu_direct_addr,addr) 
     arbiter_to_mem_write.io.en := Mux(next_state === s3,io.lsu_direct_write_en,mem_write_en & !lsu_finish & !mem_write_finish)
     arbiter_to_mem_write.io.wdata := Mux(next_state === s3,io.lsu_direct_write_data,dcache_write_data)
     arbiter_to_mem_write.io.wmask := Mux(next_state === s3,io.lsu_direct_write_mask,"b1000".U)
+    arbiter_to_mem_write.io.length := Mux(next_state === s3,0.U,(counter_end - 1).U)
     mem_write_finish := arbiter_to_mem_write.io.finish
 
+    io.axi_master_ar <> arbiter_to_mem_read.io.axi_master_ar
+    io.axi_master_r <> arbiter_to_mem_read.io.axi_master_r
+    io.axi_master_aw <> arbiter_to_mem_write.io.axi_master_aw
+    io.axi_master_w <> arbiter_to_mem_write.io.axi_master_w
+    io.axi_master_b <> arbiter_to_mem_write.io.axi_master_b
 }

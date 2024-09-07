@@ -65,7 +65,11 @@ class mem extends Module{ //BlackBox with HasBlackBoxPath {
     //io.lsu_write_data := io.mem_write_data
     //io.lsu_write_mask := io.mem_wmask
 
-    val device_read = WireDefault(io.mem_addr(27).asBool() | io.mem_addr(29).asBool())
+    val device_read = WireDefault(
+    //io.mem_addr(27).asBool() 
+    //| io.mem_addr(29).asBool() | 
+    (io.mem_addr >= "h10000000".U && io.mem_addr < "h1000ffff".U) |
+    (io.mem_addr >= "h20000000".U && io.mem_addr < "h20000fff".U))
 
     val read_data = WireDefault(0.U(64.W))
     read_data := Mux(io.direct_fin,io.direct_read_data,io.dcache_read_data)

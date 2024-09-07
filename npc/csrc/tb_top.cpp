@@ -12,7 +12,7 @@
 #include <SDL2/SDL.h>
 #include <time.h>
 
-#include "Vtop.h"
+#include "VysyxSoCFull.h"
 #include "sdb.h"
 #include "disasm.h"
 #include "ftrace.h"
@@ -25,7 +25,7 @@
 #include "keyboard.h"
 
 #include "svdpi.h"
-#include "Vtop__Dpi.h"
+#include "VysyxSoCFull__Dpi.h"
 #include "verilated_dpi.h"
 #include "verilated_save.h"
 
@@ -36,6 +36,8 @@
 #define wave_steps 0
 //#define mtrace_ 1
 //#define itrace_ 1
+
+#define Vtop VysyxSoCFull
 
 const char *regs[] = {
   "$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
@@ -60,7 +62,7 @@ uint64_t isa_reg_str2val(const char *s, bool *success)
 }
 
 static VerilatedVcdC* m_trace = new VerilatedVcdC;
-static Vtop* top = new Vtop;
+static Vtop* top = new VysyxSoCFull;
 
 static char* image_name = NULL;
 
@@ -74,7 +76,7 @@ bool recording = false;
 
 uint32_t* memory = NULL;
 uint64_t* gpr = NULL;
-uint64_t* pc = &(top->io_inst_address);
+uint64_t* pc = 0;//&(top->io_inst_address);
 
 //memory
 //static uint8_t pmem[PMEM_SIZE] = {0};
@@ -99,6 +101,14 @@ static uint64_t total_steps;
 
 //SDL
 SDL_Window* window = NULL;
+
+extern "C" void flash_read(int32_t addr, int32_t *data) { assert(0); }
+extern "C" void mrom_read(int32_t addr, int32_t *data) 
+{ 
+  *data = *(uint32_t*)(pmem + (addr - 0x20000000));
+  //printf("%x\n",addr);
+  //assert(0); 
+}
 
 void init_pmem(const char* file_name)
 {
@@ -134,18 +144,18 @@ void print_itrace_buf()
 
 void call_ftrace_handle()
 {
-  if (ftrace_enable)
-  {
-    if (BITS(INST,6,0) == 0b1101111) //jal 
-    {
-      update_ftrace(INST_ADDR,NEXT_INST_ADDR);
-    }
-    else if (BITS(INST,14,12) == 0 && BITS(INST,6,0) == 0b1100111) //jalr
-    {
-      BITS(INST, 19, 15) == 1 ? ret(INST_ADDR) : 
-      update_ftrace(INST_ADDR,NEXT_INST_ADDR);
-    }
-  }
+  // if (ftrace_enable)
+  // {
+  //   if (BITS(INST,6,0) == 0b1101111) //jal 
+  //   {
+  //     update_ftrace(INST_ADDR,NEXT_INST_ADDR);
+  //   }
+  //   else if (BITS(INST,14,12) == 0 && BITS(INST,6,0) == 0b1100111) //jalr
+  //   {
+  //     BITS(INST, 19, 15) == 1 ? ret(INST_ADDR) : 
+  //     update_ftrace(INST_ADDR,NEXT_INST_ADDR);
+  //   }
+  // }
 }
 
 static uint64_t boot_time = 0; 
@@ -233,7 +243,7 @@ extern "C" void pmem_read(
     else 
     {
       *RVALID = 0;
-      printf("invalid read address %x at pc :%lx\n",ARADDR,top->io_inst_address);
+      printf("invalid read address %x at pc :%lx\n",ARADDR,0);//top->io_inst_address);
       printf("total steps:%d\n",total_steps);
       #ifdef waveform
       m_trace->close();
@@ -464,7 +474,7 @@ void inline diff_run()
   uint32_t address = offset + gpr[inst_19_15];*/
   //printf("diff run %x %x %x\n",top->io_inst,address,top->io_diff_skip);
   //if ((inst_6_0 == 3 || inst_6_0 == 35) && address > 0x90000000)
-  if (top->io_diff_skip)
+  if (1)//top->io_diff_skip)
   {
     //printf("skip diff\n");
     difftest_skip();
@@ -515,7 +525,7 @@ void cpu_exec(int steps)
     {
       total_steps++;
       single_cycle(top);
-      if (top->io_diff_run)
+      if (1)//top->io_diff_run)
       {
         inst_counts++;
       }
@@ -540,7 +550,7 @@ void cpu_exec(int steps)
       }
       if (diff_enable == true)
       {
-        if (top->io_diff_run)
+        if (1)//top->io_diff_run)
         {
           //printf("run diff\n");
           diff_run();
@@ -556,7 +566,7 @@ void cpu_exec(int steps)
     {
       total_steps++;
       single_cycle(top);
-      if (top->io_diff_run)
+      if (1)//top->io_diff_run)
       {
         inst_counts++;
       }
@@ -572,7 +582,7 @@ void cpu_exec(int steps)
       }
       if (diff_enable == true)
       {
-        if (top->io_diff_run)
+        if (1)//top->io_diff_run)
         {
           //printf("run diff\n");
           diff_run();
@@ -600,7 +610,8 @@ int main(int argc,char *argv[])
   top->trace(m_trace, 50);
   m_trace->open("./waveform.vcd");
   #endif
-  reset(2,top);
+  Verilated::commandArgs(argc, argv);
+  reset(10,top);
   
   //initial steps
   init_pmem("inst.bin");

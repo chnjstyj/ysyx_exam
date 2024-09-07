@@ -3,6 +3,7 @@ import chisel3.util._
 import chisel3.experimental._
 import chisel3.util.experimental.loadMemoryFromFile
 import chisel3.util.experimental.loadMemoryFromFileInline
+import AXI._
 
 class top(
     tag_width:Int,
@@ -11,18 +12,19 @@ class top(
     ways:Int 
 ) extends Module{
     val io = IO(new Bundle{
-        val inst = Output(UInt(32.W))
-        val inst_address = Output(UInt(64.W))
-        val next_inst_address = Output(UInt(64.W))
-        val stall = Output(Bool())
-        val offset1 = Output(UInt(6.W))
-        val diff_run = Output(Bool())
-        val diff_jump = Output(Bool())
-        val diff_skip = Output(Bool())
+        // val inst = Output(UInt(32.W))
+        // val inst_address = Output(UInt(64.W))
+        // val next_inst_address = Output(UInt(64.W))
+        // val stall = Output(Bool())
+        // val offset1 = Output(UInt(6.W))
+        // val diff_run = Output(Bool())
+        // val diff_jump = Output(Bool())
+        // val diff_skip = Output(Bool())
 
+        val interrupt = Input(Bool())
         //axi interface
         //master 
-        val master_awready = Output(Bool())
+        val master_awready = Input(Bool())
         val master_awvalid = Output(Bool())
         val master_awaddr = Output(UInt(32.W))
         val master_awid = Output(UInt(4.W))
@@ -56,6 +58,40 @@ class top(
         val master_rlast = Input(Bool())
         val master_rid = Input(UInt(4.W))
 
+        val slave_awready = Output(Bool())
+        val slave_awvalid = Input(Bool())
+        val slave_awaddr = Input(UInt(32.W))
+        val slave_awid = Input(UInt(4.W))
+        val slave_awlen = Input(UInt(8.W))
+        val slave_awsize = Input(UInt(3.W))
+        val slave_awburst = Input(UInt(2.W))
+        
+        val slave_wready = Output(Bool())
+        val slave_wvalid = Input(Bool())
+        val slave_wdata = Input(UInt(32.W))
+        val slave_wstrb = Input(UInt(4.W))
+        val slave_wlast = Input(Bool())
+        
+        val slave_bready = Input(Bool())
+        val slave_bvalid = Output(Bool())
+        val slave_bresp = Output(UInt(2.W))
+        val slave_bid = Output(UInt(4.W))
+        
+        val slave_arready = Output(Bool())
+        val slave_arvalid = Input(Bool())
+        val slave_araddr = Input(UInt(32.W))
+        val slave_arid = Input(UInt(4.W))
+        val slave_arlen = Input(UInt(8.W))
+        val slave_arsize = Input(UInt(3.W))
+        val slave_arburst = Input(UInt(2.W)) 
+        
+        val slave_rready = Input(Bool())
+        val slave_rvalid = Output(Bool())
+        val slave_rresp = Output(UInt(2.W))
+        val slave_rdata = Output(UInt(32.W))
+        val slave_rlast = Output(Bool())
+        val slave_rid = Output(UInt(4.W))
+
     })
 
     val alu_control_width = 4
@@ -82,16 +118,21 @@ class top(
     val mem_ca = Module(new mem_ca) 
     val ca_wb = Module(new ca_wb)
 
-    io.inst := ca_wb.io.wb_inst
+
+    val next_inst_address_r = RegNext(ca_wb.io.wb_next_inst_address,0.U)
+    val inst_r = RegNext(ca_wb.io.wb_inst,0.U)
+    val diff_run = WireDefault(ca_wb.io.wb_diff_run & (ca_wb.io.wb_inst =/= inst_r) & (ca_wb.io.wb_inst =/= 0.U) & !reset.asBool)
+
+    //io.inst := ca_wb.io.wb_inst
     /*
     when (pc.io.direct_jump === 1.U){
         io.inst_address := pc.io.inst_address | "h8000_0000".U 
     }.otherwise{
         io.inst_address := pc.io.inst_address | "h8000_0000".U  
     }*/
-    io.inst_address := ca_wb.io.wb_inst_address | "h8000_0000".U 
-    io.next_inst_address := ca_wb.io.wb_next_inst_address | "h8000_0000".U 
-    io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
+    //io.inst_address := ca_wb.io.wb_inst_address | "h8000_0000".U 
+    //io.next_inst_address := ca_wb.io.wb_next_inst_address | "h8000_0000".U 
+    //io.stall := stall.io.stall_global//inst_if.io.stall_from_inst_if | mem.io.stall_from_mem
 
     //withClock((!clock.asBool).asClock){
         //val direct_jump_r = RegNext( id.io.control_signal.direct_jump )
@@ -189,7 +230,7 @@ class top(
     regfile.io.rs1 := id.io.rs1 
     regfile.io.rs2 := id.io.rs2 
     regfile.io.rd := ca_wb.io.wb_rd 
-    regfile.io.reg_wen := ca_wb.io.wb_reg_wen & io.diff_run
+    regfile.io.reg_wen := ca_wb.io.wb_reg_wen & diff_run
     regfile.io.regfile_output_1 := id.io.control_signal.regfile_output_1
     regfile.io.inst_address := inst_if_id.io.id_inst_address
     regfile.io.ecall_inst_address := ca_wb.io.wb_inst_address
@@ -392,7 +433,7 @@ class top(
     dcache_controller.io.write_cache_data := mem.io.dcache_write_data
     dcache_controller.io.write_cache_mask := mem.io.dcache_write_mask
     dcache_controller.io.read_cache_size := mem.io.dcache_read_size 
-    io.offset1 := dcache_controller.io.offset1
+    //io.offset1 := dcache_controller.io.offset1
 
     stall.io.exit_debugging := ca_wb.io.wb_exit_debugging//id.io.control_signal.exit_debugging
     stall.io.stall_from_inst_if := inst_if.io.stall_from_inst_if
@@ -443,11 +484,58 @@ class top(
     ca_wb.io.ca_direct_access := mem_ca.io.ca_direct_access
     ca_wb.io.ca_ecall := mem_ca.io.ca_ecall
 
-    val next_inst_address_r = RegNext(ca_wb.io.wb_next_inst_address,0.U)
-    val inst_r = RegNext(ca_wb.io.wb_inst,0.U)
-    io.diff_run := //id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump | 
+    //io.diff_run := //id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump | 
     //RegNext(ca_wb.io.wb_diff_run,false.B)
-    ca_wb.io.wb_diff_run & (ca_wb.io.wb_inst =/= inst_r) & (ca_wb.io.wb_inst =/= 0.U) & !reset.asBool
-    io.diff_jump := id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump
-    io.diff_skip := ca_wb.io.wb_direct_access
+    //ca_wb.io.wb_diff_run & (ca_wb.io.wb_inst =/= inst_r) & (ca_wb.io.wb_inst =/= 0.U) & !reset.asBool
+    //io.diff_jump := id.io.control_signal.direct_jump | judge_branch_m.io.branch_jump
+    //io.diff_skip := ca_wb.io.wb_direct_access
+
+    axi_lite_arbiter.io.axi_master_aw.master_awready := io.master_awready
+    io.master_awvalid := axi_lite_arbiter.io.axi_master_aw.master_awvalid
+    io.master_awaddr := axi_lite_arbiter.io.axi_master_aw.master_awaddr
+    io.master_awid := axi_lite_arbiter.io.axi_master_aw.master_awid
+    io.master_awlen := axi_lite_arbiter.io.axi_master_aw.master_awlen
+    io.master_awsize := axi_lite_arbiter.io.axi_master_aw.master_awsize
+    io.master_awburst := axi_lite_arbiter.io.axi_master_aw.master_awburst
+
+    axi_lite_arbiter.io.axi_master_w.master_wready := io.master_wready
+    io.master_wvalid := axi_lite_arbiter.io.axi_master_w.master_wvalid
+    io.master_wdata := axi_lite_arbiter.io.axi_master_w.master_wdata
+    io.master_wstrb := axi_lite_arbiter.io.axi_master_w.master_wstrb
+    io.master_wlast := axi_lite_arbiter.io.axi_master_w.master_wlast
+
+    io.master_bready := axi_lite_arbiter.io.axi_master_b.master_bready
+    axi_lite_arbiter.io.axi_master_b.master_bvalid := io.master_bvalid
+    axi_lite_arbiter.io.axi_master_b.master_bresp := io.master_bresp
+    axi_lite_arbiter.io.axi_master_b.master_bid := io.master_bid 
+
+    axi_lite_arbiter.io.axi_master_ar.master_arready := io.master_arready
+    io.master_arvalid := axi_lite_arbiter.io.axi_master_ar.master_arvalid
+    io.master_araddr := axi_lite_arbiter.io.axi_master_ar.master_araddr
+    io.master_arid := axi_lite_arbiter.io.axi_master_ar.master_arid
+    io.master_arlen := axi_lite_arbiter.io.axi_master_ar.master_arlen
+    io.master_arsize := axi_lite_arbiter.io.axi_master_ar.master_arsize
+    io.master_arburst := axi_lite_arbiter.io.axi_master_ar.master_arburst
+
+    io.master_rready := axi_lite_arbiter.io.axi_master_r.master_rready
+    axi_lite_arbiter.io.axi_master_r.master_rvalid := io.master_rvalid
+    axi_lite_arbiter.io.axi_master_r.master_rresp := io.master_rresp
+    axi_lite_arbiter.io.axi_master_r.master_rdata := io.master_rdata
+    axi_lite_arbiter.io.axi_master_r.master_rlast := io.master_rlast
+    axi_lite_arbiter.io.axi_master_r.master_rid := io.master_rid
+
+    io.slave_bvalid := 0.U
+    io.slave_bresp := 0.U
+    io.slave_rresp := 0.U
+    io.slave_rid := 0.U
+    io.slave_bid := 0.U
+    io.slave_wready := 0.U
+    io.slave_rlast := 0.U
+    io.slave_rdata := 0.U
+    io.slave_arready := 0.U
+    io.slave_rvalid := 0.U
+    io.slave_awready := 0.U
+
+
+
 }

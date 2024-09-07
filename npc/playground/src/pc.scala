@@ -36,7 +36,7 @@ class pc extends Module{
 
     ce := 1.U
     when (ce === 0.U){
-        inst_address := "h0000_0000_8000_0000".U 
+        inst_address := "h0000_0000_2000_0000".U 
     }.elsewhen (io.direct_jump === 1.U){
         inst_address := io.direct_jump_addr
     }.elsewhen (io.branch_jump === 1.U){

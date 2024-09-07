@@ -1,7 +1,7 @@
 BUILD_DIR = ./build ./obj_dir
 VSRCS = $(shell find $(abspath ./build) -name "*.v")
 CSRCS = $(shell find $(abspath ./csrc) -name "*.c" -or -name "*.cc" -or -name "*.cpp")
-top_name ?= top
+top_name ?= ysyxSoCFull
 DOCKER_RUN = sudo docker run --rm --log-driver=json-file\
 -v $(shell pwd):/mnt/data \
 --hostname lizhen --mac-address 02:42:ac:11:00:02 \
@@ -44,17 +44,21 @@ clean:
 #include $(NVBOARD_HOME)/scripts/nvboard.mk
 
 #VERILATOR_CFLAGS += --prof-cfuncs 
-VERILATOR_CFLAGS += --savable --trace -MMD --build -cc  \
-				-O3 --x-assign fast --x-initial fast --noassert
+VERILATOR_CFLAGS += --savable --trace -MMD --build -cc --autoflush  \
+				-O3 --x-assign fast --x-initial fast --noassert -I../ysyxSoC/perip/uart16550/rtl -I../ysyxSoC/perip/spi/rtl
 
 # rules for verilator
+#INC_PATH += $(abspath ../ysyxSoC/perip/uart16550/rtl) $(abspath ../ysyxSoC/perip/spi/rtl)
 INCFLAGS = $(addprefix -I, $(INC_PATH))
 CFLAGS += -g $(INCFLAGS) $(shell llvm-config --cxxflags) -fPIE -DTOP_NAME="\"V$(TOPNAME)\""
 LDFLAGS += -lSDL2 -lSDL2_image -lcurses -lreadline $(shell llvm-config --libs)
+VSRCS += $(shell find $(abspath ../ysyxSoC/perip) -name "*.v")
+VSRCS += $(shell find $(abspath ../ysyxSoC/build) -name "*.v")
 
 verilator:${VSRCS} $(CSRCS)
 	verilator $(VERILATOR_CFLAGS) \
 	--top-module $(top_name) $^ \
+	--timescale "1ns/1ns" --no-timing \
 	$(addprefix -CFLAGS , $(CFLAGS)) $(addprefix -LDFLAGS , $(LDFLAGS)) \
 	--exe -o ../Vtop 
 
