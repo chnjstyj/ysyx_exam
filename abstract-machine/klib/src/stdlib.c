@@ -41,6 +41,10 @@ void *malloc(size_t size) {
   if (addr == NULL) addr = (char*)heap.start;
   char* addr_start = addr;
   addr += size;
+  //printf("test malloc %x\n",addr_start);
+  while ((uintptr_t)addr % 8 != 0) {
+    addr++;
+  }
   return addr_start;
 #endif
   return NULL;

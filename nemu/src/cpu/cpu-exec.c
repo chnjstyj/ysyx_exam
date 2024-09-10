@@ -110,6 +110,10 @@ static void execute(uint64_t n) {
   Decode s;
   for (;n > 0; n --) {
     exec_once(&s, cpu.pc);
+    if (n < 10)
+    {
+      printf("pc %lx\n",cpu.pc);
+    }
     //printf("pc %lx\n",cpu.pc);
     g_nr_guest_inst ++;
     trace_and_difftest(&s, cpu.pc);

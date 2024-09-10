@@ -27,6 +27,7 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
   //check magic number
   assert(*(uint32_t *)m_elf.e_ident == 0x464C457F);
   m_elf_phs = (Elf_Phdr*)malloc(sizeof(Elf_Phdr) * m_elf.e_phnum);
+  (*(m_elf_phs)).p_type = 1;
   for (i = 0; i < m_elf.e_phnum; i++)
   {
     //ramdisk_read(m_elf_phs + i,m_elf.e_phoff + sizeof(Elf_Phdr) * i,sizeof(Elf_Phdr));
@@ -43,15 +44,18 @@ static uintptr_t loader(PCB *pcb, const char *filename) {
     }
   }
   */
- 
   for (i = 0; i < m_elf.e_phnum; i++)
   {
     //LOAD
-    if ((m_elf_phs + i)->p_type == PT_LOAD)
+    Elf64_Word type = (m_elf_phs + i)->p_type;
+    if (type == PT_LOAD)
     {
       //printf("load %x %x %x\n",p,(m_elf_phs + i)->p_vaddr,(uint64_t)p + (m_elf_phs + i)->p_vaddr);
       //ramdisk_read((void *)((uint64_t)p + (m_elf_phs + i)->p_vaddr),(m_elf_phs + i)->p_offset,(m_elf_phs + i)->p_filesz);
-      fs_lseek(fd,(m_elf_phs + i)->p_offset,SEEK_SET);
+      //printf("test3 %d\n",i);
+      Elf64_Off offset = (m_elf_phs + i)->p_offset;
+      //printf("test4\n");
+      fs_lseek(fd,offset,SEEK_SET);
       fs_read(fd,(void *)((uint64_t)p + (m_elf_phs + i)->p_vaddr),(m_elf_phs + i)->p_filesz);
 
       memset((void *)((uint64_t)p + (m_elf_phs + i)->p_vaddr + (m_elf_phs + i)->p_filesz),0,(m_elf_phs + i)->p_memsz - (m_elf_phs + i)->p_filesz);

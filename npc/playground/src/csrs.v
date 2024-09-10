@@ -55,7 +55,7 @@ always @(posedge clock) begin
     end
     else if (ecall_write) begin 
         mepc <= pc;
-        mcause <= ecall_idx;
+        mcause <= 0xb;  //ecall exception 0xb
     end
 end
 

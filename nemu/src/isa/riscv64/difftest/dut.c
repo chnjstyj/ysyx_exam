@@ -20,6 +20,7 @@
 bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
   int i = 0;
   int j;
+  int result = true;
   while (i < 32)
   {
     if (ref_r->gpr[i] != cpu.gpr[i])
@@ -33,7 +34,30 @@ bool isa_difftest_checkregs(CPU_state *ref_r, vaddr_t pc) {
     }
     i++;
   }
+
+  if (cpu.pc != ref_r->pc)
+  {
+    printf("different pc, npc:0x%lx\tref:0x%lx\n",cpu.pc,ref_r->pc);
+    return false;
+  }
+
+  for (i = 0; i < 4; i++)
+  {
+    if (cpu.csr[i] != ref_r->csr[i])
+    {
+      printf("different csr%d, npc:0x%lx\tref:0x%lx\n",i,cpu.csr[i],ref_r->csr[i]);
+      result = false;
+    }
+  }
   
+  if (result == false)
+  {
+    for (j = 0; j < 32;j ++)
+    {
+      printf("%05d:0x%016lx\n",j,ref_r->gpr[j]);
+    }
+    return false;
+  }
   return true;
 }
 

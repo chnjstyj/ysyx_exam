@@ -48,8 +48,9 @@ uint32_t* fb = NULL;
 void init_fs() {
   // TODO: initialize the size of /dev/fb
   AM_GPU_CONFIG_T t = io_read(AM_GPU_CONFIG);
-  char str[50] = {0};
+  char str[48] = {0};
   dispinfo_read(str,0,50);
+  //printf("test fs %d\n",t.width * t.height);
   fb = (uint32_t*)malloc(t.width * t.height * sizeof(uint32_t));
 }
 

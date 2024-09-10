@@ -40,6 +40,7 @@ void print_etrace()
 
 #endif
 
+bool is_firsttime = true;
 word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   /* TODO: Trigger an interrupt/exception with ``NO''.
    * Then return the address of the interrupt/exception vector.
@@ -54,6 +55,12 @@ word_t isa_raise_intr(word_t NO, vaddr_t epc) {
   eringbuf[eringbuf_head].epc = epc;
   eringbuf_head++;
   #endif
+  // if (is_firsttime)
+  // {
+  //   is_firsttime = false;
+  //   csr(mstatus) = 0xa00001800;
+  // }
+    csr(mstatus) = 0xa00001800;
   csr(mepc) = epc;
   csr(mcause) = NO;
   return csr(mtvec);
